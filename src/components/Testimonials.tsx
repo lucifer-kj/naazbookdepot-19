@@ -13,13 +13,13 @@ const Testimonials = () => {
     {
       id: 2,
       name: 'Fatima Rahman',
-      text: 'Naaz Perfumes offers the most authentic non-alcoholic attars I've ever used. The fragrances last all day long.',
+      text: "Naaz Perfumes offers the most authentic non-alcoholic attars I've ever used. The fragrances last all day long.",
       stars: 5,
     },
     {
       id: 3,
       name: 'Mohammed Ali',
-      text: 'I've been purchasing Islamic essentials from Naaz for years. Their prayer mats and accessories are top quality.',
+      text: "I've been purchasing Islamic essentials from Naaz for years. Their prayer mats and accessories are top quality.",
       stars: 4,
     },
   ];

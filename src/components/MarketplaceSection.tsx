@@ -28,7 +28,7 @@ const MarketplaceSection = () => {
           <div className="hidden md:block">
             <div className="relative">
               <img 
-                src="/lovable-uploads/a8c77a1e-70d0-4c8f-8218-bbff0885a682.png" 
+                src="/lovable-uploads/61ad7a88-c8e2-42f6-b3b1-567415b3c17e.png" 
                 alt="Naaz Marketplace" 
                 className="rounded-lg shadow-lg object-cover w-full h-[400px]"
               />

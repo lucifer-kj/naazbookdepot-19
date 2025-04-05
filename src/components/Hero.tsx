@@ -8,23 +8,23 @@ const Hero = () => {
     <div className="relative h-[600px] md:h-[700px] overflow-hidden">
       {/* Hero Image with Overlay */}
       <div 
-        className="absolute inset-0 bg-naaz-green bg-opacity-60"
+        className="absolute inset-0 bg-naaz-green"
         style={{
-          backgroundImage: "url('/lovable-uploads/35307c97-3aa6-4608-bf4e-4dfa8ccc9a0c.png')",
+          backgroundImage: "url('/lovable-uploads/a8c77a1e-70d0-4c8f-8218-bbff0885a682.png')",
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          backgroundBlendMode: 'overlay',
+          filter: 'brightness(0.7)',
         }}
       />
 
       {/* Content */}
-      <div className="relative z-10 container mx-auto px-4 h-full flex flex-col justify-center">
-        <div className="max-w-3xl animate-fade-up">
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-playfair font-bold text-white mb-6">
-            Discover the Naaz Marketplace Family
+      <div className="relative z-10 container mx-auto px-4 h-full flex items-center">
+        <div className="max-w-2xl animate-fade-up">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-playfair font-bold text-white mb-6">
+            Explore our premium collection of Islamic perfumes, books, and essential items
           </h1>
           <p className="text-lg md:text-xl text-white/90 mb-8">
-            Explore our premium collection of Islamic perfumes, books, and essential items across our specialized shops.
+            Discover quality products across our specialized shops with over 60 years of heritage.
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
             <Link to="/shops" className="gold-button inline-block text-center">

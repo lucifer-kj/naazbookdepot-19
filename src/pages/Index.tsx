@@ -7,6 +7,10 @@ import FeaturedProducts from '../components/FeaturedProducts';
 import Testimonials from '../components/Testimonials';
 import Newsletter from '../components/Newsletter';
 import Footer from '../components/Footer';
+import MarketplaceSection from '../components/MarketplaceSection';
+import SpecializedShops from '../components/SpecializedShops';
+import BlogSection from '../components/BlogSection';
+import NewArrivals from '../components/NewArrivals';
 
 const Index = () => {
   return (
@@ -14,8 +18,11 @@ const Index = () => {
       <Navbar />
       <main className="flex-grow">
         <Hero />
-        <FeaturedCategories />
+        <MarketplaceSection />
+        <SpecializedShops />
         <FeaturedProducts />
+        <NewArrivals />
+        <BlogSection />
         <Testimonials />
         <Newsletter />
       </main>

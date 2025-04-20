@@ -48,6 +48,17 @@ const orderStatusColors = {
   cancelled: "#ef4444"   // Red
 };
 
+// Sample sales trend data
+const salesTrendData = [
+  { name: 'Jan', value: 2400 },
+  { name: 'Feb', value: 1398 },
+  { name: 'Mar', value: 9800 },
+  { name: 'Apr', value: 3908 },
+  { name: 'May', value: 4800 },
+  { name: 'Jun', value: 3800 },
+  { name: 'Jul', value: 4300 }
+];
+
 const Dashboard = () => {
   const { toast } = useToast();
   const [timeframe, setTimeframe] = useState<'daily' | 'weekly' | 'monthly'>('daily');
@@ -82,7 +93,7 @@ const Dashboard = () => {
         const lowStock = await getLowStockProducts(5);
         
         // Format order status data for pie chart
-        const orderStatusData = Object.entries(stats.ordersByStatus).map(([status, count]) => ({
+        const orderStatusData = Object.entries(stats.ordersByStatus || {}).map(([status, count]) => ({
           name: status.charAt(0).toUpperCase() + status.slice(1),
           value: count,
           color: orderStatusColors[status as OrderStatus] || "#9ca3af"
@@ -116,17 +127,6 @@ const Dashboard = () => {
     
     return () => clearInterval(interval);
   }, [toast]);
-  
-  // Mock data for sales trend chart
-  const salesTrendData = [
-    { name: 'Jan', value: 2400 },
-    { name: 'Feb', value: 1398 },
-    { name: 'Mar', value: 9800 },
-    { name: 'Apr', value: 3908 },
-    { name: 'May', value: 4800 },
-    { name: 'Jun', value: 3800 },
-    { name: 'Jul', value: 4300 }
-  ];
 
   return (
     <div className="space-y-6">
@@ -194,7 +194,7 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {Object.values(dashboardData.ordersByStatus).reduce((sum, item) => sum + item.value, 0)}
+                {dashboardData.ordersByStatus.reduce((sum, item) => sum + item.value, 0)}
               </div>
               <div className="text-xs text-muted-foreground">
                 {dashboardData.ordersByStatus.find(status => status.name === 'Pending')?.value || 0} pending orders
@@ -230,27 +230,33 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={dashboardData.ordersByStatus}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={3}
-                    dataKey="value"
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    labelLine={false}
-                  >
-                    {dashboardData.ordersByStatus.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Legend />
-                  <Tooltip formatter={(value) => [`${value} orders`, 'Count']} />
-                </PieChart>
-              </ResponsiveContainer>
+              {dashboardData.ordersByStatus.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={dashboardData.ordersByStatus}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={3}
+                      dataKey="value"
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      labelLine={false}
+                    >
+                      {dashboardData.ordersByStatus.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Legend />
+                    <Tooltip formatter={(value) => [`${value} orders`, 'Count']} />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-full text-center text-muted-foreground">
+                  <p>No order data available</p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

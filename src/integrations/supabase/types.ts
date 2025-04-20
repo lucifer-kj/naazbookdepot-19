@@ -999,6 +999,10 @@ export type Database = {
           view_count: number | null
         }[]
       }
+      get_user_profile: {
+        Args: { user_id: string }
+        Returns: Json
+      }
       increment: {
         Args: { inc_amount: number }
         Returns: number

@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { UserProfile } from '../types/auth';
 import { logError } from '../services/error-service';
@@ -41,10 +42,12 @@ export async function fetchUserProfile(userId: string): Promise<UserProfile | nu
     // Attempt to get additional profile info from public.users table using a direct query
     // to avoid RLS recursion issues
     try {
-      const { data: profileData, error: profileError } = await supabase.rpc(
-        'get_user_profile',
-        { user_id: userId }
-      );
+      // Use the from method instead of rpc since the RPC function definition isn't available
+      const { data: profileData, error: profileError } = await supabase
+        .from('users')
+        .select('first_name, last_name, phone, role, is_super_admin')
+        .eq('id', userId)
+        .maybeSingle();
       
       if (profileError) {
         console.error('Error fetching extended profile, using basic profile:', profileError);

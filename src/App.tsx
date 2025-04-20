@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,6 +8,9 @@ import { AppProviders } from "./lib/providers";
 import { ProtectedRoute, PublicOnlyRoute } from './components/auth/ProtectedRoute';
 import { AdminRoute } from './components/auth/AdminRoute';
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { AdminLayout } from "./components/admin/AdminLayout";
+import Dashboard from "./pages/admin/Dashboard";
+import Orders from "./pages/admin/Orders";
 import Index from "./pages/Index";
 import Books from "./pages/Books";
 import Perfumes from "./pages/Perfumes";

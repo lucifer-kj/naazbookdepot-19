@@ -84,12 +84,18 @@ const App = () => (
                 <Route path="/order-success" element={<OrderSuccess />} />
                 
                 {/* Auth Routes (only accessible if NOT logged in) */}
-                <Route element={<PublicOnlyRoute />}>
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/register" element={<Register />} />
-                  <Route path="/forgot-password" element={<ForgotPassword />} />
-                  <Route path="/reset-password" element={<ResetPassword />} />
-                </Route>
+                <Route element={<PublicOnlyRoute>
+                  <Login />
+                </PublicOnlyRoute>} path="/login" />
+                <Route element={<PublicOnlyRoute>
+                  <Register />
+                </PublicOnlyRoute>} path="/register" />
+                <Route element={<PublicOnlyRoute>
+                  <ForgotPassword />
+                </PublicOnlyRoute>} path="/forgot-password" />
+                <Route element={<PublicOnlyRoute>
+                  <ResetPassword />
+                </PublicOnlyRoute>} path="/reset-password" />
                 
                 {/* Protected Routes (only accessible if logged in) */}
                 <Route element={<ProtectedRoute />}>
@@ -100,7 +106,11 @@ const App = () => (
                 </Route>
                 
                 {/* Admin Routes */}
-                <Route path="/admin/login" element={<PublicOnlyRoute adminOnly={true}><AdminLogin /></PublicOnlyRoute>} />
+                <Route path="/admin/login" element={
+                  <PublicOnlyRoute adminOnly={true}>
+                    <AdminLogin />
+                  </PublicOnlyRoute>
+                } />
                 
                 <Route path="/admin" element={<AdminRoute />}>
                   <Route element={<AdminLayout />}>

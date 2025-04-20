@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppProviders } from "./lib/providers";
 import { ProtectedRoute, AdminRoute, PublicOnlyRoute } from './components/auth/ProtectedRoute';
+import { SidebarProvider } from "@/components/ui/sidebar";
 import Index from "./pages/Index";
 import Books from "./pages/Books";
 import Perfumes from "./pages/Perfumes";
@@ -27,6 +28,11 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import ProductPage from "./pages/ProductPage";
 
+// Admin Pages
+import { AdminLayout } from "./components/admin/AdminLayout";
+import Dashboard from "./pages/admin/Dashboard";
+import Orders from "./pages/admin/Orders";
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -40,48 +46,54 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AppProviders>
       <TooltipProvider>
-        <BrowserRouter>
-          <Toaster />
-          <Sonner />
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<Index />} />
-            <Route path="/books" element={<Books />} />
-            <Route path="/perfumes" element={<Perfumes />} />
-            <Route path="/essentials" element={<Essentials />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/blog" element={<Blog />} />
-            <Route path="/blog/:slug" element={<BlogPost />} />
-            <Route path="/faq" element={<FAQ />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/product/:productId" element={<ProductPage />} />
-            <Route path="/cart" element={<Cart />} />
-            
-            {/* Auth Routes (only accessible if NOT logged in) */}
-            <Route element={<PublicOnlyRoute />}>
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-            </Route>
-            
-            {/* Protected Routes (only accessible if logged in) */}
-            <Route element={<ProtectedRoute />}>
-              <Route path="/account" element={<Account />} />
-              <Route path="/account/settings" element={<AccountSettings />} />
-              <Route path="/account/addresses" element={<AddressManagement />} />
-              <Route path="/checkout" element={<Checkout />} />
-            </Route>
-            
-            {/* Admin Routes */}
-            <Route element={<AdminRoute />}>
-              {/* Add admin routes here */}
-            </Route>
-            
-            {/* 404 Route */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+        <SidebarProvider>
+          <BrowserRouter>
+            <Toaster />
+            <Sonner />
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/" element={<Index />} />
+              <Route path="/books" element={<Books />} />
+              <Route path="/perfumes" element={<Perfumes />} />
+              <Route path="/essentials" element={<Essentials />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/blog" element={<Blog />} />
+              <Route path="/blog/:slug" element={<BlogPost />} />
+              <Route path="/faq" element={<FAQ />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/product/:productId" element={<ProductPage />} />
+              <Route path="/cart" element={<Cart />} />
+              
+              {/* Auth Routes (only accessible if NOT logged in) */}
+              <Route element={<PublicOnlyRoute />}>
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+              </Route>
+              
+              {/* Protected Routes (only accessible if logged in) */}
+              <Route element={<ProtectedRoute />}>
+                <Route path="/account" element={<Account />} />
+                <Route path="/account/settings" element={<AccountSettings />} />
+                <Route path="/account/addresses" element={<AddressManagement />} />
+                <Route path="/checkout" element={<Checkout />} />
+              </Route>
+              
+              {/* Admin Routes */}
+              <Route element={<AdminRoute />}>
+                <Route path="/admin" element={<AdminLayout />}>
+                  <Route index element={<Dashboard />} />
+                  <Route path="orders" element={<Orders />} />
+                  {/* Add more admin routes here */}
+                </Route>
+              </Route>
+              
+              {/* 404 Route */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </SidebarProvider>
       </TooltipProvider>
     </AppProviders>
   </QueryClientProvider>

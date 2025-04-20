@@ -1,19 +1,20 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 export interface WishlistItem {
   id: string;
+  user_id: string;
   product_id: string;
   created_at: string;
   product: {
+    id: string;
     name: string;
+    slug: string;
     price: number;
     sale_price: number | null;
-    image_url?: string;
-    slug: string;
-    is_in_stock: boolean;
+    main_image_url: string;
+    quantity_in_stock: number;
   };
 }
 
@@ -29,148 +30,139 @@ export const useWishlist = () => {
       }
 
       const { data, error } = await supabase
-        .from('wishlist_items')
+        .from('wishlist')
         .select(`
           id,
+          user_id,
           product_id,
           created_at,
           product:products(
+            id,
             name,
+            slug,
             price,
             sale_price,
-            slug,
-            quantity_in_stock,
-            image:product_images(image_url)
+            main_image_url,
+            quantity_in_stock
           )
         `)
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      // Format wishlist items
-      return data.map(item => ({
-        id: item.id,
-        product_id: item.product_id,
-        created_at: item.created_at,
-        product: {
-          name: item.product.name,
-          price: item.product.price,
-          sale_price: item.product.sale_price,
-          slug: item.product.slug,
-          image_url: item.product.image?.[0]?.image_url || null,
-          is_in_stock: item.product.quantity_in_stock > 0
-        }
-      }));
+      return data as WishlistItem[];
     }
   });
 };
 
-// Add item to wishlist
-export const useAddToWishlist = () => {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: async ({ productId }: { productId: string }) => {
+// Check if a product is in the wishlist
+export const useIsInWishlist = (productId: string | undefined) => {
+  return useQuery({
+    queryKey: ['wishlist', 'check', productId],
+    queryFn: async () => {
+      if (!productId) return false;
+      
       const { data: { user } } = await supabase.auth.getUser();
       
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
+      if (!user) return false;
 
-      // Check if product already in wishlist
-      const { data: existingItem, error: checkError } = await supabase
-        .from('wishlist_items')
+      const { data, error } = await supabase
+        .from('wishlist')
         .select('id')
         .eq('user_id', user.id)
         .eq('product_id', productId)
-        .single();
-
-      if (!checkError && existingItem) {
-        throw new Error('Product already in wishlist');
-      }
-
-      // Get product data
-      const { data: product, error: productError } = await supabase
-        .from('products')
-        .select('name')
-        .eq('id', productId)
-        .single();
-
-      if (productError) throw productError;
-
-      // Add to wishlist
-      const { error } = await supabase
-        .from('wishlist_items')
-        .insert({
-          user_id: user.id,
-          product_id: productId
-        });
+        .maybeSingle();
 
       if (error) throw error;
 
-      return { productName: product.name };
+      return !!data;
     },
-    onSuccess: (data) => {
-      toast.success(`Added to wishlist: ${data.productName}`);
-      queryClient.invalidateQueries({ queryKey: ['wishlist'] });
-    },
-    onError: (error: any) => {
-      if (error.message === 'Product already in wishlist') {
-        toast.info(error.message);
-      } else {
-        toast.error(`Error adding to wishlist: ${error.message}`);
-      }
-    }
+    enabled: !!productId
   });
 };
 
-// Remove item from wishlist
-export const useRemoveFromWishlist = () => {
+// Add product to wishlist
+export const useAddToWishlist = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: async ({ 
-      itemId,
-      productName
-    }: { 
-      itemId: string;
-      productName?: string;
-    }) => {
+    mutationFn: async (productId: string) => {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
         throw new Error('User not authenticated');
       }
 
-      // Get product name if not provided
-      if (!productName) {
-        const { data, error } = await supabase
-          .from('wishlist_items')
-          .select(`
-            product:products(name)
-          `)
-          .eq('id', itemId)
-          .eq('user_id', user.id)
-          .single();
+      // Check if already in wishlist
+      const { data: existing } = await supabase
+        .from('wishlist')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('product_id', productId)
+        .maybeSingle();
 
-        if (!error && data) {
-          productName = data.product?.name;
-        }
+      if (existing) {
+        return { id: existing.id };
       }
 
-      // Remove from wishlist
+      // Add to wishlist
+      const { data, error } = await supabase
+        .from('wishlist')
+        .insert({
+          user_id: user.id,
+          product_id: productId
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Log activity
+      await supabase
+        .from('activity_logs')
+        .insert({
+          action_type: 'add_to_wishlist',
+          user_id: user.id,
+          details: { product_id: productId }
+        });
+
+      return data;
+    },
+    onSuccess: () => {
+      toast.success('Added to wishlist');
+      queryClient.invalidateQueries({ queryKey: ['wishlist'] });
+    },
+    onError: (error) => {
+      toast.error(`Error adding to wishlist: ${error.message}`);
+    }
+  });
+};
+
+// Remove product from wishlist
+export const useRemoveFromWishlist = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (itemId: string) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
       const { error } = await supabase
-        .from('wishlist_items')
+        .from('wishlist')
         .delete()
         .eq('id', itemId)
         .eq('user_id', user.id);
 
       if (error) throw error;
 
-      return { productName: productName || 'Item' };
+      return { id: itemId };
     },
-    onSuccess: (data) => {
-      toast.success(`Removed from wishlist: ${data.productName}`);
+    onSuccess: () => {
+      toast.success('Removed from wishlist');
       queryClient.invalidateQueries({ queryKey: ['wishlist'] });
     },
     onError: (error) => {
@@ -182,111 +174,247 @@ export const useRemoveFromWishlist = () => {
 // Move item from wishlist to cart
 export const useMoveToCart = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: async ({ 
-      itemId,
-      productId,
-      quantity = 1
-    }: { 
-      itemId: string;
-      productId: string;
-      quantity?: number;
-    }) => {
+    mutationFn: async ({ itemId, productId }: { itemId: string; productId: string }) => {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
         throw new Error('User not authenticated');
       }
 
-      // Get product data
+      // Check product availability
       const { data: product, error: productError } = await supabase
         .from('products')
-        .select('name, quantity_in_stock')
+        .select('quantity_in_stock')
         .eq('id', productId)
         .single();
 
       if (productError) throw productError;
 
-      // Check inventory
-      if (product.quantity_in_stock < quantity) {
-        throw new Error(`Only ${product.quantity_in_stock} items available in stock`);
+      if (!product || product.quantity_in_stock < 1) {
+        throw new Error('Product is out of stock');
       }
 
-      // Check if product already in cart
-      const { data: existingCartItem, error: checkCartError } = await supabase
+      // Check if already in cart
+      const { data: existingCartItem } = await supabase
         .from('cart_items')
         .select('id, quantity')
         .eq('user_id', user.id)
         .eq('product_id', productId)
-        .single();
+        .maybeSingle();
 
-      // Start transaction
-      const { data: { transaction_id } } = await supabase.rpc('begin_transaction');
+      // Start a transaction
+      const { data: transactionResult } = await supabase.rpc('begin_transaction');
+      let transactionId = null;
       
+      if (transactionResult && typeof transactionResult === 'object') {
+        transactionId = (transactionResult as any).transaction_id || null;
+      }
+
       try {
-        if (!checkCartError && existingCartItem) {
-          // Update quantity if already in cart
-          const newQuantity = existingCartItem.quantity + quantity;
-          
-          // Check again for inventory with new total
-          if (product.quantity_in_stock < newQuantity) {
-            throw new Error(`Only ${product.quantity_in_stock} items available in stock`);
-          }
-          
+        // Add to cart or update quantity
+        if (existingCartItem) {
+          // Update quantity
           const { error: updateError } = await supabase
             .from('cart_items')
-            .update({ quantity: newQuantity })
+            .update({ 
+              quantity: existingCartItem.quantity + 1 
+            })
             .eq('id', existingCartItem.id);
 
           if (updateError) throw updateError;
         } else {
-          // Add new item to cart
+          // Add new cart item
           const { error: insertError } = await supabase
             .from('cart_items')
             .insert({
               user_id: user.id,
               product_id: productId,
-              quantity
+              quantity: 1
             });
 
           if (insertError) throw insertError;
         }
 
         // Remove from wishlist
-        const { error: removeError } = await supabase
-          .from('wishlist_items')
+        const { error: deleteError } = await supabase
+          .from('wishlist')
           .delete()
           .eq('id', itemId)
           .eq('user_id', user.id);
 
-        if (removeError) throw removeError;
+        if (deleteError) throw deleteError;
 
         // Commit transaction
-        await supabase.rpc('commit_transaction', { transaction_id });
+        if (transactionId) {
+          await supabase.rpc('commit_transaction', { transaction_id: transactionId });
+        }
 
-        return { productName: product.name };
+        return { success: true };
       } catch (error) {
         // Rollback transaction
-        await supabase.rpc('rollback_transaction', { transaction_id });
+        if (transactionId) {
+          await supabase.rpc('rollback_transaction', { transaction_id: transactionId });
+        }
         throw error;
       }
     },
-    onSuccess: (data) => {
-      toast.success(`Moved to cart: ${data.productName}`);
+    onSuccess: () => {
+      toast.success('Item moved to cart');
       queryClient.invalidateQueries({ queryKey: ['wishlist'] });
       queryClient.invalidateQueries({ queryKey: ['cart'] });
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast.error(`Error moving to cart: ${error.message}`);
     }
   });
 };
 
-// Clear entire wishlist
+// Move all wishlist items to cart
+export const useMoveAllToCart = () => {
+  const queryClient = useQueryClient();
+  const { data: wishlistItems } = useWishlist();
+
+  return useMutation({
+    mutationFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      if (!wishlistItems || wishlistItems.length === 0) {
+        throw new Error('Your wishlist is empty');
+      }
+
+      // Start a transaction
+      const { data: transactionResult } = await supabase.rpc('begin_transaction');
+      let transactionId = null;
+      
+      if (transactionResult && typeof transactionResult === 'object') {
+        transactionId = (transactionResult as any).transaction_id || null;
+      }
+      
+      try {
+        // Get current cart items
+        const { data: cartItems, error: cartError } = await supabase
+          .from('cart_items')
+          .select('id, product_id, quantity')
+          .eq('user_id', user.id);
+
+        if (cartError) throw cartError;
+
+        // Create a map of product_id -> cart_item for easy lookup
+        const cartMap = new Map();
+        cartItems?.forEach(item => {
+          cartMap.set(item.product_id, item);
+        });
+
+        // Process each wishlist item
+        const itemsToAdd = [];
+        const itemsToUpdate = [];
+        const successfulItems = [];
+        const failedItems = [];
+
+        for (const item of wishlistItems) {
+          // Skip out of stock items
+          if (item.product.quantity_in_stock < 1) {
+            failedItems.push({
+              id: item.id,
+              reason: 'Out of stock'
+            });
+            continue;
+          }
+
+          // Check if already in cart
+          const existingCartItem = cartMap.get(item.product_id);
+          
+          if (existingCartItem) {
+            // Update quantity
+            itemsToUpdate.push({
+              id: existingCartItem.id,
+              quantity: existingCartItem.quantity + 1
+            });
+          } else {
+            // Add new cart item
+            itemsToAdd.push({
+              user_id: user.id,
+              product_id: item.product_id,
+              quantity: 1
+            });
+          }
+          
+          successfulItems.push(item.id);
+        }
+
+        // Add new cart items
+        if (itemsToAdd.length > 0) {
+          const { error: insertError } = await supabase
+            .from('cart_items')
+            .insert(itemsToAdd);
+
+          if (insertError) throw insertError;
+        }
+
+        // Update existing cart items
+        for (const item of itemsToUpdate) {
+          const { error: updateError } = await supabase
+            .from('cart_items')
+            .update({ quantity: item.quantity })
+            .eq('id', item.id);
+
+          if (updateError) throw updateError;
+        }
+
+        // Remove successful items from wishlist
+        if (successfulItems.length > 0) {
+          const { error: deleteError } = await supabase
+            .from('wishlist')
+            .delete()
+            .in('id', successfulItems)
+            .eq('user_id', user.id);
+
+          if (deleteError) throw deleteError;
+        }
+
+        // Commit transaction
+        if (transactionId) {
+          await supabase.rpc('commit_transaction', { transaction_id: transactionId });
+        }
+
+        return { 
+          success: true,
+          added: successfulItems.length,
+          failed: failedItems.length
+        };
+      } catch (error) {
+        // Rollback transaction
+        if (transactionId) {
+          await supabase.rpc('rollback_transaction', { transaction_id: transactionId });
+        }
+        throw error;
+      }
+    },
+    onSuccess: (data) => {
+      if (data.failed > 0) {
+        toast.warning(`Added ${data.added} items to cart. ${data.failed} items couldn't be added.`);
+      } else {
+        toast.success('All items moved to cart');
+      }
+      queryClient.invalidateQueries({ queryKey: ['wishlist'] });
+      queryClient.invalidateQueries({ queryKey: ['cart'] });
+    },
+    onError: (error) => {
+      toast.error(`Error moving items to cart: ${error.message}`);
+    }
+  });
+};
+
+// Clear wishlist
 export const useClearWishlist = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -296,11 +424,13 @@ export const useClearWishlist = () => {
       }
 
       const { error } = await supabase
-        .from('wishlist_items')
+        .from('wishlist')
         .delete()
         .eq('user_id', user.id);
 
       if (error) throw error;
+
+      return { success: true };
     },
     onSuccess: () => {
       toast.success('Wishlist cleared');

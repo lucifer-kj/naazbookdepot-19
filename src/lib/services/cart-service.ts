@@ -1,144 +1,75 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { useEffect } from "react";
 
 export interface CartItem {
   id: string;
   product_id: string;
   quantity: number;
   product: {
+    id: string;
     name: string;
+    slug: string;
     price: number;
     sale_price: number | null;
-    image_url?: string;
-    slug: string;
+    quantity_in_stock: number;
+    main_image_url: string | null;
   };
 }
 
 export interface CartSummary {
-  items: CartItem[];
-  total_items: number;
   subtotal: number;
-  total: number;
-  shipping_cost: number;
-  tax_amount: number;
-  discount_amount: number;
-  coupon_code: string | null;
+  itemCount: number;
+  items: CartItem[];
 }
 
-// Local storage key
-const CART_STORAGE_KEY = 'naaz_cart';
-
-// Get cart from Supabase or localStorage
+// Get cart items
 export const useCart = () => {
-  const queryClient = useQueryClient();
-
-  // Sync cart on authentication changes
-  useEffect(() => {
-    const syncCart = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      // Only sync for authenticated users
-      if (user) {
-        const localCart = getLocalCart();
-        
-        // If local cart exists, merge with server cart
-        if (localCart && localCart.items.length > 0) {
-          await mergeLocalCartWithServer(localCart.items);
-          clearLocalCart();
-          
-          // Invalidate queries to refresh cart data
-          queryClient.invalidateQueries({ queryKey: ['cart'] });
-        }
-      }
-    };
-
-    syncCart();
-    
-    // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event) => {
-      if (event === 'SIGNED_IN') {
-        await syncCart();
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [queryClient]);
-
   return useQuery({
     queryKey: ['cart'],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       
-      // For authenticated users, get cart from Supabase
-      if (user) {
-        const { data, error } = await supabase
-          .from('cart_items')
-          .select(`
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      const { data, error } = await supabase
+        .from('cart_items')
+        .select(`
+          id,
+          product_id,
+          quantity,
+          product:products(
             id,
-            product_id,
-            quantity,
-            product:products(
-              name,
-              price,
-              sale_price,
-              slug,
-              image:product_images(image_url)
-            )
-          `)
-          .eq('user_id', user.id);
+            name,
+            slug,
+            price,
+            sale_price,
+            quantity_in_stock,
+            main_image_url
+          )
+        `)
+        .eq('user_id', user.id);
 
-        if (error) throw error;
+      if (error) throw error;
 
-        // Format cart items
-        const items = data.map(item => ({
-          id: item.id,
-          product_id: item.product_id,
-          quantity: item.quantity,
-          product: {
-            name: item.product.name,
-            price: item.product.price,
-            sale_price: item.product.sale_price,
-            slug: item.product.slug,
-            image_url: item.product.image?.[0]?.image_url || null
-          }
-        }));
-
-        // Calculate totals
-        const subtotal = calculateSubtotal(items);
-        const total_items = calculateTotalItems(items);
-        const shipping_cost = 0; // Will be calculated based on shipping method
-        const tax_amount = 0; // Will be calculated based on region
-        const discount_amount = 0; // Will be calculated based on coupons
-
-        return {
-          items,
-          total_items,
-          subtotal,
-          shipping_cost,
-          tax_amount,
-          discount_amount,
-          total: subtotal + shipping_cost + tax_amount - discount_amount,
-          coupon_code: null
-        };
-      } 
+      // Calculate subtotal
+      let subtotal = 0;
+      let itemCount = 0;
       
-      // For guest users, get cart from localStorage
-      const localCart = getLocalCart();
-      return localCart || {
-        items: [],
-        total_items: 0,
-        subtotal: 0,
-        shipping_cost: 0,
-        tax_amount: 0,
-        discount_amount: 0,
-        total: 0,
-        coupon_code: null
-      };
+      const items = data.map((item: CartItem) => {
+        const price = item.product.sale_price || item.product.price;
+        subtotal += price * item.quantity;
+        itemCount += item.quantity;
+        return item;
+      });
+
+      return {
+        items,
+        subtotal,
+        itemCount
+      } as CartSummary;
     }
   });
 };
@@ -146,147 +77,92 @@ export const useCart = () => {
 // Add item to cart
 export const useAddToCart = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async ({ 
       productId, 
-      quantity = 1
+      quantity = 1 
     }: { 
       productId: string; 
-      quantity?: number 
+      quantity?: number;
     }) => {
       const { data: { user } } = await supabase.auth.getUser();
       
-      // For authenticated users, add to Supabase
-      if (user) {
-        // Check if product exists in cart
-        const { data: existingItem, error: checkError } = await supabase
-          .from('cart_items')
-          .select('id, quantity')
-          .eq('user_id', user.id)
-          .eq('product_id', productId)
-          .maybeSingle();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
 
-        if (checkError) throw checkError;
-
-        // Get product data to display in toast
-        const { data: product, error: productError } = await supabase
-          .from('products')
-          .select('name, quantity_in_stock')
-          .eq('id', productId)
-          .single();
-
-        if (productError) throw productError;
-
-        // Check inventory
-        if (product.quantity_in_stock < quantity) {
-          throw new Error(`Only ${product.quantity_in_stock} items available in stock`);
-        }
-
-        if (existingItem) {
-          // Update quantity if already in cart
-          const newQuantity = existingItem.quantity + quantity;
-          
-          // Check again for inventory with new total
-          if (product.quantity_in_stock < newQuantity) {
-            throw new Error(`Only ${product.quantity_in_stock} items available in stock`);
-          }
-          
-          const { error: updateError } = await supabase
-            .from('cart_items')
-            .update({ quantity: newQuantity })
-            .eq('id', existingItem.id);
-
-          if (updateError) throw updateError;
-        } else {
-          // Add new item to cart
-          const { error: insertError } = await supabase
-            .from('cart_items')
-            .insert({
-              user_id: user.id,
-              product_id: productId,
-              quantity
-            });
-
-          if (insertError) throw insertError;
-        }
-
-        return { name: product.name, quantity };
-      } 
-      
-      // For guest users, add to localStorage
+      // Check if product exists and has stock
       const { data: product, error: productError } = await supabase
         .from('products')
-        .select(`
-          name, 
-          price, 
-          sale_price, 
-          quantity_in_stock, 
-          slug,
-          image:product_images(image_url)
-        `)
+        .select('quantity_in_stock, name')
         .eq('id', productId)
         .single();
 
       if (productError) throw productError;
 
-      // Check inventory
       if (product.quantity_in_stock < quantity) {
-        throw new Error(`Only ${product.quantity_in_stock} items available in stock`);
+        throw new Error(`Not enough stock for ${product.name}. Only ${product.quantity_in_stock} available.`);
       }
 
-      const localCart = getLocalCart() || {
-        items: [],
-        total_items: 0,
-        subtotal: 0,
-        shipping_cost: 0,
-        tax_amount: 0,
-        discount_amount: 0,
-        total: 0,
-        coupon_code: null
-      };
+      // Check if item already in cart
+      const { data: existingItem, error: existingItemError } = await supabase
+        .from('cart_items')
+        .select('id, quantity')
+        .eq('user_id', user.id)
+        .eq('product_id', productId)
+        .maybeSingle();
 
-      // Check if product already in cart
-      const existingItemIndex = localCart.items.findIndex(item => item.product_id === productId);
-      
-      if (existingItemIndex !== -1) {
+      if (existingItemError) throw existingItemError;
+
+      if (existingItem) {
         // Update quantity
-        const newQuantity = localCart.items[existingItemIndex].quantity + quantity;
+        const newQuantity = existingItem.quantity + quantity;
         
-        // Check again for inventory with new total
-        if (product.quantity_in_stock < newQuantity) {
-          throw new Error(`Only ${product.quantity_in_stock} items available in stock`);
+        // Check if new quantity exceeds stock
+        if (newQuantity > product.quantity_in_stock) {
+          throw new Error(`Cannot add ${quantity} more. Only ${product.quantity_in_stock - existingItem.quantity} more available.`);
         }
         
-        localCart.items[existingItemIndex].quantity = newQuantity;
+        const { error: updateError } = await supabase
+          .from('cart_items')
+          .update({ quantity: newQuantity })
+          .eq('id', existingItem.id);
+
+        if (updateError) throw updateError;
+        
+        return { 
+          added: true, 
+          updated: true, 
+          productId, 
+          quantity: newQuantity 
+        };
       } else {
         // Add new item
-        localCart.items.push({
-          id: `local-${Date.now()}`,
-          product_id: productId,
-          quantity,
-          product: {
-            name: product.name,
-            price: product.price,
-            sale_price: product.sale_price,
-            slug: product.slug,
-            image_url: product.image?.[0]?.image_url || null
-          }
-        });
+        const { error: insertError } = await supabase
+          .from('cart_items')
+          .insert({
+            user_id: user.id,
+            product_id: productId,
+            quantity
+          });
+
+        if (insertError) throw insertError;
+        
+        return { 
+          added: true, 
+          updated: false, 
+          productId, 
+          quantity 
+        };
       }
-
-      // Update totals
-      localCart.total_items = calculateTotalItems(localCart.items);
-      localCart.subtotal = calculateSubtotal(localCart.items);
-      localCart.total = localCart.subtotal + localCart.shipping_cost + localCart.tax_amount - localCart.discount_amount;
-      
-      // Save to localStorage
-      saveLocalCart(localCart);
-
-      return { name: product.name, quantity };
     },
     onSuccess: (data) => {
-      toast.success(`Added ${data.quantity} ${data.quantity > 1 ? 'items' : 'item'} to cart: ${data.name}`);
+      if (data.updated) {
+        toast.success(`Updated quantity in cart (${data.quantity})`);
+      } else {
+        toast.success('Item added to cart');
+      }
       queryClient.invalidateQueries({ queryKey: ['cart'] });
     },
     onError: (error) => {
@@ -298,72 +174,77 @@ export const useAddToCart = () => {
 // Update cart item quantity
 export const useUpdateCartItem = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async ({ 
-      itemId, 
-      quantity,
-      productId 
+      cartItemId, 
+      quantity 
     }: { 
-      itemId: string; 
+      cartItemId: string; 
       quantity: number;
-      productId: string;
     }) => {
-      // Validate quantity
-      if (quantity < 1) {
-        throw new Error('Quantity must be at least 1');
-      }
-
-      // Check inventory
-      const { data: product, error: productError } = await supabase
-        .from('products')
-        .select('quantity_in_stock')
-        .eq('id', productId)
-        .single();
-
-      if (productError) throw productError;
-
-      if (product.quantity_in_stock < quantity) {
-        throw new Error(`Only ${product.quantity_in_stock} items available in stock`);
-      }
-
       const { data: { user } } = await supabase.auth.getUser();
       
-      // For authenticated users, update in Supabase
-      if (user) {
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      if (quantity <= 0) {
+        // Remove item if quantity is 0 or negative
         const { error } = await supabase
           .from('cart_items')
-          .update({ quantity })
-          .eq('id', itemId)
+          .delete()
+          .eq('id', cartItemId)
           .eq('user_id', user.id);
 
         if (error) throw error;
+        
+        return { removed: true, cartItemId };
       } else {
-        // For guest users, update in localStorage
-        const localCart = getLocalCart();
-        if (!localCart) {
-          throw new Error('Cart not found');
-        }
-        
-        const itemIndex = localCart.items.findIndex(item => item.id === itemId);
-        if (itemIndex === -1) {
-          throw new Error('Item not found in cart');
-        }
-        
-        localCart.items[itemIndex].quantity = quantity;
-        
-        // Update totals
-        localCart.total_items = calculateTotalItems(localCart.items);
-        localCart.subtotal = calculateSubtotal(localCart.items);
-        localCart.total = localCart.subtotal + localCart.shipping_cost + localCart.tax_amount - localCart.discount_amount;
-        
-        // Save to localStorage
-        saveLocalCart(localCart);
-      }
+        // Get product info to check stock
+        const { data: cartItem, error: cartItemError } = await supabase
+          .from('cart_items')
+          .select('product_id')
+          .eq('id', cartItemId)
+          .eq('user_id', user.id)
+          .single();
 
-      return { itemId, quantity };
+        if (cartItemError) throw cartItemError;
+
+        const { data: product, error: productError } = await supabase
+          .from('products')
+          .select('quantity_in_stock, name')
+          .eq('id', cartItem.product_id)
+          .single();
+
+        if (productError) throw productError;
+
+        if (product.quantity_in_stock < quantity) {
+          throw new Error(`Not enough stock for ${product.name}. Only ${product.quantity_in_stock} available.`);
+        }
+
+        // Update quantity
+        const { error: updateError } = await supabase
+          .from('cart_items')
+          .update({ quantity })
+          .eq('id', cartItemId)
+          .eq('user_id', user.id);
+
+        if (updateError) throw updateError;
+        
+        return { 
+          updated: true, 
+          cartItemId, 
+          quantity 
+        };
+      }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      if (data.removed) {
+        toast.success('Item removed from cart');
+      } else {
+        toast.success('Cart updated');
+      }
       queryClient.invalidateQueries({ queryKey: ['cart'] });
     },
     onError: (error) => {
@@ -375,77 +256,31 @@ export const useUpdateCartItem = () => {
 // Remove item from cart
 export const useRemoveFromCart = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: async ({ 
-      itemId,
-      productName
-    }: { 
-      itemId: string;
-      productName?: string;
-    }) => {
+    mutationFn: async ({ cartItemId }: { cartItemId: string }) => {
       const { data: { user } } = await supabase.auth.getUser();
       
-      // For authenticated users, remove from Supabase
-      if (user) {
-        // Get product name if not provided
-        if (!productName) {
-          const { data, error } = await supabase
-            .from('cart_items')
-            .select(`
-              product:products(name)
-            `)
-            .eq('id', itemId)
-            .eq('user_id', user.id)
-            .single();
-
-          if (!error && data) {
-            productName = data.product?.name;
-          }
-        }
-
-        const { error } = await supabase
-          .from('cart_items')
-          .delete()
-          .eq('id', itemId)
-          .eq('user_id', user.id);
-
-        if (error) throw error;
-      } else {
-        // For guest users, remove from localStorage
-        const localCart = getLocalCart();
-        if (!localCart) {
-          throw new Error('Cart not found');
-        }
-        
-        const itemIndex = localCart.items.findIndex(item => item.id === itemId);
-        if (itemIndex === -1) {
-          throw new Error('Item not found in cart');
-        }
-        
-        if (!productName) {
-          productName = localCart.items[itemIndex].product.name;
-        }
-        
-        localCart.items.splice(itemIndex, 1);
-        
-        // Update totals
-        localCart.total_items = calculateTotalItems(localCart.items);
-        localCart.subtotal = calculateSubtotal(localCart.items);
-        localCart.total = localCart.subtotal + localCart.shipping_cost + localCart.tax_amount - localCart.discount_amount;
-        
-        // Save to localStorage
-        saveLocalCart(localCart);
+      if (!user) {
+        throw new Error('User not authenticated');
       }
 
-      return { productName };
+      const { error } = await supabase
+        .from('cart_items')
+        .delete()
+        .eq('id', cartItemId)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      
+      return { removed: true, cartItemId };
     },
-    onSuccess: (data) => {
-      toast.success(`Removed from cart: ${data.productName || 'Item'}`);
+    onSuccess: () => {
+      toast.success('Item removed from cart');
       queryClient.invalidateQueries({ queryKey: ['cart'] });
     },
     onError: (error) => {
-      toast.error(`Error removing from cart: ${error.message}`);
+      toast.error(`Error removing item: ${error.message}`);
     }
   });
 };
@@ -453,23 +288,23 @@ export const useRemoveFromCart = () => {
 // Clear cart
 export const useClearCart = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       
-      // For authenticated users, clear cart in Supabase
-      if (user) {
-        const { error } = await supabase
-          .from('cart_items')
-          .delete()
-          .eq('user_id', user.id);
-
-        if (error) throw error;
-      } else {
-        // For guest users, clear localStorage
-        clearLocalCart();
+      if (!user) {
+        throw new Error('User not authenticated');
       }
+
+      const { error } = await supabase
+        .from('cart_items')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      
+      return { cleared: true };
     },
     onSuccess: () => {
       toast.success('Cart cleared');
@@ -481,198 +316,117 @@ export const useClearCart = () => {
   });
 };
 
-// Apply coupon code
-export const useApplyCoupon = () => {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: async ({ code }: { code: string }) => {
-      // Validate coupon code
-      const { data: coupon, error } = await supabase
-        .from('coupons')
-        .select('*')
-        .eq('code', code)
-        .eq('is_active', true)
-        .single();
-
-      if (error) {
-        throw new Error('Invalid coupon code');
-      }
-
-      // Check if coupon is expired
-      const now = new Date();
-      if (new Date(coupon.end_date) < now) {
-        throw new Error('This coupon has expired');
-      }
-
-      // Check if coupon is not yet valid
-      if (new Date(coupon.start_date) > now) {
-        throw new Error('This coupon is not valid yet');
-      }
-
-      // Check usage limit
-      if (coupon.usage_limit && coupon.used_count >= coupon.usage_limit) {
-        throw new Error('This coupon has reached its usage limit');
-      }
-
-      // Get current cart
-      const cart = await queryClient.fetchQuery({ queryKey: ['cart'] });
-
-      // Check minimum purchase
-      if (coupon.min_purchase > cart.subtotal) {
-        throw new Error(`This coupon requires a minimum purchase of ${coupon.min_purchase}`);
-      }
-
-      // Calculate discount
-      let discountAmount = 0;
-      
-      if (coupon.discount_type === 'percentage') {
-        discountAmount = cart.subtotal * (coupon.discount_value / 100);
-      } else {
-        // Fixed amount
-        discountAmount = Math.min(coupon.discount_value, cart.subtotal);
-      }
-
-      // For tracking we'd normally update coupon usage here, but we'll do that only on checkout
-
-      return {
-        coupon_code: code,
-        discount_amount: discountAmount,
-        discount_type: coupon.discount_type,
-        discount_value: coupon.discount_value
-      };
-    },
-    onSuccess: (data) => {
-      const discountText = data.discount_type === 'percentage' 
-        ? `${data.discount_value}%` 
-        : `₹${data.discount_amount}`;
-        
-      toast.success(`Coupon applied: ${discountText} discount`);
-      
-      // Update cart with coupon information
-      queryClient.setQueryData(['cart'], (oldData: any) => {
-        return {
-          ...oldData,
-          discount_amount: data.discount_amount,
-          coupon_code: data.coupon_code,
-          total: oldData.subtotal + oldData.shipping_cost + oldData.tax_amount - data.discount_amount
-        };
-      });
-    },
-    onError: (error) => {
-      toast.error(`Error applying coupon: ${error.message}`);
-    }
-  });
-};
-
-// Remove coupon code
-export const useRemoveCoupon = () => {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: async () => {
-      // Simply remove the coupon from the cart state
-      return true;
-    },
-    onSuccess: () => {
-      toast.success('Coupon removed');
-      
-      // Update cart removing coupon information
-      queryClient.setQueryData(['cart'], (oldData: any) => {
-        return {
-          ...oldData,
-          discount_amount: 0,
-          coupon_code: null,
-          total: oldData.subtotal + oldData.shipping_cost + oldData.tax_amount
-        };
-      });
-    }
-  });
-};
-
-// Helper functions
-const calculateSubtotal = (items: CartItem[]) => {
-  return items.reduce((total, item) => {
-    const price = item.product.sale_price || item.product.price;
-    return total + (price * item.quantity);
-  }, 0);
-};
-
-const calculateTotalItems = (items: CartItem[]) => {
-  return items.reduce((total, item) => total + item.quantity, 0);
-};
-
-const getLocalCart = (): CartSummary | null => {
-  const storedCart = localStorage.getItem(CART_STORAGE_KEY);
-  return storedCart ? JSON.parse(storedCart) : null;
-};
-
-const saveLocalCart = (cart: CartSummary) => {
-  localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
-};
-
-const clearLocalCart = () => {
-  localStorage.removeItem(CART_STORAGE_KEY);
-};
-
-const mergeLocalCartWithServer = async (localItems: CartItem[]) => {
+// Get cart summary (for use outside of React components)
+export const getCartSummary = async (): Promise<CartSummary> => {
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return;
-
-  // Get current server cart
-  const { data: serverItems, error: serverError } = await supabase
-    .from('cart_items')
-    .select('product_id, quantity')
-    .eq('user_id', user.id);
-
-  if (serverError) throw serverError;
-
-  // Create map of existing server items
-  const serverItemsMap = new Map();
-  serverItems.forEach(item => {
-    serverItemsMap.set(item.product_id, item.quantity);
-  });
-
-  // Prepare items to insert/update
-  const itemsToUpsert = [];
-
-  for (const item of localItems) {
-    const serverQuantity = serverItemsMap.get(item.product_id) || 0;
-    
-    // Check inventory
-    const { data: product, error: productError } = await supabase
-      .from('products')
-      .select('quantity_in_stock')
-      .eq('id', item.product_id)
-      .single();
-
-    if (productError) continue;
-
-    const newQuantity = Math.min(
-      serverQuantity + item.quantity,
-      product.quantity_in_stock
-    );
-
-    itemsToUpsert.push({
-      user_id: user.id,
-      product_id: item.product_id,
-      quantity: newQuantity
-    });
+  
+  if (!user) {
+    throw new Error('User not authenticated');
   }
 
-  // Update server cart
-  if (itemsToUpsert.length > 0) {
-    // Delete existing items that will be replaced
-    const productIds = itemsToUpsert.map(item => item.product_id);
-    await supabase
-      .from('cart_items')
-      .delete()
-      .eq('user_id', user.id)
-      .in('product_id', productIds);
+  const { data, error } = await supabase
+    .from('cart_items')
+    .select(`
+      id,
+      product_id,
+      quantity,
+      product:products(
+        id,
+        name,
+        slug,
+        price,
+        sale_price,
+        quantity_in_stock,
+        main_image_url
+      )
+    `)
+    .eq('user_id', user.id);
+
+  if (error) throw error;
+
+  // Calculate subtotal
+  let subtotal = 0;
+  let itemCount = 0;
+  
+  const items = data.map((item: CartItem) => {
+    const price = item.product.sale_price || item.product.price;
+    subtotal += price * item.quantity;
+    itemCount += item.quantity;
+    return item;
+  });
+
+  return {
+    items,
+    subtotal,
+    itemCount
+  };
+};
+
+// Apply coupon/discount code
+export const applyDiscount = async (couponCode: string) => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
     
-    // Insert new items
-    await supabase
-      .from('cart_items')
-      .insert(itemsToUpsert);
+    // Get cart subtotal
+    const cartSummary = await getCartSummary();
+    
+    // Ensure cartSummary is properly typed
+    const typedCartSummary = cartSummary as CartSummary;
+    
+    // Now we can safely access subtotal
+    const subtotal = typedCartSummary.subtotal;
+    
+    // Validate coupon
+    const { data: coupon, error: couponError } = await supabase
+      .from('coupons')
+      .select('*')
+      .eq('code', couponCode)
+      .eq('is_active', true)
+      .single();
+      
+    if (couponError) {
+      throw new Error('Invalid coupon code');
+    }
+    
+    // Check coupon validity
+    const now = new Date();
+    if (new Date(coupon.start_date) > now || new Date(coupon.end_date) < now) {
+      throw new Error('Coupon is expired or not yet active');
+    }
+    
+    if (coupon.usage_limit && coupon.used_count >= coupon.usage_limit) {
+      throw new Error('Coupon usage limit reached');
+    }
+    
+    if (coupon.min_purchase > subtotal) {
+      throw new Error(`Minimum purchase amount of ${coupon.min_purchase} required`);
+    }
+    
+    // Calculate discount
+    let discountAmount = 0;
+    if (coupon.discount_type === 'percentage') {
+      discountAmount = subtotal * (coupon.discount_value / 100);
+    } else {
+      // Fixed amount
+      discountAmount = Math.min(coupon.discount_value, subtotal);
+    }
+    
+    return {
+      success: true,
+      coupon: {
+        code: coupon.code,
+        discountType: coupon.discount_type,
+        discountValue: coupon.discount_value,
+      },
+      discountAmount,
+      subtotal
+    };
+  } catch (error: any) {
+    console.error('Error applying discount:', error);
+    return {
+      success: false,
+      error: error.message
+    };
   }
 };

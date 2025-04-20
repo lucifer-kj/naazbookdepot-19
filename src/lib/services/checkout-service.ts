@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { OrderStatus } from "./admin-order-service";
 
 export interface CheckoutInput {
   shippingAddress: {
@@ -34,7 +35,7 @@ export const useCheckout = () => {
       const { data: { user } } = await supabase.auth.getUser();
       
       // Store transaction ID for rollback if needed
-      let transactionId = null;
+      let transactionId: string | null = null;
       
       try {
         if (!user) {
@@ -130,8 +131,10 @@ export const useCheckout = () => {
         const totalAmount = subtotal + shippingCost + taxAmount - discountAmount;
 
         // Start a transaction
-        const { data: transactionData } = await supabase.rpc('begin_transaction');
-        transactionId = transactionData.transaction_id;
+        const { data: transactionResult } = await supabase.rpc('begin_transaction');
+        if (transactionResult && typeof transactionResult === 'object') {
+          transactionId = (transactionResult as any).transaction_id || null;
+        }
 
         // Save shipping address
         const shippingAddressData = {
@@ -151,24 +154,24 @@ export const useCheckout = () => {
         if (input.sameAsBilling) {
           billingAddress = shippingAddress;
         } else {
-          const billingAddressData = {
+          const addressData = {
             ...input.billingAddress,
             user_id: user.id
           };
-          const { data: billingAddressData, error: billingAddressError } = await supabase
+          const { data: billingData, error: billingAddressError } = await supabase
             .from('addresses')
-            .insert(billingAddressData)
+            .insert(addressData)
             .select()
             .single();
 
           if (billingAddressError) throw billingAddressError;
-          billingAddress = billingAddressData;
+          billingAddress = billingData;
         }
 
         // Create order
         const orderData = {
           user_id: user.id,
-          status: 'pending',
+          status: 'pending' as OrderStatus,
           total_amount: totalAmount,
           shipping_address_id: shippingAddress.id,
           billing_address_id: billingAddress.id,
@@ -200,15 +203,19 @@ export const useCheckout = () => {
 
         if (orderItemsError) throw orderItemsError;
 
-        // Customer note is added via trigger in order_timeline
-
         // Add customer note if provided
         if (input.notes) {
-          const { error: noteError } = await supabase
-            .rpc('add_customer_order_note', {
-              order_id_param: order.id,
-              note_text: input.notes,
-              is_visible: true
+          const { error: noteError } = await supabase.functions
+            .invoke('order-helpers', {
+              body: {
+                action: 'addOrderNote',
+                params: {
+                  orderId: order.id,
+                  userId: user.id,
+                  note: input.notes,
+                  isCustomerVisible: true
+                }
+              }
             });
 
           if (noteError) throw noteError;
@@ -247,7 +254,9 @@ export const useCheckout = () => {
         if (clearCartError) throw clearCartError;
 
         // Commit the transaction
-        await supabase.rpc('commit_transaction', { transaction_id: transactionId });
+        if (transactionId) {
+          await supabase.rpc('commit_transaction', { transaction_id: transactionId });
+        }
 
         // Log activity
         await supabase

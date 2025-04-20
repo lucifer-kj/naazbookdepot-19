@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -245,67 +244,27 @@ export const useOrderDetails = (orderId: string | undefined) => {
         }
       }
 
-      // Fetch order timeline using custom query
-      const { data: timeline, error: timelineError } = await supabase
-        .rpc('get_order_timeline', { order_id_param: orderId })
-        .select(`
-          id,
-          order_id,
-          status,
-          created_at,
-          note,
-          user_id,
-          user_first_name,
-          user_last_name
-        `)
-        .order('created_at', { ascending: true });
+      // Fetch order timeline using edge function
+      const { data: timeline, error: timelineError } = await supabase.functions
+        .invoke('order-helpers', {
+          body: {
+            action: 'getOrderTimeline',
+            params: { orderId }
+          }
+        });
 
       if (timelineError) throw timelineError;
 
-      // Format timeline data
-      const formattedTimeline = timeline ? timeline.map((entry: any) => ({
-        id: entry.id,
-        order_id: entry.order_id,
-        status: entry.status,
-        created_at: entry.created_at,
-        note: entry.note,
-        user_id: entry.user_id,
-        user: entry.user_first_name || entry.user_last_name ? {
-          first_name: entry.user_first_name || '',
-          last_name: entry.user_last_name || ''
-        } : undefined
-      })) : [];
-
-      // Fetch order notes using custom query
-      const { data: notes, error: notesError } = await supabase
-        .rpc('get_order_notes', { order_id_param: orderId })
-        .select(`
-          id,
-          order_id,
-          note,
-          created_at,
-          is_customer_visible,
-          user_id,
-          user_first_name,
-          user_last_name
-        `)
-        .order('created_at', { ascending: false });
+      // Fetch order notes using edge function
+      const { data: notes, error: notesError } = await supabase.functions
+        .invoke('order-helpers', {
+          body: {
+            action: 'getOrderNotes',
+            params: { orderId }
+          }
+        });
 
       if (notesError) throw notesError;
-
-      // Format notes data
-      const formattedNotes = notes ? notes.map((note: any) => ({
-        id: note.id,
-        order_id: note.order_id,
-        note: note.note,
-        created_at: note.created_at,
-        is_customer_visible: note.is_customer_visible,
-        user_id: note.user_id,
-        user: {
-          first_name: note.user_first_name || '',
-          last_name: note.user_last_name || ''
-        }
-      })) : [];
 
       // Format customer information
       const customer = {
@@ -320,8 +279,8 @@ export const useOrderDetails = (orderId: string | undefined) => {
         items,
         shippingAddress,
         billingAddress,
-        timeline: formattedTimeline || [],
-        notes: formattedNotes || []
+        timeline: timeline || [],
+        notes: notes || []
       };
     },
     enabled: !!orderId
@@ -342,6 +301,12 @@ export const useUpdateOrderStatus = () => {
       status: OrderStatus; 
       note?: string;
     }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+      
       const { error } = await supabase
         .from('orders')
         .update({ 
@@ -352,12 +317,18 @@ export const useUpdateOrderStatus = () => {
 
       if (error) throw error;
 
-      // Add to order timeline using stored procedure
-      const { error: timelineError } = await supabase
-        .rpc('add_order_timeline_entry', {
-          order_id_param: orderId,
-          status_param: status,
-          note_param: note || null
+      // Add to order timeline using edge function
+      const { error: timelineError } = await supabase.functions
+        .invoke('order-helpers', {
+          body: {
+            action: 'addOrderTimelineEntry',
+            params: {
+              orderId,
+              status,
+              userId: user.id,
+              note: note || null
+            }
+          }
         });
 
       if (timelineError) throw timelineError;
@@ -368,7 +339,7 @@ export const useUpdateOrderStatus = () => {
         .insert({
           action_type: 'update_order_status',
           details: { orderId, status, note },
-          user_id: (await supabase.auth.getUser()).data.user?.id
+          user_id: user.id
         });
 
       return { orderId, status };
@@ -398,18 +369,28 @@ export const useAddOrderNote = () => {
       note: string; 
       isCustomerVisible?: boolean;
     }) => {
-      const { error, data } = await supabase
-        .rpc('add_order_note', {
-          order_id_param: orderId,
-          note_text: note,
-          is_visible: isCustomerVisible
-        })
-        .select()
-        .single();
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+      
+      const { data, error } = await supabase.functions
+        .invoke('order-helpers', {
+          body: {
+            action: 'addOrderNote',
+            params: {
+              orderId,
+              userId: user.id,
+              note,
+              isCustomerVisible
+            }
+          }
+        });
 
       if (error) throw error;
 
-      return data;
+      return data && data[0] ? data[0] : { order_id: orderId };
     },
     onSuccess: (data) => {
       toast.success('Note added successfully');
@@ -427,8 +408,13 @@ export const useDeleteOrderNote = () => {
 
   return useMutation({
     mutationFn: async ({ noteId, orderId }: { noteId: string; orderId: string }) => {
-      const { error } = await supabase
-        .rpc('delete_order_note', { note_id_param: noteId });
+      const { error } = await supabase.functions
+        .invoke('order-helpers', {
+          body: {
+            action: 'deleteOrderNote',
+            params: { noteId }
+          }
+        });
 
       if (error) throw error;
 
@@ -456,6 +442,12 @@ export const useBulkUpdateOrderStatus = () => {
       orderIds: string[]; 
       status: OrderStatus;
     }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+      
       // Update orders
       const { error } = await supabase
         .from('orders')
@@ -467,12 +459,18 @@ export const useBulkUpdateOrderStatus = () => {
 
       if (error) throw error;
 
-      // Add timeline entries using a procedure
-      const { error: timelineError } = await supabase
-        .rpc('bulk_add_timeline_entries', {
-          order_ids: orderIds,
-          status_value: status,
-          note_text: `Bulk updated to ${status}`
+      // Add timeline entries using edge function
+      const { error: timelineError } = await supabase.functions
+        .invoke('order-helpers', {
+          body: {
+            action: 'bulkAddTimelineEntries',
+            params: {
+              orderIds,
+              status,
+              userId: user.id,
+              note: `Bulk updated to ${status}`
+            }
+          }
         });
 
       if (timelineError) throw timelineError;
@@ -483,7 +481,7 @@ export const useBulkUpdateOrderStatus = () => {
         .insert({
           action_type: 'bulk_update_order_status',
           details: { orderIds, status },
-          user_id: (await supabase.auth.getUser()).data.user?.id
+          user_id: user.id
         });
 
       return { orderIds, status };
@@ -507,12 +505,15 @@ export const useGenerateInvoice = (orderId: string | undefined) => {
         throw new Error('Order ID is required');
       }
 
-      // Reuse the order details query function but with a custom implementation
-      const orderDetails = await useOrderDetails(orderId).queryFn();
+      // Reuse the order details query
+      const orderDetailsQuery = useOrderDetails(orderId);
+      const orderDetails = await orderDetailsQuery.refetch();
+      
+      if (orderDetails.error) throw orderDetails.error;
       
       // Format data specifically for invoice
       return {
-        ...orderDetails,
+        ...orderDetails.data,
         invoiceNumber: `INV-${orderId.substring(0, 8).toUpperCase()}`,
         invoiceDate: new Date().toISOString(),
         dueDate: new Date(new Date().setDate(new Date().getDate() + 14)).toISOString()

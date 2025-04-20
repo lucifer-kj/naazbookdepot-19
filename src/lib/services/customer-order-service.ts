@@ -129,21 +129,30 @@ export const useCustomerOrderDetails = (orderId: string | undefined) => {
         }
       }
 
-      // Fetch order timeline using an RPC function
-      const { data: timeline, error: timelineError } = await supabase
-        .rpc('get_customer_order_timeline', { order_id_param: orderId })
-        .select()
-        .order('created_at', { ascending: true });
+      // Fetch order timeline using edge function
+      const { data: timeline, error: timelineError } = await supabase.functions
+        .invoke('order-helpers', {
+          body: {
+            action: 'getOrderTimeline',
+            params: { orderId }
+          }
+        });
 
       if (timelineError) throw timelineError;
 
-      // Fetch order notes (only customer-visible notes) using an RPC function
-      const { data: notes, error: notesError } = await supabase
-        .rpc('get_customer_order_notes', { order_id_param: orderId })
-        .select()
-        .order('created_at', { ascending: false });
+      // Fetch order notes (only customer-visible notes) using edge function
+      const { data: allNotes, error: notesError } = await supabase.functions
+        .invoke('order-helpers', {
+          body: {
+            action: 'getOrderNotes',
+            params: { orderId }
+          }
+        });
 
       if (notesError) throw notesError;
+      
+      // Filter for only customer-visible notes
+      const notes = allNotes ? allNotes.filter(note => note.is_customer_visible) : [];
 
       return {
         ...order,
@@ -190,18 +199,25 @@ export const useCancelOrder = () => {
       const { error } = await supabase
         .from('orders')
         .update({ 
-          status: 'cancelled', 
+          status: 'cancelled' as OrderStatus, 
           updated_at: new Date().toISOString() 
         })
         .eq('id', orderId);
 
       if (error) throw error;
 
-      // Add to order timeline using an RPC function
-      const { error: timelineError } = await supabase
-        .rpc('add_customer_order_timeline', {
-          order_id_param: orderId,
-          note_text: reason ? `Cancelled by customer: ${reason}` : 'Cancelled by customer'
+      // Add to order timeline using edge function
+      const { error: timelineError } = await supabase.functions
+        .invoke('order-helpers', {
+          body: {
+            action: 'addOrderTimelineEntry',
+            params: {
+              orderId,
+              status: 'cancelled',
+              userId: user.id,
+              note: reason ? `Cancelled by customer: ${reason}` : 'Cancelled by customer'
+            }
+          }
         });
 
       if (timelineError) throw timelineError;

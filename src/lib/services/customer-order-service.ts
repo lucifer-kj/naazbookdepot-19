@@ -129,21 +129,18 @@ export const useCustomerOrderDetails = (orderId: string | undefined) => {
         }
       }
 
-      // Fetch order timeline (only customer-visible entries)
+      // Fetch order timeline using an RPC function
       const { data: timeline, error: timelineError } = await supabase
-        .from('order_timeline')
-        .select('*')
-        .eq('order_id', orderId)
+        .rpc('get_customer_order_timeline', { order_id_param: orderId })
+        .select()
         .order('created_at', { ascending: true });
 
       if (timelineError) throw timelineError;
 
-      // Fetch order notes (only customer-visible notes)
+      // Fetch order notes (only customer-visible notes) using an RPC function
       const { data: notes, error: notesError } = await supabase
-        .from('order_notes')
-        .select('*')
-        .eq('order_id', orderId)
-        .eq('is_customer_visible', true)
+        .rpc('get_customer_order_notes', { order_id_param: orderId })
+        .select()
         .order('created_at', { ascending: false });
 
       if (notesError) throw notesError;
@@ -200,14 +197,11 @@ export const useCancelOrder = () => {
 
       if (error) throw error;
 
-      // Add to order timeline
+      // Add to order timeline using an RPC function
       const { error: timelineError } = await supabase
-        .from('order_timeline')
-        .insert({
-          order_id: orderId,
-          status: 'cancelled',
-          note: reason ? `Cancelled by customer: ${reason}` : 'Cancelled by customer',
-          user_id: user.id
+        .rpc('add_customer_order_timeline', {
+          order_id_param: orderId,
+          note_text: reason ? `Cancelled by customer: ${reason}` : 'Cancelled by customer'
         });
 
       if (timelineError) throw timelineError;

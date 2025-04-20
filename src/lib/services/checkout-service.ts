@@ -130,8 +130,8 @@ export const useCheckout = () => {
         const totalAmount = subtotal + shippingCost + taxAmount - discountAmount;
 
         // Start a transaction
-        const { data: { transaction_id } } = await supabase.rpc('begin_transaction');
-        transactionId = transaction_id;
+        const { data: transactionData } = await supabase.rpc('begin_transaction');
+        transactionId = transactionData.transaction_id;
 
         // Save shipping address
         const shippingAddressData = {
@@ -200,27 +200,15 @@ export const useCheckout = () => {
 
         if (orderItemsError) throw orderItemsError;
 
-        // Add order to timeline
-        const { error: timelineError } = await supabase
-          .from('order_timeline')
-          .insert({
-            order_id: order.id,
-            status: 'pending',
-            user_id: user.id,
-            note: 'Order placed'
-          });
-
-        if (timelineError) throw timelineError;
+        // Customer note is added via trigger in order_timeline
 
         // Add customer note if provided
         if (input.notes) {
           const { error: noteError } = await supabase
-            .from('order_notes')
-            .insert({
-              order_id: order.id,
-              user_id: user.id,
-              note: input.notes,
-              is_customer_visible: true
+            .rpc('add_customer_order_note', {
+              order_id_param: order.id,
+              note_text: input.notes,
+              is_visible: true
             });
 
           if (noteError) throw noteError;

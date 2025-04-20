@@ -333,6 +333,76 @@ export type Database = {
           },
         ]
       }
+      order_notes: {
+        Row: {
+          created_at: string
+          id: string
+          is_customer_visible: boolean
+          note: string
+          order_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_customer_visible?: boolean
+          note: string
+          order_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_customer_visible?: boolean
+          note?: string
+          order_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_notes_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_timeline: {
+        Row: {
+          created_at: string
+          id: string
+          note: string | null
+          order_id: string
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          order_id: string
+          status: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          order_id?: string
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_timeline_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
           billing_address_id: string | null
@@ -660,7 +730,26 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      begin_transaction: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      commit_transaction: {
+        Args: { transaction_id: string }
+        Returns: undefined
+      }
+      decrement: {
+        Args: { inc_amount: number }
+        Returns: number
+      }
+      increment: {
+        Args: { inc_amount: number }
+        Returns: number
+      }
+      rollback_transaction: {
+        Args: { transaction_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       blog_status: "draft" | "published"

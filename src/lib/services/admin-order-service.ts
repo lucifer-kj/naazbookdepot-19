@@ -245,35 +245,67 @@ export const useOrderDetails = (orderId: string | undefined) => {
         }
       }
 
-      // Fetch order timeline
+      // Fetch order timeline using custom query
       const { data: timeline, error: timelineError } = await supabase
-        .from('order_timeline')
+        .rpc('get_order_timeline', { order_id_param: orderId })
         .select(`
-          *,
-          user:user_id (
-            first_name,
-            last_name
-          )
+          id,
+          order_id,
+          status,
+          created_at,
+          note,
+          user_id,
+          user_first_name,
+          user_last_name
         `)
-        .eq('order_id', orderId)
         .order('created_at', { ascending: true });
 
       if (timelineError) throw timelineError;
 
-      // Fetch order notes
+      // Format timeline data
+      const formattedTimeline = timeline ? timeline.map((entry: any) => ({
+        id: entry.id,
+        order_id: entry.order_id,
+        status: entry.status,
+        created_at: entry.created_at,
+        note: entry.note,
+        user_id: entry.user_id,
+        user: entry.user_first_name || entry.user_last_name ? {
+          first_name: entry.user_first_name || '',
+          last_name: entry.user_last_name || ''
+        } : undefined
+      })) : [];
+
+      // Fetch order notes using custom query
       const { data: notes, error: notesError } = await supabase
-        .from('order_notes')
+        .rpc('get_order_notes', { order_id_param: orderId })
         .select(`
-          *,
-          user:user_id (
-            first_name,
-            last_name
-          )
+          id,
+          order_id,
+          note,
+          created_at,
+          is_customer_visible,
+          user_id,
+          user_first_name,
+          user_last_name
         `)
-        .eq('order_id', orderId)
         .order('created_at', { ascending: false });
 
       if (notesError) throw notesError;
+
+      // Format notes data
+      const formattedNotes = notes ? notes.map((note: any) => ({
+        id: note.id,
+        order_id: note.order_id,
+        note: note.note,
+        created_at: note.created_at,
+        is_customer_visible: note.is_customer_visible,
+        user_id: note.user_id,
+        user: {
+          first_name: note.user_first_name || '',
+          last_name: note.user_last_name || ''
+        }
+      })) : [];
 
       // Format customer information
       const customer = {
@@ -288,8 +320,8 @@ export const useOrderDetails = (orderId: string | undefined) => {
         items,
         shippingAddress,
         billingAddress,
-        timeline: timeline || [],
-        notes: notes || []
+        timeline: formattedTimeline || [],
+        notes: formattedNotes || []
       };
     },
     enabled: !!orderId
@@ -320,14 +352,12 @@ export const useUpdateOrderStatus = () => {
 
       if (error) throw error;
 
-      // Add to order timeline
+      // Add to order timeline using stored procedure
       const { error: timelineError } = await supabase
-        .from('order_timeline')
-        .insert({
-          order_id: orderId,
-          status,
-          note,
-          user_id: (await supabase.auth.getUser()).data.user?.id
+        .rpc('add_order_timeline_entry', {
+          order_id_param: orderId,
+          status_param: status,
+          note_param: note || null
         });
 
       if (timelineError) throw timelineError;
@@ -369,12 +399,10 @@ export const useAddOrderNote = () => {
       isCustomerVisible?: boolean;
     }) => {
       const { error, data } = await supabase
-        .from('order_notes')
-        .insert({
-          order_id: orderId,
-          note,
-          is_customer_visible: isCustomerVisible,
-          user_id: (await supabase.auth.getUser()).data.user?.id
+        .rpc('add_order_note', {
+          order_id_param: orderId,
+          note_text: note,
+          is_visible: isCustomerVisible
         })
         .select()
         .single();
@@ -400,9 +428,7 @@ export const useDeleteOrderNote = () => {
   return useMutation({
     mutationFn: async ({ noteId, orderId }: { noteId: string; orderId: string }) => {
       const { error } = await supabase
-        .from('order_notes')
-        .delete()
-        .eq('id', noteId);
+        .rpc('delete_order_note', { note_id_param: noteId });
 
       if (error) throw error;
 
@@ -441,17 +467,13 @@ export const useBulkUpdateOrderStatus = () => {
 
       if (error) throw error;
 
-      // Add to timeline for each order
-      const timelineEntries = orderIds.map(orderId => ({
-        order_id: orderId,
-        status,
-        note: `Bulk updated to ${status}`,
-        user_id: (await supabase.auth.getUser()).data.user?.id
-      }));
-
+      // Add timeline entries using a procedure
       const { error: timelineError } = await supabase
-        .from('order_timeline')
-        .insert(timelineEntries);
+        .rpc('bulk_add_timeline_entries', {
+          order_ids: orderIds,
+          status_value: status,
+          note_text: `Bulk updated to ${status}`
+        });
 
       if (timelineError) throw timelineError;
 
@@ -485,7 +507,7 @@ export const useGenerateInvoice = (orderId: string | undefined) => {
         throw new Error('Order ID is required');
       }
 
-      // Reuse the order details query function
+      // Reuse the order details query function but with a custom implementation
       const orderDetails = await useOrderDetails(orderId).queryFn();
       
       // Format data specifically for invoice

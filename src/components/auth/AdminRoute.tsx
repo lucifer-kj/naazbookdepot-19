@@ -1,9 +1,10 @@
 
+import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '@/lib/context/AuthContext';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export const AdminRoute = () => {
+export const AdminRoute: React.FC = () => {
   const { isLoading, isAdmin } = useAuth();
 
   if (isLoading) {

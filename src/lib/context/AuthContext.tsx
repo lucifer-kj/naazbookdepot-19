@@ -13,6 +13,7 @@ export interface UserProfile {
   role: 'admin' | 'customer';
   created_at: string;
   updated_at: string;
+  avatar_url?: string | null;
 }
 
 interface AuthContextType {
@@ -31,7 +32,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);

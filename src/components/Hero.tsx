@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 
 const Hero = () => {
   return (
-    <div className="relative h-[500px] md:h-[600px] lg:h-[700px] w-full overflow-hidden">
+    <div className="relative h-[600px] md:h-[700px] overflow-hidden">
       {/* Hero Image with Overlay */}
       <div 
         className="absolute inset-0 bg-naaz-green"
@@ -14,24 +14,23 @@ const Hero = () => {
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           filter: 'brightness(0.7)',
-          width: '100vw', // Ensure full viewport width
         }}
       />
 
       {/* Content */}
-      <div className="relative z-10 w-full mx-auto px-4 h-full flex items-center justify-center">
-        <div className="max-w-xl md:max-w-2xl lg:max-w-3xl xl:max-w-4xl animate-fade-up">
-          <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-playfair font-bold text-white mb-4 md:mb-6">
+      <div className="relative z-10 container mx-auto px-4 h-full flex items-center">
+        <div className="max-w-2xl animate-fade-up">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-playfair font-bold text-white mb-6">
             Explore our premium collection of Islamic perfumes, books, and essential items
           </h1>
-          <p className="text-base md:text-lg lg:text-xl text-white/90 mb-6 md:mb-8">
+          <p className="text-lg md:text-xl text-white/90 mb-8">
             Discover quality products across our specialized shops with over 60 years of heritage.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center">
-            <Link to="/shops" className="gold-button text-center w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Link to="/shops" className="gold-button inline-block text-center">
               Visit Our Shops
             </Link>
-            <Link to="/blog" className="accent-button text-center w-full sm:w-auto">
+            <Link to="/blog" className="accent-button inline-block text-center">
               Explore Our Blog
             </Link>
           </div>

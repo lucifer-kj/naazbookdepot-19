@@ -1,9 +1,9 @@
-
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { BookOpen, SprayCan, BookMarked, UserCircle, LogOut, ShoppingCart, Shield } from 'lucide-react';
 import { useAuth } from '@/lib/context/AuthContext';
+import Image from '@/components/ui/image';
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -21,9 +21,16 @@ const Navbar = () => {
   return (
     <nav className="bg-white shadow-md">
       <div className="container mx-auto flex justify-between items-center py-4 px-4">
-        <Link to="/" className="text-2xl font-playfair font-bold text-naaz-green">
-          The Naaz Group
-        </Link>
+        <div className="flex items-center space-x-4">
+          <Link to="/" className="text-2xl font-playfair font-bold text-naaz-green flex items-center space-x-2">
+            <Image 
+              src="/lovable-uploads/62fd92cc-0660-4c44-a99d-c69c5be673cb.png" 
+              alt="Naaz Group Logo" 
+              className="w-10 h-10 object-cover"
+            />
+            <span>The Naaz Group</span>
+          </Link>
+        </div>
 
         <div className="flex items-center space-x-6">
           <Link to="/books" className="flex items-center space-x-2 text-gray-700 hover:text-naaz-green">

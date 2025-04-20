@@ -1,7 +1,7 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useProductRealtime } from "./realtime-service";
 
 export interface Product {
   id: string;
@@ -29,8 +29,21 @@ export interface ProductFilters {
   sort?: string;
 }
 
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  image_url?: string;
+  parent_id?: string;
+  is_active: boolean;
+  display_order: number;
+}
+
 export const useProducts = (filters: ProductFilters = {}, page = 1) => {
   const limit = 10;
+  
+  useProductRealtime();
   
   return useQuery({
     queryKey: ['products', filters, page],
@@ -88,6 +101,28 @@ export const useProducts = (filters: ProductFilters = {}, page = 1) => {
   });
 };
 
+export const useProductById = (id?: string) => {
+  useProductRealtime(id);
+  
+  return useQuery({
+    queryKey: ['product', id],
+    queryFn: async () => {
+      if (!id) throw new Error("Product ID is required");
+      
+      const { data, error } = await supabase
+        .from('products')
+        .select('*, categories(*)')
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+      
+      return data as Product & { categories: Category };
+    },
+    enabled: !!id
+  });
+};
+
 export const useDeleteProducts = () => {
   const queryClient = useQueryClient();
 
@@ -131,3 +166,46 @@ export const useUpdateProductsStatus = () => {
     }
   });
 };
+
+export const useCategories = () => {
+  return useQuery({
+    queryKey: ['categories'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .order('display_order', { ascending: true });
+
+      if (error) throw error;
+      
+      return buildCategoryTree(data as Category[]);
+    }
+  });
+};
+
+function buildCategoryTree(categories: Category[]) {
+  const categoryMap = new Map<string, Category & { children: (Category & { children: any[] })[] }>();
+  
+  categories.forEach(category => {
+    categoryMap.set(category.id, { ...category, children: [] });
+  });
+  
+  const rootCategories: (Category & { children: any[] })[] = [];
+  
+  categories.forEach(category => {
+    const categoryWithChildren = categoryMap.get(category.id)!;
+    
+    if (category.parent_id && categoryMap.has(category.parent_id)) {
+      const parent = categoryMap.get(category.parent_id)!;
+      parent.children.push(categoryWithChildren);
+    } else {
+      rootCategories.push(categoryWithChildren);
+    }
+  });
+  
+  return {
+    flat: categories,
+    tree: rootCategories,
+    map: categoryMap
+  };
+}

@@ -8,7 +8,6 @@ interface UserProfile {
   first_name: string;
   last_name: string;
   email: string;
-  avatar_url?: string;
   phone?: string;
   is_admin: boolean;
 }
@@ -50,10 +49,6 @@ async function fetchUserProfile(userId: string) {
       phone: data.phone,
       is_admin: data.role === 'admin'
     };
-
-    if (data.avatar_url) {
-      userProfile.avatar_url = data.avatar_url;
-    }
 
     return userProfile;
   } catch (error) {

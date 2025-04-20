@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
@@ -93,6 +94,22 @@ serve(async (req) => {
       if (updateError) {
         console.error("Failed to update order:", updateError);
         throw new Error("Failed to update order");
+      }
+      
+      // Send order confirmation email
+      try {
+        // Call the order-helpers function to send order confirmation email
+        await supabaseAdmin.functions.invoke("order-helpers", {
+          body: {
+            action: "sendOrderConfirmation",
+            params: {
+              orderId: order.id
+            }
+          }
+        });
+      } catch (emailError) {
+        console.error("Error sending order confirmation email:", emailError);
+        // Don't throw error, we don't want to fail the webhook response
       }
     }
     else if (event.event === "payment.failed") {

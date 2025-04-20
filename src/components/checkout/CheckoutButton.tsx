@@ -58,7 +58,7 @@ const CheckoutButton: React.FC<CheckoutButtonProps> = ({
         taxAmount
       });
       
-      // Redirect to Stripe
+      // Redirect to Stripe or other payment processor
       window.location.href = checkoutUrl;
     } catch (error) {
       console.error("Checkout error:", error);

@@ -2,33 +2,11 @@
 import { supabase } from "@/integrations/supabase/client";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { OrderStatus } from "./admin-order-service";
 import { logActivity } from "@/lib/api/protected-client";
-
-export interface CheckoutInput {
-  shippingAddress: {
-    address_line1: string;
-    address_line2?: string;
-    city: string;
-    state: string;
-    postal_code: string;
-    country: string;
-    is_default?: boolean;
-  };
-  billingAddress: {
-    address_line1: string;
-    address_line2?: string;
-    city: string;
-    state: string;
-    postal_code: string;
-    country: string;
-    is_default?: boolean;
-  };
-  sameAsBilling: boolean;
-  paymentMethod: string;
-  couponCode?: string;
-  notes?: string;
-}
+import { saveAddresses } from "./address-service";
+import { validateCoupon } from "./coupon-service";
+import { createOrder, saveOrderItems, updateInventory } from "./order-service";
+import type { CheckoutInput } from "../types/checkout";
 
 /**
  * Process a checkout operation, creating orders and handling inventory
@@ -70,21 +48,46 @@ export const useCheckout = () => {
         }
 
         // Calculate order totals and prepare items
-        const { subtotal, orderItems, discountAmount } = await processCartItems(cartItems, input.couponCode);
-        
-        // Fixed shipping cost, can be dynamic
-        const shippingCost = 100; 
-        // 5% tax rate, can be dynamic based on region
-        const taxRate = 0.05; 
-        // Calculate tax
+        let subtotal = 0;
+        const orderItems = [];
+
+        // Prepare order items and check inventory
+        for (const item of cartItems) {
+          const { product, quantity } = item;
+          
+          // Check if product is in stock
+          if (product.quantity_in_stock < quantity) {
+            throw new Error(`Not enough stock for ${product.name}. Only ${product.quantity_in_stock} available.`);
+          }
+          
+          // Calculate price
+          const price = product.sale_price || product.price;
+          const totalItemPrice = price * quantity;
+          
+          subtotal += totalItemPrice;
+          
+          orderItems.push({
+            product_id: product.id,
+            quantity,
+            price_per_unit: price,
+            total_price: totalItemPrice
+          });
+        }
+
+        // Apply coupon if provided
+        const { discountAmount } = input.couponCode ? 
+          await validateCoupon(input.couponCode, subtotal) : 
+          { discountAmount: 0 };
+
+        // Fixed shipping cost and tax rate
+        const shippingCost = 100;
+        const taxRate = 0.05;
         const taxAmount = (subtotal - discountAmount) * taxRate;
-        // Calculate total
         const totalAmount = subtotal + shippingCost + taxAmount - discountAmount;
 
-        // Start a transaction
+        // Start transaction
         const { data: transactionResult } = await supabase.rpc('begin_transaction');
         if (transactionResult && typeof transactionResult === 'object') {
-          // Safely extract transaction_id from JSON object
           transactionId = (transactionResult as any).transaction_id || null;
         }
 
@@ -134,12 +137,12 @@ export const useCheckout = () => {
 
         if (clearCartError) throw clearCartError;
 
-        // Commit the transaction
+        // Commit transaction
         if (transactionId) {
           await supabase.rpc('commit_transaction', { transaction_id: transactionId });
         }
 
-        // Log activity (using the extracted logActivity function that handles proper awaiting)
+        // Log activity
         await logActivity('place_order', { order_id: order.id, total: totalAmount });
 
         return {
@@ -147,7 +150,7 @@ export const useCheckout = () => {
           total: totalAmount
         };
       } catch (error: any) {
-        // Rollback the transaction if started
+        // Rollback transaction if started
         if (transactionId) {
           await supabase.rpc('rollback_transaction', { transaction_id: transactionId });
         }
@@ -162,199 +165,3 @@ export const useCheckout = () => {
     }
   });
 };
-
-/**
- * Process cart items, checking inventory and calculating totals
- */
-async function processCartItems(cartItems: any[], couponCode?: string) {
-  // Calculate order totals
-  let subtotal = 0;
-  let discountAmount = 0;
-
-  // Prepare order items and check inventory
-  const orderItems = [];
-  for (const item of cartItems) {
-    const { product, quantity } = item;
-    
-    // Check if product is in stock
-    if (product.quantity_in_stock < quantity) {
-      throw new Error(`Not enough stock for ${product.name}. Only ${product.quantity_in_stock} available.`);
-    }
-    
-    // Calculate price
-    const price = product.sale_price || product.price;
-    const totalItemPrice = price * quantity;
-    
-    subtotal += totalItemPrice;
-    
-    orderItems.push({
-      product_id: product.id,
-      quantity,
-      price_per_unit: price,
-      total_price: totalItemPrice
-    });
-  }
-
-  // Apply coupon if provided
-  if (couponCode) {
-    discountAmount = await applyCoupon(couponCode, subtotal);
-  }
-
-  return { subtotal, orderItems, discountAmount };
-}
-
-/**
- * Apply coupon code and return discount amount
- */
-async function applyCoupon(couponCode: string, subtotal: number): Promise<number> {
-  const { data: coupon } = await supabase
-    .from('coupons')
-    .select('*')
-    .eq('code', couponCode)
-    .eq('is_active', true)
-    .maybeSingle();
-
-  if (!coupon) return 0;
-
-  // Check coupon validity
-  const now = new Date();
-  if (
-    new Date(coupon.start_date) <= now &&
-    new Date(coupon.end_date) >= now &&
-    (!coupon.usage_limit || coupon.used_count < coupon.usage_limit) &&
-    coupon.min_purchase <= subtotal
-  ) {
-    // Calculate discount
-    let discountAmount = 0;
-    if (coupon.discount_type === 'percentage') {
-      discountAmount = subtotal * (coupon.discount_value / 100);
-    } else {
-      // Fixed amount
-      discountAmount = Math.min(coupon.discount_value, subtotal);
-    }
-
-    // Update coupon usage if applied successfully
-    if (discountAmount > 0) {
-      await supabase
-        .from('coupons')
-        .update({ used_count: coupon.used_count + 1 })
-        .eq('code', couponCode);
-    }
-
-    return discountAmount;
-  }
-
-  return 0;
-}
-
-/**
- * Save shipping and billing addresses
- */
-async function saveAddresses(userId: string, input: CheckoutInput) {
-  // Save shipping address
-  const shippingAddressData = {
-    ...input.shippingAddress,
-    user_id: userId
-  };
-  const { data: shippingAddress, error: shippingAddressError } = await supabase
-    .from('addresses')
-    .insert(shippingAddressData)
-    .select()
-    .single();
-
-  if (shippingAddressError) throw shippingAddressError;
-
-  // Save billing address (if different from shipping)
-  let billingAddress;
-  if (input.sameAsBilling) {
-    billingAddress = shippingAddress;
-  } else {
-    const billingAddressInput = {
-      ...input.billingAddress,
-      user_id: userId
-    };
-    const { data: billingData, error: billingAddressError } = await supabase
-      .from('addresses')
-      .insert(billingAddressInput)
-      .select()
-      .single();
-
-    if (billingAddressError) throw billingAddressError;
-    billingAddress = billingData;
-  }
-
-  return { shippingAddress, billingAddress };
-}
-
-/**
- * Create order record
- */
-async function createOrder(params: {
-  userId: string;
-  totalAmount: number;
-  shippingAddress: any;
-  billingAddress: any;
-  shippingCost: number;
-  taxAmount: number;
-  discountAmount: number;
-  paymentMethod: string;
-  couponCode?: string;
-}) {
-  // Create order with properly typed status
-  const orderData = {
-    user_id: params.userId,
-    status: 'pending' as OrderStatus,
-    total_amount: params.totalAmount,
-    shipping_address_id: params.shippingAddress.id,
-    billing_address_id: params.billingAddress.id,
-    shipping_cost: params.shippingCost,
-    tax_amount: params.taxAmount,
-    discount_amount: params.discountAmount,
-    payment_method: params.paymentMethod,
-    payment_status: 'pending',
-    coupon_code: params.couponCode || null
-  };
-
-  const { data: order, error: orderError } = await supabase
-    .from('orders')
-    .insert(orderData)
-    .select()
-    .single();
-
-  if (orderError) throw orderError;
-  return order;
-}
-
-/**
- * Save order items
- */
-async function saveOrderItems(orderId: string, orderItems: any[]) {
-  const orderItemsData = orderItems.map(item => ({
-    ...item,
-    order_id: orderId
-  }));
-
-  const { error: orderItemsError } = await supabase
-    .from('order_items')
-    .insert(orderItemsData);
-
-  if (orderItemsError) throw orderItemsError;
-}
-
-/**
- * Update product inventory
- */
-async function updateInventory(orderItems: any[]) {
-  for (const item of orderItems) {
-    const { error: inventoryError } = await supabase
-      .from('products')
-      .update({ 
-        quantity_in_stock: supabase.rpc('decrement', { 
-          inc_amount: item.quantity 
-        }) 
-      })
-      .eq('id', item.product_id);
-
-    if (inventoryError) throw inventoryError;
-  }
-}

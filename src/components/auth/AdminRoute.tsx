@@ -1,11 +1,12 @@
 
 import React from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/context/AuthContext';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export const AdminRoute: React.FC = () => {
-  const { isLoading, isAdmin } = useAuth();
+  const { isLoading, isAdmin, user } = useAuth();
+  const location = useLocation();
 
   if (isLoading) {
     return (
@@ -17,6 +18,10 @@ export const AdminRoute: React.FC = () => {
         </div>
       </div>
     );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   if (!isAdmin) {

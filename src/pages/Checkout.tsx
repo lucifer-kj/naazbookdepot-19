@@ -2,44 +2,119 @@
 import React, { useState } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { useToast } from '@/components/ui/use-toast';
+import { CheckoutButton } from '@/components/checkout/CheckoutButton';
+import RazorpayCheckoutButton from '@/components/checkout/RazorpayCheckoutButton';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { useCartContext } from '@/lib/context/CartContext';
+import { FormError } from '@/components/ui/form-error';
+
+// Validation schema
+const addressSchema = z.object({
+  firstName: z.string().min(2, { message: "First name must be at least 2 characters" }),
+  lastName: z.string().min(2, { message: "Last name must be at least 2 characters" }),
+  address1: z.string().min(5, { message: "Address must be at least 5 characters" }),
+  address2: z.string().optional(),
+  city: z.string().min(2, { message: "City is required" }),
+  state: z.string().min(2, { message: "State is required" }),
+  postcode: z.string().min(5, { message: "Valid postal code is required" }),
+  country: z.string().min(2, { message: "Country is required" }).default("India"),
+  phone: z.string().min(10, { message: "Valid phone number is required" }),
+  email: z.string().email({ message: "Valid email is required" }),
+});
+
+const checkoutSchema = z.object({
+  shipping: addressSchema,
+  billing: addressSchema,
+  sameAsShipping: z.boolean().default(true),
+  paymentMethod: z.enum(["card", "cod", "razorpay"]),
+  notes: z.string().optional(),
+});
 
 const Checkout = () => {
   const [step, setStep] = useState(1);
+  const [error, setError] = useState("");
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const { cart } = useCartContext();
 
-  // Mock cart items
-  const cartItems = [
-    {
-      id: 1,
-      name: 'The Noble Quran',
-      category: 'Books',
-      price: 1200,
-      quantity: 1,
-      image: '/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png',
+  // Form setup
+  const form = useForm<z.infer<typeof checkoutSchema>>({
+    resolver: zodResolver(checkoutSchema),
+    defaultValues: {
+      shipping: {
+        firstName: "",
+        lastName: "",
+        address1: "",
+        address2: "",
+        city: "",
+        state: "",
+        postcode: "",
+        country: "India",
+        phone: "",
+        email: "",
+      },
+      billing: {
+        firstName: "",
+        lastName: "",
+        address1: "",
+        address2: "",
+        city: "",
+        state: "",
+        postcode: "",
+        country: "India",
+        phone: "",
+        email: "",
+      },
+      sameAsShipping: true,
+      paymentMethod: "card",
+      notes: "",
     },
-    {
-      id: 2,
-      name: 'Amber Oud Attar',
-      category: 'Perfumes',
-      price: 850,
-      quantity: 2,
-      image: '/lovable-uploads/35ff87ed-b986-45b1-9c00-555f9d78c627.png',
-    },
-    {
-      id: 3,
-      name: 'Premium Prayer Mat',
-      category: 'Essentials',
-      price: 950,
-      quantity: 1,
-      image: '/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png',
-    },
-  ];
+  });
 
   // Calculate cart totals
-  const subtotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
-  const shipping = 100;
-  const total = subtotal + shipping;
+  const subtotal = cart.subtotal;
+  const shipping = cart.items.length > 0 ? 100 : 0;
+  const tax = Math.round(subtotal * 0.05);
+  const total = subtotal + shipping + tax;
+  
+  // Handle form submission
+  const onSubmit = async (data: z.infer<typeof checkoutSchema>) => {
+    try {
+      setError("");
+      
+      // If same as shipping is checked, use shipping address for billing
+      if (data.sameAsShipping) {
+        data.billing = data.shipping;
+      }
+      
+      if (step < 3) {
+        setStep(step + 1);
+      }
+    } catch (err: any) {
+      setError(err.message || "An error occurred during checkout");
+      console.error("Checkout error:", err);
+    }
+  };
+
+  // Update billing fields when sameAsShipping changes
+  React.useEffect(() => {
+    const sameAsShipping = form.watch("sameAsShipping");
+    
+    if (sameAsShipping) {
+      const shipping = form.watch("shipping");
+      Object.keys(shipping).forEach(key => {
+        form.setValue(`billing.${key}` as any, shipping[key as keyof typeof shipping]);
+      });
+    }
+  }, [form.watch("sameAsShipping"), form.watch("shipping")]);
 
   const renderStep = () => {
     switch(step) {
@@ -47,194 +122,370 @@ const Checkout = () => {
         return (
           <div>
             <h2 className="text-2xl font-playfair font-semibold text-naaz-green mb-6">Shipping Information</h2>
-            <form className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label htmlFor="firstName" className="block text-gray-700 mb-2">First Name</label>
-                  <input 
-                    type="text" 
-                    id="firstName" 
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-naaz-green"
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="shipping.firstName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700">First Name</FormLabel>
+                        <FormControl>
+                          <Input {...field} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-naaz-green" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="shipping.lastName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700">Last Name</FormLabel>
+                        <FormControl>
+                          <Input {...field} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-naaz-green" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
                 </div>
-                <div>
-                  <label htmlFor="lastName" className="block text-gray-700 mb-2">Last Name</label>
-                  <input 
-                    type="text" 
-                    id="lastName" 
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-naaz-green"
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <label htmlFor="address" className="block text-gray-700 mb-2">Address</label>
-                <input 
-                  type="text" 
-                  id="address" 
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-naaz-green"
+                
+                <FormField
+                  control={form.control}
+                  name="shipping.address1"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-700">Address</FormLabel>
+                      <FormControl>
+                        <Input {...field} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-naaz-green" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
-              
-              <div>
-                <label htmlFor="apartment" className="block text-gray-700 mb-2">Apartment, suite, etc. (optional)</label>
-                <input 
-                  type="text" 
-                  id="apartment" 
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-naaz-green"
+                
+                <FormField
+                  control={form.control}
+                  name="shipping.address2"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-700">Apartment, suite, etc. (optional)</FormLabel>
+                      <FormControl>
+                        <Input {...field} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-naaz-green" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                  <label htmlFor="city" className="block text-gray-700 mb-2">City</label>
-                  <input 
-                    type="text" 
-                    id="city" 
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-naaz-green"
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="shipping.city"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700">City</FormLabel>
+                        <FormControl>
+                          <Input {...field} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-naaz-green" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="shipping.state"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700">State</FormLabel>
+                        <FormControl>
+                          <Input {...field} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-naaz-green" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="shipping.postcode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700">PIN Code</FormLabel>
+                        <FormControl>
+                          <Input {...field} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-naaz-green" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
                 </div>
-                <div>
-                  <label htmlFor="state" className="block text-gray-700 mb-2">State</label>
-                  <input 
-                    type="text" 
-                    id="state" 
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-naaz-green"
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="shipping.phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700">Phone</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="tel" className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-naaz-green" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="shipping.email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700">Email</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="email" className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-naaz-green" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
                 </div>
-                <div>
-                  <label htmlFor="zip" className="block text-gray-700 mb-2">PIN Code</label>
-                  <input 
-                    type="text" 
-                    id="zip" 
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-naaz-green"
-                  />
+                
+                {error && <FormError error={error} />}
+                
+                <div className="pt-6 flex justify-between">
+                  <Link to="/cart" className="text-naaz-green hover:text-naaz-gold transition-colors">
+                    Return to cart
+                  </Link>
+                  <Button 
+                    type="submit" 
+                    className="gold-button flex items-center"
+                  >
+                    Continue to Payment
+                    <ChevronRight size={16} className="ml-1" />
+                  </Button>
                 </div>
-              </div>
-              
-              <div>
-                <label htmlFor="phone" className="block text-gray-700 mb-2">Phone</label>
-                <input 
-                  type="tel" 
-                  id="phone" 
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-naaz-green"
-                />
-              </div>
-              
-              <div className="flex items-center">
-                <input type="checkbox" id="saveAddress" className="h-4 w-4 text-naaz-gold focus:ring-naaz-green" />
-                <label htmlFor="saveAddress" className="ml-2 block text-sm text-gray-700">
-                  Save this address for future orders
-                </label>
-              </div>
-              
-              <div className="pt-6 flex justify-between">
-                <Link to="/cart" className="text-naaz-green hover:text-naaz-gold transition-colors">
-                  Return to cart
-                </Link>
-                <button 
-                  type="button" 
-                  onClick={() => setStep(2)} 
-                  className="gold-button flex items-center"
-                >
-                  Continue to Payment
-                  <ChevronRight size={16} className="ml-1" />
-                </button>
-              </div>
-            </form>
+              </form>
+            </Form>
           </div>
         );
       case 2:
         return (
           <div>
             <h2 className="text-2xl font-playfair font-semibold text-naaz-green mb-6">Payment Method</h2>
-            <div className="space-y-6">
-              <div className="bg-gray-50 p-6 rounded-lg mb-6">
-                <div className="mb-6 border-b border-gray-200 pb-4">
-                  <div className="flex items-center">
-                    <input type="radio" id="card" name="payment" className="h-4 w-4 text-naaz-gold focus:ring-naaz-green" defaultChecked />
-                    <label htmlFor="card" className="ml-2 block text-gray-700">Credit/Debit Card</label>
-                  </div>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <div className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="paymentMethod"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="space-y-4">
+                          <div className="bg-gray-50 p-6 rounded-lg">
+                            <div className="flex items-center">
+                              <input 
+                                type="radio"
+                                id="card"
+                                value="card"
+                                checked={field.value === "card"}
+                                onChange={() => field.onChange("card")}
+                                className="h-4 w-4 text-naaz-gold focus:ring-naaz-green"
+                              />
+                              <label htmlFor="card" className="ml-2 block text-gray-700">Credit/Debit Card</label>
+                            </div>
+                          </div>
+                          
+                          <div className="bg-gray-50 p-6 rounded-lg">
+                            <div className="flex items-center">
+                              <input 
+                                type="radio"
+                                id="cod"
+                                value="cod"
+                                checked={field.value === "cod"}
+                                onChange={() => field.onChange("cod")}
+                                className="h-4 w-4 text-naaz-gold focus:ring-naaz-green"
+                              />
+                              <label htmlFor="cod" className="ml-2 block text-gray-700">Cash on Delivery</label>
+                            </div>
+                          </div>
+                          
+                          <div className="bg-gray-50 p-6 rounded-lg">
+                            <div className="flex items-center">
+                              <input 
+                                type="radio"
+                                id="razorpay"
+                                value="razorpay"
+                                checked={field.value === "razorpay"}
+                                onChange={() => field.onChange("razorpay")}
+                                className="h-4 w-4 text-naaz-gold focus:ring-naaz-green"
+                              />
+                              <label htmlFor="razorpay" className="ml-2 block text-gray-700">Razorpay (Recommended)</label>
+                            </div>
+                          </div>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="sameAsShipping"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="bg-gray-50 p-6 rounded-lg">
+                          <div className="flex items-center mb-4">
+                            <input 
+                              type="checkbox"
+                              id="sameAsShipping"
+                              checked={field.value}
+                              onChange={(e) => field.onChange(e.target.checked)}
+                              className="h-4 w-4 text-naaz-gold focus:ring-naaz-green"
+                            />
+                            <label htmlFor="sameAsShipping" className="ml-2 block text-gray-700">Billing address same as shipping address</label>
+                          </div>
+                          
+                          {!field.value && (
+                            <div className="mt-4 pt-4 border-t border-gray-200 space-y-4">
+                              <h3 className="text-lg font-medium text-naaz-green mb-3">Billing Address</h3>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <FormField
+                                  control={form.control}
+                                  name="billing.firstName"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel className="text-gray-700">First Name</FormLabel>
+                                      <FormControl>
+                                        <Input {...field} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-naaz-green" />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                                <FormField
+                                  control={form.control}
+                                  name="billing.lastName"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel className="text-gray-700">Last Name</FormLabel>
+                                      <FormControl>
+                                        <Input {...field} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-naaz-green" />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                              </div>
+                              
+                              <FormField
+                                control={form.control}
+                                name="billing.address1"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-gray-700">Address</FormLabel>
+                                    <FormControl>
+                                      <Input {...field} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-naaz-green" />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <FormField
+                                  control={form.control}
+                                  name="billing.city"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel className="text-gray-700">City</FormLabel>
+                                      <FormControl>
+                                        <Input {...field} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-naaz-green" />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                                <FormField
+                                  control={form.control}
+                                  name="billing.state"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel className="text-gray-700">State</FormLabel>
+                                      <FormControl>
+                                        <Input {...field} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-naaz-green" />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                                <FormField
+                                  control={form.control}
+                                  name="billing.postcode"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel className="text-gray-700">PIN Code</FormLabel>
+                                      <FormControl>
+                                        <Input {...field} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-naaz-green" />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="notes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700">Order Notes (Optional)</FormLabel>
+                        <FormControl>
+                          <textarea 
+                            {...field}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-naaz-green h-24 resize-none"
+                            placeholder="Special instructions for delivery or order"
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
                 </div>
                 
-                <div className="space-y-4">
-                  <div>
-                    <label htmlFor="cardNumber" className="block text-gray-700 mb-2">Card Number</label>
-                    <input 
-                      type="text" 
-                      id="cardNumber" 
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-naaz-green"
-                      placeholder="1234 5678 9012 3456"
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-6">
-                    <div>
-                      <label htmlFor="expDate" className="block text-gray-700 mb-2">Expiration Date</label>
-                      <input 
-                        type="text" 
-                        id="expDate" 
-                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-naaz-green"
-                        placeholder="MM/YY"
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="cvv" className="block text-gray-700 mb-2">CVV</label>
-                      <input 
-                        type="text" 
-                        id="cvv" 
-                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-naaz-green"
-                        placeholder="123"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="nameOnCard" className="block text-gray-700 mb-2">Name on Card</label>
-                    <input 
-                      type="text" 
-                      id="nameOnCard" 
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-naaz-green"
-                    />
-                  </div>
+                {error && <FormError error={error} />}
+                
+                <div className="pt-6 flex justify-between">
+                  <Button 
+                    type="button" 
+                    onClick={() => setStep(1)} 
+                    className="text-naaz-green hover:text-naaz-gold transition-colors"
+                    variant="ghost"
+                  >
+                    Return to shipping
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    className="gold-button flex items-center"
+                  >
+                    Review Order
+                    <ChevronRight size={16} className="ml-1" />
+                  </Button>
                 </div>
-              </div>
-              
-              <div className="bg-gray-50 p-6 rounded-lg">
-                <div className="flex items-center">
-                  <input type="radio" id="cod" name="payment" className="h-4 w-4 text-naaz-gold focus:ring-naaz-green" />
-                  <label htmlFor="cod" className="ml-2 block text-gray-700">Cash on Delivery</label>
-                </div>
-              </div>
-              
-              <div className="flex items-center">
-                <input type="checkbox" id="saveCard" className="h-4 w-4 text-naaz-gold focus:ring-naaz-green" />
-                <label htmlFor="saveCard" className="ml-2 block text-sm text-gray-700">
-                  Save my payment information for future purchases
-                </label>
-              </div>
-              
-              <div className="pt-6 flex justify-between">
-                <button 
-                  type="button" 
-                  onClick={() => setStep(1)} 
-                  className="text-naaz-green hover:text-naaz-gold transition-colors"
-                >
-                  Return to shipping
-                </button>
-                <button 
-                  type="button" 
-                  onClick={() => setStep(3)} 
-                  className="gold-button flex items-center"
-                >
-                  Review Order
-                  <ChevronRight size={16} className="ml-1" />
-                </button>
-              </div>
-            </div>
+              </form>
+            </Form>
           </div>
         );
       case 3:
+        const formValues = form.getValues();
+        const shippingAddress = formValues.shipping;
+        const billingAddress = formValues.sameAsShipping ? formValues.shipping : formValues.billing;
+        
         return (
           <div>
             <h2 className="text-2xl font-playfair font-semibold text-naaz-green mb-6">Review Order</h2>
@@ -242,39 +493,53 @@ const Checkout = () => {
             <div className="mb-8 space-y-6">
               <div className="bg-gray-50 p-6 rounded-lg">
                 <h3 className="text-lg font-medium text-naaz-green mb-3">Shipping Address</h3>
-                <p className="text-gray-600">Ahmed Khan</p>
-                <p className="text-gray-600">123 Main Street, Apartment 4B</p>
-                <p className="text-gray-600">Kolkata, West Bengal, 700001</p>
-                <p className="text-gray-600">India</p>
-                <p className="text-gray-600">+91 98765 43210</p>
-                <button 
+                <p className="text-gray-600">{shippingAddress.firstName} {shippingAddress.lastName}</p>
+                <p className="text-gray-600">{shippingAddress.address1}</p>
+                {shippingAddress.address2 && <p className="text-gray-600">{shippingAddress.address2}</p>}
+                <p className="text-gray-600">{shippingAddress.city}, {shippingAddress.state}, {shippingAddress.postcode}</p>
+                <p className="text-gray-600">{shippingAddress.country}</p>
+                <p className="text-gray-600">{shippingAddress.phone}</p>
+                <Button 
                   type="button" 
                   onClick={() => setStep(1)} 
                   className="text-naaz-gold hover:underline mt-2 text-sm"
+                  variant="link"
                 >
                   Edit
-                </button>
+                </Button>
               </div>
               
               <div className="bg-gray-50 p-6 rounded-lg">
                 <h3 className="text-lg font-medium text-naaz-green mb-3">Payment Method</h3>
-                <p className="text-gray-600">Credit Card ending in 3456</p>
-                <button 
+                <p className="text-gray-600">
+                  {formValues.paymentMethod === "card" && "Credit/Debit Card"}
+                  {formValues.paymentMethod === "cod" && "Cash on Delivery"}
+                  {formValues.paymentMethod === "razorpay" && "Razorpay"}
+                </p>
+                <Button 
                   type="button" 
                   onClick={() => setStep(2)} 
                   className="text-naaz-gold hover:underline mt-2 text-sm"
+                  variant="link"
                 >
                   Edit
-                </button>
+                </Button>
               </div>
+              
+              {formValues.notes && (
+                <div className="bg-gray-50 p-6 rounded-lg">
+                  <h3 className="text-lg font-medium text-naaz-green mb-3">Order Notes</h3>
+                  <p className="text-gray-600">{formValues.notes}</p>
+                </div>
+              )}
             </div>
             
             <h3 className="text-lg font-medium text-naaz-green mb-4">Order Summary</h3>
             <div className="border-t border-gray-200 pt-4 mb-6">
-              {cartItems.map((item) => (
-                <div key={item.id} className="flex py-4 border-b border-gray-200">
+              {cart.items.map((item) => (
+                <div key={`${item.productId}-${item.variationId || ''}`} className="flex py-4 border-b border-gray-200">
                   <div className="w-16 h-16 bg-naaz-cream flex-shrink-0 rounded overflow-hidden">
-                    <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                    <img src={item.image || '/placeholder.svg'} alt={item.name} className="w-full h-full object-cover" />
                   </div>
                   <div className="ml-4 flex-grow">
                     <div className="flex justify-between">
@@ -282,7 +547,7 @@ const Checkout = () => {
                         <h4 className="font-medium text-naaz-green">{item.name}</h4>
                         <p className="text-sm text-gray-500">Quantity: {item.quantity}</p>
                       </div>
-                      <p className="font-medium text-naaz-green">₹{(item.price * item.quantity).toFixed(2)}</p>
+                      <p className="font-medium text-naaz-green">₹{(item.price * item.quantity).toLocaleString('en-IN')}</p>
                     </div>
                   </div>
                 </div>
@@ -292,32 +557,50 @@ const Checkout = () => {
             <div className="bg-gray-50 p-6 rounded-lg mb-8">
               <div className="flex justify-between mb-2">
                 <span className="text-gray-600">Subtotal</span>
-                <span className="font-medium">₹{subtotal.toFixed(2)}</span>
+                <span className="font-medium">₹{subtotal.toLocaleString('en-IN')}</span>
               </div>
               <div className="flex justify-between mb-2">
                 <span className="text-gray-600">Shipping</span>
-                <span className="font-medium">₹{shipping.toFixed(2)}</span>
+                <span className="font-medium">₹{shipping.toLocaleString('en-IN')}</span>
+              </div>
+              <div className="flex justify-between mb-2">
+                <span className="text-gray-600">Tax (5%)</span>
+                <span className="font-medium">₹{tax.toLocaleString('en-IN')}</span>
               </div>
               <div className="flex justify-between pt-4 border-t border-gray-200 mt-4">
                 <span className="text-lg font-medium text-naaz-green">Total</span>
-                <span className="text-lg font-bold text-naaz-green">₹{total.toFixed(2)}</span>
+                <span className="text-lg font-bold text-naaz-green">₹{total.toLocaleString('en-IN')}</span>
               </div>
             </div>
             
+            {error && <FormError error={error} className="mb-4" />}
+            
             <div className="pt-6 flex justify-between">
-              <button 
+              <Button 
                 type="button" 
                 onClick={() => setStep(2)} 
                 className="text-naaz-green hover:text-naaz-gold transition-colors"
+                variant="ghost"
               >
                 Return to payment
-              </button>
-              <button 
-                type="button" 
-                className="gold-button"
-              >
-                Place Order
-              </button>
+              </Button>
+              
+              {formValues.paymentMethod === "razorpay" ? (
+                <RazorpayCheckoutButton
+                  shippingAddress={shippingAddress}
+                  billingAddress={billingAddress}
+                  shippingCost={shipping}
+                  taxAmount={tax}
+                  email={shippingAddress.email}
+                />
+              ) : (
+                <CheckoutButton
+                  shippingAddress={shippingAddress}
+                  billingAddress={billingAddress}
+                  shippingCost={shipping}
+                  taxAmount={tax}
+                />
+              )}
             </div>
           </div>
         );
@@ -395,16 +678,16 @@ const Checkout = () => {
                 </h2>
                 
                 <div className="space-y-4 mb-6">
-                  {cartItems.map((item) => (
-                    <div key={item.id} className="flex items-center">
+                  {cart.items.map((item) => (
+                    <div key={`${item.productId}-${item.variationId || ''}`} className="flex items-center">
                       <div className="w-12 h-12 bg-naaz-cream rounded overflow-hidden">
-                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                        <img src={item.image || '/placeholder.svg'} alt={item.name} className="w-full h-full object-cover" />
                       </div>
                       <div className="ml-4 flex-grow">
                         <p className="text-sm font-medium text-naaz-green">{item.name}</p>
                         <p className="text-xs text-gray-500">Qty: {item.quantity}</p>
                       </div>
-                      <p className="font-medium text-naaz-green">₹{(item.price * item.quantity).toFixed(2)}</p>
+                      <p className="font-medium text-naaz-green">₹{(item.price * item.quantity).toLocaleString('en-IN')}</p>
                     </div>
                   ))}
                 </div>
@@ -412,15 +695,19 @@ const Checkout = () => {
                 <div className="border-t border-gray-200 pt-4 space-y-4">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Subtotal</span>
-                    <span className="font-medium">₹{subtotal.toFixed(2)}</span>
+                    <span className="font-medium">₹{subtotal.toLocaleString('en-IN')}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Shipping</span>
-                    <span className="font-medium">₹{shipping.toFixed(2)}</span>
+                    <span className="font-medium">₹{shipping.toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Tax (5%)</span>
+                    <span className="font-medium">₹{tax.toLocaleString('en-IN')}</span>
                   </div>
                   <div className="pt-4 border-t border-gray-200 flex justify-between">
                     <span className="text-gray-800 font-semibold">Total</span>
-                    <span className="font-bold text-naaz-green">₹{total.toFixed(2)}</span>
+                    <span className="font-bold text-naaz-green">₹{total.toLocaleString('en-IN')}</span>
                   </div>
                 </div>
               </div>

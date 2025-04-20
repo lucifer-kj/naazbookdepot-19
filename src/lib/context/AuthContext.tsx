@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Session, User, AuthChangeEvent } from '@supabase/supabase-js';
@@ -32,7 +31,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 async function fetchUserProfile(userId: string) {
   try {
-    // Use 'users' table instead of 'profiles' which doesn't exist
     const { data, error } = await supabase
       .from('users')
       .select('*')
@@ -44,16 +42,18 @@ async function fetchUserProfile(userId: string) {
       return null;
     }
 
-    // Transform data to match UserProfile interface if needed
     const userProfile: UserProfile = {
       id: data.id,
       first_name: data.first_name || '',
       last_name: data.last_name || '',
       email: data.email || '',
-      avatar_url: data.avatar_url,
       phone: data.phone,
-      is_admin: data.is_admin || false
+      is_admin: data.role === 'admin'
     };
+
+    if (data.avatar_url) {
+      userProfile.avatar_url = data.avatar_url;
+    }
 
     return userProfile;
   } catch (error) {
@@ -72,14 +72,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
   useEffect(() => {
-    // First set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: AuthChangeEvent, currentSession: Session | null) => {
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
         if (currentSession?.user) {
-          // Use setTimeout to avoid potential race conditions
           setTimeout(async () => {
             const userProfile = await fetchUserProfile(currentSession.user.id);
             setProfile(userProfile);
@@ -94,7 +92,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     );
 
-    // Then check for existing session
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
@@ -188,7 +185,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  // Add updateProfile method
   const updateProfile = async (data: Partial<UserProfile>) => {
     try {
       if (!user) {
@@ -201,14 +197,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           first_name: data.first_name,
           last_name: data.last_name,
           phone: data.phone,
-          avatar_url: data.avatar_url,
-          // Don't allow updating email or is_admin through this method for security
         })
         .eq('id', user.id);
 
       if (error) throw error;
       
-      // Refresh the profile after update
       const updatedProfile = await fetchUserProfile(user.id);
       setProfile(updatedProfile);
       

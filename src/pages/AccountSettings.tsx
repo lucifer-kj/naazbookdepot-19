@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/context/AuthContext';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -31,12 +31,24 @@ const AccountSettings = () => {
   const form = useForm<z.infer<typeof profileFormSchema>>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      first_name: profile?.first_name || '',
-      last_name: profile?.last_name || '',
-      email: profile?.email || '',
-      phone: profile?.phone || '',
+      first_name: '',
+      last_name: '',
+      email: '',
+      phone: '',
     },
   });
+
+  // Update form values when profile is loaded
+  useEffect(() => {
+    if (profile) {
+      form.reset({
+        first_name: profile.first_name || '',
+        last_name: profile.last_name || '',
+        email: profile.email || '',
+        phone: profile.phone || '',
+      });
+    }
+  }, [profile, form]);
 
   async function onSubmit(data: z.infer<typeof profileFormSchema>) {
     setIsSubmitting(true);

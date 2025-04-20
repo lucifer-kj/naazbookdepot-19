@@ -8,7 +8,7 @@ const SpecializedShops = () => {
       id: 1,
       title: "Naaz Book Depot",
       description: "Discover the rich heritage of Islamic literature",
-      image: "/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png",
+      image: "/https://unsplash.com/photos/a-stack-of-books-with-a-ladder-leaning-against-it-wwtLv4Z4BEA",
       link: "/books"
     },
     {

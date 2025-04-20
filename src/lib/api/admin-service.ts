@@ -28,28 +28,32 @@ export const getDashboardStats = async () => {
       monthly: await getSalesSummary('monthly')
     };
     
-    // Get orders by status using a corrected GROUP BY query
+    // Get orders by status using a modified query that avoids using GROUP BY directly
+    // Instead, we'll fetch all orders and count statuses on the client side
     const { data: ordersData, error: ordersError } = await supabase
       .from('orders')
-      .select('status, count(*)')
-      .group('status');
+      .select('status');
     
     if (ordersError) throw ordersError;
     
-    const ordersByStatus = (ordersData || []).reduce((acc: Record<string, number>, item) => {
-      acc[item.status] = item.count;
-      return acc;
-    }, {
+    // Count orders by status manually
+    const statusCounts: Record<string, number> = {
       pending: 0,
       processing: 0, 
       shipped: 0,
       delivered: 0,
       cancelled: 0
+    };
+    
+    ordersData?.forEach(order => {
+      if (order.status in statusCounts) {
+        statusCounts[order.status]++;
+      }
     });
     
     return {
       salesSummary,
-      ordersByStatus
+      ordersByStatus: statusCounts
     };
   } catch (error) {
     console.error('Error fetching dashboard stats:', error);

@@ -93,9 +93,9 @@ const Dashboard = () => {
         const lowStock = await getLowStockProducts(5);
         
         // Format order status data for pie chart
-        const orderStatusData = Object.entries(stats.ordersByStatus || {}).map(([status, count]) => ({
+        const orderStatusData: OrderStatusData[] = Object.entries(stats.ordersByStatus || {}).map(([status, count]) => ({
           name: status.charAt(0).toUpperCase() + status.slice(1),
-          value: count,
+          value: Number(count), // Ensure the value is a number
           color: orderStatusColors[status as OrderStatus] || "#9ca3af"
         }));
         

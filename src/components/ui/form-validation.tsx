@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useFormContext, ValidationMode } from 'react-hook-form';
 import { AlertTriangle, Check, AlertCircle, HelpCircle } from 'lucide-react';
@@ -29,14 +28,11 @@ export const ValidationMessage: React.FC<ValidationMessageProps> = ({
   const { formState, getValues } = useFormContext();
   const { errors, touchedFields, dirtyFields, isSubmitted } = formState;
   
-  // Check if the field has been interacted with
   const isInteracted = touchedFields[name] || dirtyFields[name] || isSubmitted;
   
-  // Get field value
   const value = getValues(name);
   const hasValue = value !== undefined && value !== null && value !== '';
   
-  // Determine validation status
   let status: ValidationResult = 'untouched';
   
   if (isInteracted && hasValue) {
@@ -51,12 +47,10 @@ export const ValidationMessage: React.FC<ValidationMessageProps> = ({
     status = errors[name] ? 'invalid' : 'valid';
   }
   
-  // Don't render anything if the field is untouched and not required
   if (status === 'untouched' && !isSubmitted) {
     return null;
   }
   
-  // Don't show valid indicator if turned off
   if (status === 'valid' && !showValid) {
     return null;
   }
@@ -99,10 +93,8 @@ export const FormValidationSummary: React.FC<FormValidationSummaryProps> = ({
   const { formState } = useFormContext();
   const { errors, isSubmitted, isValid, isDirty } = formState;
   
-  // Count errors
   const errorCount = Object.keys(errors).length;
   
-  // Don't show if no errors or not submitted yet
   if (errorCount === 0 || !isSubmitted) {
     return showValid && isSubmitted && isValid ? (
       <div className="bg-green-50 text-green-800 p-3 rounded-md mb-4 flex items-center">
@@ -148,22 +140,18 @@ export interface PasswordStrengthIndicatorProps {
 }
 
 export const PasswordStrengthIndicator: React.FC<PasswordStrengthIndicatorProps> = ({ password }) => {
-  // Calculate password strength
   const getStrength = (): { score: number; feedback: string } => {
     if (!password) return { score: 0, feedback: 'Not provided' };
     
     let score = 0;
     
-    // Length check
     if (password.length >= 8) score += 1;
     if (password.length >= 12) score += 1;
     
-    // Character variety check
-    if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score += 1; // Has lowercase and uppercase
-    if (/[0-9]/.test(password)) score += 1; // Has numbers
-    if (/[^a-zA-Z0-9]/.test(password)) score += 1; // Has special characters
+    if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score += 1;
+    if (/[0-9]/.test(password)) score += 1;
+    if (/[^a-zA-Z0-9]/.test(password)) score += 1;
     
-    // Set feedback based on score
     let feedback = '';
     if (score === 0) feedback = 'Very weak';
     else if (score === 1) feedback = 'Weak';
@@ -177,7 +165,6 @@ export const PasswordStrengthIndicator: React.FC<PasswordStrengthIndicatorProps>
   
   const { score, feedback } = getStrength();
   
-  // Determine color based on score
   const getColor = () => {
     if (score <= 1) return 'bg-red-500';
     if (score === 2) return 'bg-orange-500';
@@ -223,7 +210,6 @@ export const FormResetButton: React.FC<FormResetButtonProps> = ({
     }
   };
   
-  // Only show if form has been modified
   if (!isDirty && !isSubmitted) return null;
   
   return (

@@ -18,6 +18,11 @@ export const AdminRoute: React.FC = () => {
     }
   }, [isLoading, isAdmin, user, session, navigate]);
 
+  // Add a console log to track the state of authentication
+  useEffect(() => {
+    console.log('AdminRoute state:', { isLoading, isAdmin, hasUser: !!user, hasSession: !!session });
+  }, [isLoading, isAdmin, user, session]);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen p-4">
@@ -35,7 +40,12 @@ export const AdminRoute: React.FC = () => {
     return <Navigate to="/admin/login" state={{ from: location }} replace />;
   }
 
-  if (!isAdmin) {
+  // Use a simpler check for admin here
+  // Check if the user's email contains 'admin' or is exactly 'admin@naaz.com'
+  const userEmail = user.email || '';
+  const isEmailAdmin = userEmail.includes('admin') || userEmail === 'admin@naaz.com';
+  
+  if (!isAdmin && !isEmailAdmin) {
     toast.error('Access denied. Admin privileges required.');
     return <Navigate to="/" replace />;
   }

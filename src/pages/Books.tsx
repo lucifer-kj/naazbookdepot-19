@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -25,7 +24,8 @@ const books: Product[] = [
     images: [
       { id: 1, src: '/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png', alt: 'The Noble Quran' }
     ],
-    description: 'The Noble Quran with translation and commentary.'
+    description: 'The Noble Quran with translation and commentary.',
+    quantity_in_stock: 15
   },
   {
     id: 2,
@@ -40,7 +40,8 @@ const books: Product[] = [
     images: [
       { id: 1, src: '/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png', alt: 'Sahih Al-Bukhari' }
     ],
-    description: 'Complete collection of authentic Hadith.'
+    description: 'Complete collection of authentic Hadith.',
+    quantity_in_stock: 12
   },
   {
     id: 3,
@@ -57,7 +58,8 @@ const books: Product[] = [
     images: [
       { id: 1, src: '/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png', alt: 'Riyad-us-Saliheen' }
     ],
-    description: 'A collection of authentic hadith covering various aspects of life.'
+    description: 'A collection of authentic hadith covering various aspects of life.',
+    quantity_in_stock: 8
   },
   {
     id: 4,
@@ -72,7 +74,8 @@ const books: Product[] = [
     images: [
       { id: 1, src: '/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png', alt: 'The Sealed Nectar' }
     ],
-    description: 'Biography of Prophet Muhammad (PBUH).'
+    description: 'Biography of Prophet Muhammad (PBUH).',
+    quantity_in_stock: 20
   },
   {
     id: 5,
@@ -87,7 +90,8 @@ const books: Product[] = [
     images: [
       { id: 1, src: '/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png', alt: 'Tafsir Ibn Kathir' }
     ],
-    description: 'Comprehensive Tafsir of the Quran.'
+    description: 'Comprehensive Tafsir of the Quran.',
+    quantity_in_stock: 10
   },
   {
     id: 6,
@@ -102,7 +106,8 @@ const books: Product[] = [
     images: [
       { id: 1, src: '/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png', alt: 'Fiqh Made Easy' }
     ],
-    description: 'A beginner friendly guide to Islamic jurisprudence.'
+    description: 'A beginner friendly guide to Islamic jurisprudence.',
+    quantity_in_stock: 0
   },
   {
     id: 7,
@@ -117,7 +122,8 @@ const books: Product[] = [
     images: [
       { id: 1, src: '/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png', alt: 'Stories of the Prophets' }
     ],
-    description: 'Stories of all the Prophets mentioned in the Quran.'
+    description: 'Stories of all the Prophets mentioned in the Quran.',
+    quantity_in_stock: 14
   },
   {
     id: 8,
@@ -132,7 +138,8 @@ const books: Product[] = [
     images: [
       { id: 1, src: '/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png', alt: 'Islamic Way of Life' }
     ],
-    description: 'Guide to living according to Islamic principles.'
+    description: 'Guide to living according to Islamic principles.',
+    quantity_in_stock: 25
   }
 ];
 

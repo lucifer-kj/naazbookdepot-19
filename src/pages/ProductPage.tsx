@@ -18,6 +18,7 @@ const mockProduct: Product = {
   stock_status: 'instock',
   average_rating: '4.8',
   rating_count: 24,
+  quantity_in_stock: 20, // Added missing property
   categories: [
     { id: 1, name: 'Books', slug: 'books' },
     { id: 2, name: 'Quran & Tafsir', slug: 'quran-tafsir' }
@@ -81,6 +82,7 @@ const mockRelatedProducts: Product[] = [
     stock_status: 'instock',
     average_rating: '4.9',
     rating_count: 18,
+    quantity_in_stock: 8, // Added missing property
     categories: [{ id: 1, name: 'Books', slug: 'books' }],
     images: [{ id: 1, src: '/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png', alt: 'Tafsir Ibn Kathir' }]
   },
@@ -92,6 +94,7 @@ const mockRelatedProducts: Product[] = [
     stock_status: 'instock',
     average_rating: '4.7',
     rating_count: 12,
+    quantity_in_stock: 5, // Added missing property
     categories: [{ id: 1, name: 'Books', slug: 'books' }],
     images: [{ id: 1, src: '/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png', alt: 'Quran with stand' }]
   },
@@ -103,6 +106,7 @@ const mockRelatedProducts: Product[] = [
     stock_status: 'instock',
     average_rating: '4.5',
     rating_count: 25,
+    quantity_in_stock: 30, // Added missing property
     categories: [{ id: 1, name: 'Books', slug: 'books' }],
     images: [{ id: 1, src: '/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png', alt: 'Travel Quran' }]
   },
@@ -114,6 +118,7 @@ const mockRelatedProducts: Product[] = [
     stock_status: 'instock',
     average_rating: '4.8',
     rating_count: 15,
+    quantity_in_stock: 12, // Added missing property
     categories: [{ id: 1, name: 'Books', slug: 'books' }],
     images: [{ id: 1, src: '/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png', alt: 'Calligraphy Quran' }]
   }

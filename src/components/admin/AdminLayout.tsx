@@ -136,7 +136,7 @@ export const AdminLayout = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={profile?.avatar_url || ''} alt={profile?.first_name} />
+                  <AvatarImage src="" alt={profile?.first_name} />
                   <AvatarFallback className="bg-naaz-green text-white">
                     {profile?.first_name?.[0] || 'A'}
                   </AvatarFallback>

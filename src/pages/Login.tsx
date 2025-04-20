@@ -1,10 +1,40 @@
 
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 const Login = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const navigate = useNavigate();
+
+  const handleLogin = async (event: React.FormEvent) => {
+    event.preventDefault();
+    
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+
+      toast.success('Login successful');
+      navigate('/');
+    } catch (error) {
+      console.error('Login error:', error);
+      toast.error('An unexpected error occurred');
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -16,14 +46,16 @@ const Login = () => {
               <p className="text-gray-600 mt-2">Welcome back to The Naaz Group</p>
             </div>
             
-            <form className="space-y-6">
+            <form onSubmit={handleLogin} className="space-y-6">
               <div>
                 <label htmlFor="email" className="block text-gray-700 mb-2">Email Address</label>
-                <input 
+                <Input 
                   type="email" 
                   id="email" 
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-naaz-green"
                   placeholder="Your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
                 />
               </div>
               
@@ -34,11 +66,13 @@ const Login = () => {
                     Forgot password?
                   </Link>
                 </div>
-                <input 
+                <Input 
                   type="password" 
                   id="password" 
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-naaz-green"
                   placeholder="Your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
                 />
               </div>
               
@@ -49,12 +83,9 @@ const Login = () => {
                 </label>
               </div>
               
-              <button 
-                type="submit" 
-                className="w-full bg-naaz-green text-white py-2 px-4 rounded-md hover:bg-naaz-green/90 transition-colors"
-              >
+              <Button type="submit" className="w-full">
                 Sign In
-              </button>
+              </Button>
             </form>
             
             <div className="mt-8 pt-6 border-t border-gray-200 text-center">

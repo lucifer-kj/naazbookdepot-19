@@ -1,13 +1,22 @@
 
-import React from 'react';
-import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/context/AuthContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 
 export const AdminRoute: React.FC = () => {
-  const { isLoading, isAdmin, user } = useAuth();
+  const { isLoading, isAdmin, user, session } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check if session exists but user is not admin
+    if (!isLoading && session && user && !isAdmin) {
+      toast.error('Access denied. Admin privileges required.');
+      navigate('/');
+    }
+  }, [isLoading, isAdmin, user, session, navigate]);
 
   if (isLoading) {
     return (

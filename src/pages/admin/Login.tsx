@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,7 +13,20 @@ const AdminLogin = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { signIn } = useAuth();
+  const location = useLocation();
+  const { signIn, isAdmin } = useAuth();
+
+  // Redirect to admin dashboard if already logged in as admin
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session && isAdmin) {
+        navigate('/admin');
+      }
+    };
+    
+    checkAdminStatus();
+  }, [navigate, isAdmin]);
 
   const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +57,8 @@ const AdminLogin = () => {
 
       if (profile?.role === 'admin') {
         toast.success('Admin login successful');
-        navigate('/admin');
+        // Use small timeout to ensure state is updated before redirecting
+        setTimeout(() => navigate('/admin'), 100);
       } else {
         toast.error('Access denied. Admin privileges required.');
         await supabase.auth.signOut();

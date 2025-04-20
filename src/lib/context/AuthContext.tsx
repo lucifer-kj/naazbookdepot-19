@@ -1,10 +1,11 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Session, User, AuthChangeEvent } from '@supabase/supabase-js';
 import { AuthContextType, UserProfile } from '../types/auth';
 import { fetchUserProfile } from '../utils/auth-utils';
 import * as authService from '../services/auth-service';
+import { toast } from 'sonner';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -18,29 +19,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [isSuperAdmin, setIsSuperAdmin] = useState<boolean>(false);
 
+  const refreshUserProfile = useCallback(async (userId: string) => {
+    try {
+      const userProfile = await fetchUserProfile(userId);
+      if (userProfile) {
+        setProfile(userProfile);
+        setIsAdmin(userProfile.is_admin);
+        setIsSuperAdmin(userProfile.is_super_admin);
+      }
+    } catch (error) {
+      console.error('Error refreshing user profile:', error);
+    }
+  }, []);
+
   useEffect(() => {
+    // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: AuthChangeEvent, currentSession: Session | null) => {
+        console.log('Auth state changed:', event);
+        
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
         if (currentSession?.user) {
-          const { data: userData, error } = await supabase
-            .from('users')
-            .select('role, is_super_admin')
-            .eq('id', currentSession.user.id)
-            .single();
-
-          if (!error && userData) {
-            const userProfile = await fetchUserProfile(currentSession.user.id);
-            setProfile(userProfile);
-            setIsAdmin(userData.role === 'admin');
-            setIsSuperAdmin(!!userData.is_super_admin);
-          } else {
-            setProfile(null);
-            setIsAdmin(false);
-            setIsSuperAdmin(false);
-          }
+          // Use setTimeout to prevent deadlocks with Supabase client
+          setTimeout(async () => {
+            await refreshUserProfile(currentSession.user.id);
+          }, 0);
         } else {
           setProfile(null);
           setIsAdmin(false);
@@ -51,49 +56,70 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     );
 
+    // Check for existing session
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       
       if (currentSession?.user) {
-        supabase
-          .from('users')
-          .select('role, is_super_admin')
-          .eq('id', currentSession.user.id)
-          .single()
-          .then(({ data: userData, error }) => {
-            if (!error && userData) {
-              fetchUserProfile(currentSession.user.id).then(userProfile => {
-                setProfile(userProfile);
-                setIsAdmin(userData.role === 'admin');
-                setIsSuperAdmin(!!userData.is_super_admin);
-              });
-            }
-            setIsLoading(false);
-          });
-      } else {
-        setIsLoading(false);
+        refreshUserProfile(currentSession.user.id);
       }
+      setIsLoading(false);
     });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [refreshUserProfile]);
 
-  const signIn = authService.signIn;
-  const signUp = authService.signUp;
-  const signOut = authService.signOut;
+  const signIn = async (email: string, password: string) => {
+    try {
+      const { error } = await authService.signIn(email, password);
+      if (error) throw error;
+    } catch (error: any) {
+      console.error('Sign in error:', error.message);
+      throw error;
+    }
+  };
+
+  const signUp = async (email: string, password: string, metadata?: any) => {
+    try {
+      const { error } = await authService.signUp(email, password, metadata);
+      if (error) throw error;
+    } catch (error: any) {
+      console.error('Sign up error:', error.message);
+      throw error;
+    }
+  };
+
+  const signOut = async () => {
+    try {
+      const { error } = await authService.signOut();
+      if (error) throw error;
+    } catch (error: any) {
+      console.error('Sign out error:', error.message);
+      throw error;
+    }
+  };
+  
   const resetPassword = authService.resetPassword;
   const updatePassword = authService.updatePassword;
   
   const updateProfile = async (data: Partial<UserProfile>) => {
     if (!user) return { error: new Error('User not authenticated') };
-    const result = await authService.updateProfile(user.id, data);
-    if (result.profile) {
-      setProfile(result.profile);
+    
+    try {
+      const result = await authService.updateProfile(user.id, data);
+      if (result.profile) {
+        setProfile(result.profile);
+        setIsAdmin(result.profile.is_admin);
+        setIsSuperAdmin(result.profile.is_super_admin);
+      }
+      return result;
+    } catch (error) {
+      console.error('Update profile error:', error);
+      return { error };
     }
-    return result;
   };
 
   return (

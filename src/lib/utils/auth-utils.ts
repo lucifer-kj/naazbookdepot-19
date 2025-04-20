@@ -15,6 +15,11 @@ export async function fetchUserProfile(userId: string): Promise<UserProfile | nu
       return null;
     }
 
+    if (!data) {
+      console.error('No user profile found for ID:', userId);
+      return null;
+    }
+
     const userProfile: UserProfile = {
       id: data.id,
       first_name: data.first_name || '',

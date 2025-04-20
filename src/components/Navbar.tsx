@@ -2,12 +2,12 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { BookOpen, SprayCan, BookMarked, UserCircle, LogOut, ShoppingCart } from 'lucide-react';
+import { BookOpen, SprayCan, BookMarked, UserCircle, LogOut, ShoppingCart, Shield } from 'lucide-react';
 import { useAuth } from '@/lib/context/AuthContext';
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, isAdmin, signOut } = useAuth();
 
   const handleLogout = async () => {
     try {
@@ -48,6 +48,12 @@ const Navbar = () => {
           
           {user ? (
             <>
+              {isAdmin && (
+                <Link to="/admin" className="flex items-center space-x-2 text-naaz-green hover:text-naaz-green/80">
+                  <Shield size={20} />
+                  <span>Admin</span>
+                </Link>
+              )}
               <Link to="/account" className="flex items-center space-x-2 text-gray-700 hover:text-naaz-green">
                 <UserCircle size={20} />
                 <span>{profile ? `${profile.first_name || 'My'} Account` : 'Account'}</span>

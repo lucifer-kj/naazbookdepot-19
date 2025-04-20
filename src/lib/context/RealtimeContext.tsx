@@ -1,25 +1,55 @@
 
-import React, { createContext, useContext, ReactNode } from 'react';
-import { useInitializeRealtime } from '../services/realtime-service';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useAuth } from './AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 interface RealtimeContextType {
-  userId: string | null;
-  initialized: boolean;
+  connected: boolean;
 }
 
 const RealtimeContext = createContext<RealtimeContextType>({
-  userId: null,
-  initialized: false
+  connected: false,
 });
 
-export const RealtimeProvider = ({ children }: { children: ReactNode }) => {
-  const { userId } = useInitializeRealtime();
+export const useRealtime = () => useContext(RealtimeContext);
+
+export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [connected, setConnected] = useState(false);
+  const { user } = useAuth();
+  
+  // Initialize realtime connection
+  useEffect(() => {
+    if (!user) {
+      setConnected(false);
+      return;
+    }
+    
+    const channel = supabase.channel('public:products');
+    
+    channel
+      .on('presence', { event: 'sync' }, () => {
+        setConnected(true);
+      })
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          setConnected(true);
+        } else {
+          setConnected(false);
+        }
+      });
+    
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [user]);
+  
+  const value = {
+    connected,
+  };
   
   return (
-    <RealtimeContext.Provider value={{ userId, initialized: true }}>
+    <RealtimeContext.Provider value={value}>
       {children}
     </RealtimeContext.Provider>
   );
 };
-
-export const useRealtimeContext = () => useContext(RealtimeContext);

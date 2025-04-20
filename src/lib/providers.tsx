@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { AuthProvider } from './context/AuthContext';
 import { RealtimeProvider } from './context/RealtimeContext';
 import { Toaster } from 'sonner';
@@ -9,19 +9,17 @@ import ErrorBoundary from '@/components/ui/error-boundary';
 
 export const AppProviders: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Initialize error tracking on mount
-  useEffect(() => {
+  React.useEffect(() => {
     initErrorTracking();
   }, []);
 
   return (
     <ErrorBoundary>
       <AuthProvider>
-        <RealtimeProvider>
-          <NetworkStatusProvider>
-            {children}
-            <Toaster richColors closeButton position="top-right" />
-          </NetworkStatusProvider>
-        </RealtimeProvider>
+        <NetworkStatusProvider>
+          {children}
+          <Toaster richColors closeButton position="top-right" />
+        </NetworkStatusProvider>
       </AuthProvider>
     </ErrorBoundary>
   );

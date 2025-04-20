@@ -28,7 +28,7 @@ export const ValidationMessage: React.FC<ValidationMessageProps> = ({
   className,
 }) => {
   const { formState, getValues } = useFormContext();
-  const { errors, touchedFields, dirtyFields, isSubmitted } = formState;
+  const { errors, touchedFields, dirtyFields, isSubmitted, isValidating } = formState;
   
   const isInteracted = touchedFields[name] || dirtyFields[name] || isSubmitted;
   
@@ -49,9 +49,8 @@ export const ValidationMessage: React.FC<ValidationMessageProps> = ({
     status = errors[name] ? 'invalid' : 'valid';
   }
   
-  // Add a condition to set status to 'pending' if needed
-  // This is just an example - adjust based on your specific requirements
-  if (/* your pending condition here */) {
+  // Use isValidating from formState to detect pending validation
+  if (isValidating && name in touchedFields) {
     status = 'pending';
   }
   

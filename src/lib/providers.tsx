@@ -1,27 +1,28 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { AuthProvider } from './context/AuthContext';
-import { CartProvider } from './context/CartContext';
-import { AnalyticsProvider } from './context/AnalyticsContext';
-import { Helmet, HelmetProvider } from 'react-helmet-async';
-import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { RealtimeProvider } from './context/RealtimeContext';
+import { Toaster } from 'sonner';
+import { NetworkStatusProvider } from '@/components/ui/network-status';
+import { initErrorTracking } from './services/error-service';
+import ErrorBoundary from '@/components/ui/error-boundary';
 
-interface AppProvidersProps {
-  children: React.ReactNode;
-}
+export const AppProviders: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Initialize error tracking on mount
+  useEffect(() => {
+    initErrorTracking();
+  }, []);
 
-export const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
   return (
-    <HelmetProvider>
-      <ErrorBoundary>
-        <AuthProvider>
-          <CartProvider>
-            <AnalyticsProvider measurementId="G-EXAMPLE123">
-              {children}
-            </AnalyticsProvider>
-          </CartProvider>
-        </AuthProvider>
-      </ErrorBoundary>
-    </HelmetProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <RealtimeProvider>
+          <NetworkStatusProvider>
+            {children}
+            <Toaster richColors closeButton position="top-right" />
+          </NetworkStatusProvider>
+        </RealtimeProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 };

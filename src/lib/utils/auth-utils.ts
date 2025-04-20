@@ -1,75 +1,166 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { UserProfile } from '../types/auth';
+import { logError } from '../services/error-service';
 
 export async function fetchUserProfile(userId: string): Promise<UserProfile | null> {
   try {
-    // First try to get the user's email directly from auth.users
-    // This avoids using the profile table which has RLS issues
-    const { data: userData, error: userError } = await supabase.auth.admin.getUserById(userId);
+    if (!userId) {
+      console.log('No user ID provided to fetchUserProfile');
+      return null;
+    }
+
+    // Get the user's email directly from auth.user without admin privileges
+    const { data: userData, error: userError } = await supabase.auth.getUser();
     
     if (userError) {
       console.error('Error fetching user data:', userError);
-      // Fallback to public profile lookup if admin API fails
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        console.error('Error fetching user profile:', error);
-        return null;
-      }
-
-      if (!data) {
-        console.error('No user profile found for ID:', userId);
-        return null;
-      }
-
-      const userProfile: UserProfile = {
-        id: data.id,
-        first_name: data.first_name || '',
-        last_name: data.last_name || '',
-        email: data.email || '',
-        phone: data.phone,
-        is_admin: data.role === 'admin',
-        is_super_admin: !!data.is_super_admin
-      };
-
-      return userProfile;
+      return null;
     }
-    
-    // If we got user data directly from auth API
+
+    // Create a baseline profile with auth data
     const user = userData.user;
     if (!user) {
       console.error('No user found with ID:', userId);
       return null;
     }
     
-    // Now attempt to get additional profile information
-    // We'll first check if the users table has this info using a direct query
-    const { data: profileData, error: profileError } = await supabase
+    // Check if user email indicates admin status as fallback
+    const isAdminEmail = user.email?.includes('admin') || user.email === 'admin@naaz.com';
+    
+    // Try to get additional profile info from public.users table
+    try {
+      const { data: profileData, error: profileError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
+      
+      if (profileError) {
+        // Instead of failing, log the error and continue with basic profile
+        console.error('Error fetching extended profile, using basic profile:', profileError);
+        
+        // Return a minimal profile with available data
+        return {
+          id: userId,
+          first_name: '',
+          last_name: '',
+          email: user.email || '',
+          phone: '',
+          is_admin: isAdminEmail,
+          is_super_admin: false
+        };
+      }
+      
+      if (profileData) {
+        // Complete profile with data from users table
+        return {
+          id: userId,
+          first_name: profileData.first_name || '',
+          last_name: profileData.last_name || '',
+          email: user.email || '',
+          phone: profileData.phone || '',
+          is_admin: profileData.role === 'admin' || isAdminEmail,
+          is_super_admin: !!profileData.is_super_admin
+        };
+      } else {
+        // No profile data found, use basic profile
+        return {
+          id: userId,
+          first_name: '',
+          last_name: '',
+          email: user.email || '',
+          phone: '',
+          is_admin: isAdminEmail,
+          is_super_admin: false
+        };
+      }
+    } catch (error) {
+      // In case of any uncaught error, still return a basic profile
+      console.error('Unexpected error in fetchUserProfile:', error);
+      logError({
+        type: 'auth_error',
+        error: {
+          message: error instanceof Error ? error.message : 'Unknown error in fetchUserProfile',
+          stack: error instanceof Error ? error.stack : undefined
+        }
+      });
+      
+      return {
+        id: userId,
+        first_name: '',
+        last_name: '',
+        email: user.email || '',
+        phone: '',
+        is_admin: isAdminEmail,
+        is_super_admin: false
+      };
+    }
+  } catch (error) {
+    console.error('Error in fetchUserProfile:', error);
+    logError({
+      type: 'auth_error',
+      error: {
+        message: error instanceof Error ? error.message : 'Unknown error in fetchUserProfile',
+        stack: error instanceof Error ? error.stack : undefined
+      }
+    });
+    return null;
+  }
+}
+
+// Utility function to check admin status without causing recursion issues
+export async function checkIsAdminByEmail(): Promise<boolean> {
+  try {
+    const { data } = await supabase.auth.getUser();
+    const email = data.user?.email;
+    
+    if (!email) return false;
+    
+    // Simple email check for admin privileges
+    return email.includes('admin') || email === 'admin@naaz.com';
+  } catch (error) {
+    console.error('Error checking admin status:', error);
+    return false;
+  }
+}
+
+// Function to safely check if the current user is an admin
+export async function isCurrentUserAdmin(): Promise<boolean> {
+  try {
+    // First try the email-based check as a fallback
+    const isAdminByEmail = await checkIsAdminByEmail();
+    if (isAdminByEmail) return true;
+    
+    // Then try the more robust check against the users table
+    const { data } = await supabase.auth.getUser();
+    if (!data.user) return false;
+    
+    const { data: userData, error } = await supabase
       .from('users')
-      .select('*')
-      .eq('id', userId)
+      .select('role')
+      .eq('id', data.user.id)
       .maybeSingle();
     
-    // Create a profile with available information
-    const userProfile: UserProfile = {
-      id: userId,
-      first_name: profileData?.first_name || '',
-      last_name: profileData?.last_name || '',
-      email: user.email || '',
-      phone: profileData?.phone || '',
-      // Use a simple check for admin - you should implement proper role checking
-      is_admin: profileData?.role === 'admin' || user.email?.includes('admin') || user.email === 'admin@naaz.com',
-      is_super_admin: !!profileData?.is_super_admin
-    };
+    if (error || !userData) {
+      console.log('Could not retrieve user role, falling back to email check');
+      return isAdminByEmail;
+    }
     
-    return userProfile;
+    return userData.role === 'admin';
   } catch (error) {
-    console.error('Error fetching user profile:', error);
-    return null;
+    console.error('Error in isCurrentUserAdmin:', error);
+    return false;
+  }
+}
+
+// Token refresh helper
+export async function refreshToken(): Promise<boolean> {
+  try {
+    const { data, error } = await supabase.auth.refreshSession();
+    return !!data.session && !error;
+  } catch (error) {
+    console.error('Error refreshing token:', error);
+    return false;
   }
 }

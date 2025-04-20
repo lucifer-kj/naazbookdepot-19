@@ -255,7 +255,8 @@ export const useCheckout = () => {
           await supabase.rpc('commit_transaction', { transaction_id: transactionId });
         }
 
-        // Log activity - Execute the insert without assigning its return value
+        // Log activity - Don't try to return the insert operation or assign it
+        // This is the line causing the type error
         await supabase
           .from('activity_logs')
           .insert({

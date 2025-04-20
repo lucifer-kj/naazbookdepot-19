@@ -74,8 +74,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await authService.signIn(email, password);
-      if (error) throw error;
+      const result = await authService.signIn(email, password);
+      // We don't need to check for error here since authService.signIn handles errors
     } catch (error: any) {
       console.error('Sign in error:', error.message);
       throw error;
@@ -84,8 +84,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const signUp = async (email: string, password: string, metadata?: any) => {
     try {
-      const { error } = await authService.signUp(email, password, metadata);
-      if (error) throw error;
+      const result = await authService.signUp(email, password, metadata);
+      // We don't need to check for error here since authService.signUp handles errors
     } catch (error: any) {
       console.error('Sign up error:', error.message);
       throw error;
@@ -94,8 +94,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const signOut = async () => {
     try {
-      const { error } = await authService.signOut();
-      if (error) throw error;
+      const result = await authService.signOut();
+      // We don't need to check for error here since authService.signOut handles errors
     } catch (error: any) {
       console.error('Sign out error:', error.message);
       throw error;

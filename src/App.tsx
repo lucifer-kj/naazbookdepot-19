@@ -42,14 +42,14 @@ const queryClient = new QueryClient({
       staleTime: 60 * 1000, // 1 minute
       retry: 1,
       meta: {
-        onError: (error: Error) => {
+        errorHandler: (error: Error) => {
           console.error('Query error:', error);
         },
       },
     },
     mutations: {
       meta: {
-        onError: (error: Error) => {
+        errorHandler: (error: Error) => {
           console.error('Mutation error:', error);
         },
       },

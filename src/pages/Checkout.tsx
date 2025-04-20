@@ -8,7 +8,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useToast } from '@/components/ui/use-toast';
-import { CheckoutButton } from '@/components/checkout/CheckoutButton';
+import CheckoutButton from '@/components/checkout/CheckoutButton'; // Fixed import
 import RazorpayCheckoutButton from '@/components/checkout/RazorpayCheckoutButton';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -79,8 +79,8 @@ const Checkout = () => {
     },
   });
 
-  // Calculate cart totals
-  const subtotal = cart.subtotal;
+  // Calculate cart totals - ensure numeric operations
+  const subtotal = cart.subtotal || 0;
   const shipping = cart.items.length > 0 ? 100 : 0;
   const tax = Math.round(subtotal * 0.05);
   const total = subtotal + shipping + tax;
@@ -547,7 +547,7 @@ const Checkout = () => {
                         <h4 className="font-medium text-naaz-green">{item.name}</h4>
                         <p className="text-sm text-gray-500">Quantity: {item.quantity}</p>
                       </div>
-                      <p className="font-medium text-naaz-green">₹{(item.price * item.quantity).toLocaleString('en-IN')}</p>
+                      <p className="font-medium text-naaz-green">₹{(Number(item.price) * item.quantity).toLocaleString('en-IN')}</p>
                     </div>
                   </div>
                 </div>
@@ -687,7 +687,7 @@ const Checkout = () => {
                         <p className="text-sm font-medium text-naaz-green">{item.name}</p>
                         <p className="text-xs text-gray-500">Qty: {item.quantity}</p>
                       </div>
-                      <p className="font-medium text-naaz-green">₹{(item.price * item.quantity).toLocaleString('en-IN')}</p>
+                      <p className="font-medium text-naaz-green">₹{(Number(item.price) * item.quantity).toLocaleString('en-IN')}</p>
                     </div>
                   ))}
                 </div>

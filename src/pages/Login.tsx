@@ -1,141 +1,131 @@
 
 import React, { useState } from 'react';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '@/lib/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useAuth } from '@/lib/context/AuthContext';
-import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { MailCheck } from 'lucide-react';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const { signIn } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const location = useLocation();
+  const { signIn } = useAuth();
 
-  // Get the intended destination from state, or default to home
-  const from = location.state?.from?.pathname || '/';
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError(null);
+    setLoading(true);
 
-  const handleLogin = async (event: React.FormEvent) => {
-    event.preventDefault();
-    setIsLoading(true);
-    
     try {
-      const { error } = await signIn(email, password);
-
-      if (!error) {
-        // Create activity log
-        try {
-          await fetch('/api/log-activity', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              action_type: 'login',
-              details: { method: 'email' }
-            }),
-          });
-        } catch (logError) {
-          console.error('Failed to log activity:', logError);
-        }
-        
-        // Redirect to the intended destination
-        navigate(from);
-      }
+      await signIn(email, password);
+      navigate('/');
+    } catch (error: any) {
+      setLoginError(error.message || 'Failed to login');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      <main className="flex-grow py-16 px-4">
-        <div className="container mx-auto max-w-md">
-          <div className="bg-white rounded-lg shadow-lg p-8">
-            <div className="text-center mb-8">
-              <h1 className="text-3xl font-playfair font-bold text-naaz-green">Sign In</h1>
-              <p className="text-gray-600 mt-2">Welcome back to The Naaz Group</p>
-            </div>
-            
-            <form onSubmit={handleLogin} className="space-y-6">
-              <div>
-                <label htmlFor="email" className="block text-gray-700 mb-2">Email Address</label>
-                <Input 
-                  type="email" 
-                  id="email" 
-                  placeholder="Your email"
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Sign in to your account</h2>
+        <p className="mt-2 text-center text-sm text-gray-600">
+          Or{' '}
+          <Link to="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
+            create a new account
+          </Link>
+        </p>
+      </div>
+
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                Email address
+              </label>
+              <div className="mt-1">
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  required
-                  disabled={isLoading}
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 />
               </div>
-              
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <label htmlFor="password" className="text-gray-700">Password</label>
-                  <Link to="/forgot-password" className="text-sm text-naaz-gold hover:underline">
-                    Forgot password?
-                  </Link>
-                </div>
-                <Input 
-                  type="password" 
-                  id="password" 
-                  placeholder="Your password"
+            </div>
+
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                Password
+              </label>
+              <div className="mt-1">
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  required
-                  disabled={isLoading}
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 />
               </div>
-              
+            </div>
+
+            <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <input 
-                  type="checkbox" 
-                  id="remember" 
-                  className="h-4 w-4 text-naaz-gold focus:ring-naaz-green"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
+                <input
+                  id="remember-me"
+                  name="remember-me"
+                  type="checkbox"
+                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                 />
-                <label htmlFor="remember" className="ml-2 block text-sm text-gray-700">
+                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
                   Remember me
                 </label>
               </div>
-              
-              <Button 
-                type="submit" 
-                className="w-full"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing In...
-                  </>
-                ) : (
-                  'Sign In'
-                )}
-              </Button>
-            </form>
-            
-            <div className="mt-8 pt-6 border-t border-gray-200 text-center">
-              <p className="text-gray-600">
-                Don't have an account? 
-                <Link to="/register" className="text-naaz-gold hover:underline ml-1">
-                  Sign up
+
+              <div className="text-sm">
+                <Link to="/forgot-password" className="font-medium text-indigo-600 hover:text-indigo-500">
+                  Forgot your password?
                 </Link>
-              </p>
+              </div>
             </div>
-          </div>
+
+            {loginError && (
+              <div className="rounded-md bg-red-50 p-4">
+                <div className="flex">
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-red-800">Login Error</h3>
+                    <div className="mt-2 text-sm text-red-700">
+                      <p>{loginError}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div>
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                {loading ? 'Signing in...' : 'Sign in'}
+              </Button>
+            </div>
+          </form>
         </div>
-      </main>
-      <Footer />
+      </div>
     </div>
   );
 };

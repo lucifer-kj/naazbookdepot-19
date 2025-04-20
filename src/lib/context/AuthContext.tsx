@@ -25,14 +25,16 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updatePassword: (newPassword: string) => Promise<void>;
+  updateProfile: (data: Partial<UserProfile>) => Promise<{error?: any}>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 async function fetchUserProfile(userId: string) {
   try {
+    // Use 'users' table instead of 'profiles' which doesn't exist
     const { data, error } = await supabase
-      .from('profiles')
+      .from('users')
       .select('*')
       .eq('id', userId)
       .single();
@@ -42,7 +44,18 @@ async function fetchUserProfile(userId: string) {
       return null;
     }
 
-    return data as UserProfile;
+    // Transform data to match UserProfile interface if needed
+    const userProfile: UserProfile = {
+      id: data.id,
+      first_name: data.first_name || '',
+      last_name: data.last_name || '',
+      email: data.email || '',
+      avatar_url: data.avatar_url,
+      phone: data.phone,
+      is_admin: data.is_admin || false
+    };
+
+    return userProfile;
   } catch (error) {
     console.error('Error fetching user profile:', error);
     return null;
@@ -175,6 +188,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  // Add updateProfile method
+  const updateProfile = async (data: Partial<UserProfile>) => {
+    try {
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      const { error } = await supabase
+        .from('users')
+        .update({
+          first_name: data.first_name,
+          last_name: data.last_name,
+          phone: data.phone,
+          avatar_url: data.avatar_url,
+          // Don't allow updating email or is_admin through this method for security
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+      
+      // Refresh the profile after update
+      const updatedProfile = await fetchUserProfile(user.id);
+      setProfile(updatedProfile);
+      
+      toast.success('Profile updated successfully');
+      return { error: null };
+    } catch (error: any) {
+      toast.error(`Profile update error: ${error.message}`);
+      return { error };
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -188,6 +233,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         signOut,
         resetPassword,
         updatePassword,
+        updateProfile,
       }}
     >
       {children}

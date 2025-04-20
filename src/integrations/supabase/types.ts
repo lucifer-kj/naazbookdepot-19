@@ -88,8 +88,79 @@ export type Database = {
           },
         ]
       }
+      blog_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      blog_comments: {
+        Row: {
+          author_email: string
+          author_name: string
+          blog_post_id: string
+          content: string
+          created_at: string
+          id: string
+          is_approved: boolean | null
+          user_id: string | null
+        }
+        Insert: {
+          author_email: string
+          author_name: string
+          blog_post_id: string
+          content: string
+          created_at?: string
+          id?: string
+          is_approved?: boolean | null
+          user_id?: string | null
+        }
+        Update: {
+          author_email?: string
+          author_name?: string
+          blog_post_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          is_approved?: boolean | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_comments_blog_post_id_fkey"
+            columns: ["blog_post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blog_posts: {
         Row: {
+          author_avatar: string | null
+          author_name: string | null
+          category_id: string | null
           content: string | null
           created_at: string
           excerpt: string | null
@@ -101,10 +172,15 @@ export type Database = {
           published_at: string | null
           slug: string
           status: Database["public"]["Enums"]["blog_status"]
+          tags: string[] | null
           title: string
           updated_at: string
+          view_count: number | null
         }
         Insert: {
+          author_avatar?: string | null
+          author_name?: string | null
+          category_id?: string | null
           content?: string | null
           created_at?: string
           excerpt?: string | null
@@ -116,10 +192,15 @@ export type Database = {
           published_at?: string | null
           slug: string
           status?: Database["public"]["Enums"]["blog_status"]
+          tags?: string[] | null
           title: string
           updated_at?: string
+          view_count?: number | null
         }
         Update: {
+          author_avatar?: string | null
+          author_name?: string | null
+          category_id?: string | null
           content?: string | null
           created_at?: string
           excerpt?: string | null
@@ -131,10 +212,20 @@ export type Database = {
           published_at?: string | null
           slug?: string
           status?: Database["public"]["Enums"]["blog_status"]
+          tags?: string[] | null
           title?: string
           updated_at?: string
+          view_count?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "blog_posts_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       cart_items: {
         Row: {
@@ -219,6 +310,60 @@ export type Database = {
           },
         ]
       }
+      content_automation_settings: {
+        Row: {
+          created_at: string
+          id: string
+          setting_key: string
+          setting_value: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          setting_key: string
+          setting_value: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          setting_key?: string
+          setting_value?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      content_generation_logs: {
+        Row: {
+          content_id: string | null
+          content_type: string
+          created_at: string
+          error_message: string | null
+          generation_params: Json | null
+          id: string
+          status: string
+        }
+        Insert: {
+          content_id?: string | null
+          content_type: string
+          created_at?: string
+          error_message?: string | null
+          generation_params?: Json | null
+          id?: string
+          status: string
+        }
+        Update: {
+          content_id?: string | null
+          content_type?: string
+          created_at?: string
+          error_message?: string | null
+          generation_params?: Json | null
+          id?: string
+          status?: string
+        }
+        Relationships: []
+      }
       coupons: {
         Row: {
           code: string
@@ -265,8 +410,10 @@ export type Database = {
           created_at: string
           display_order: number
           id: string
+          is_active: boolean | null
           is_automated: boolean
           question: string
+          seo_keywords: string[] | null
           updated_at: string
         }
         Insert: {
@@ -275,8 +422,10 @@ export type Database = {
           created_at?: string
           display_order?: number
           id?: string
+          is_active?: boolean | null
           is_automated?: boolean
           question: string
+          seo_keywords?: string[] | null
           updated_at?: string
         }
         Update: {
@@ -285,9 +434,47 @@ export type Database = {
           created_at?: string
           display_order?: number
           id?: string
+          is_active?: boolean | null
           is_automated?: boolean
           question?: string
+          seo_keywords?: string[] | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      media_library: {
+        Row: {
+          alt_text: string | null
+          created_at: string
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          folder: string | null
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          alt_text?: string | null
+          created_at?: string
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          folder?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          alt_text?: string | null
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          file_type?: string
+          folder?: string | null
+          id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -742,9 +929,36 @@ export type Database = {
         Args: { inc_amount: number }
         Returns: number
       }
+      get_related_blog_posts: {
+        Args: { post_id: string; limit_count?: number }
+        Returns: {
+          author_avatar: string | null
+          author_name: string | null
+          category_id: string | null
+          content: string | null
+          created_at: string
+          excerpt: string | null
+          featured_image_url: string | null
+          id: string
+          is_automated: boolean
+          meta_description: string | null
+          meta_title: string | null
+          published_at: string | null
+          slug: string
+          status: Database["public"]["Enums"]["blog_status"]
+          tags: string[] | null
+          title: string
+          updated_at: string
+          view_count: number | null
+        }[]
+      }
       increment: {
         Args: { inc_amount: number }
         Returns: number
+      }
+      increment_blog_view_count: {
+        Args: { post_id: string }
+        Returns: undefined
       }
       rollback_transaction: {
         Args: { transaction_id: string }

@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -97,14 +96,14 @@ export const useCheckout = () => {
 
         // Apply coupon if provided
         if (input.couponCode) {
-          const { data: coupon, error: couponError } = await supabase
+          const { data: coupon } = await supabase
             .from('coupons')
             .select('*')
             .eq('code', input.couponCode)
             .eq('is_active', true)
-            .single();
+            .maybeSingle();
 
-          if (!couponError && coupon) {
+          if (coupon) {
             // Check coupon validity
             const now = new Date();
             if (
@@ -119,6 +118,14 @@ export const useCheckout = () => {
               } else {
                 // Fixed amount
                 discountAmount = Math.min(coupon.discount_value, subtotal);
+              }
+
+              // Update coupon usage if applied successfully
+              if (discountAmount > 0) {
+                await supabase
+                  .from('coupons')
+                  .update({ used_count: coupon.used_count + 1 })
+                  .eq('code', input.couponCode);
               }
             }
           }
@@ -218,16 +225,6 @@ export const useCheckout = () => {
                 }
               }
             });
-        }
-
-        // Update coupon usage if applied
-        if (input.couponCode && discountAmount > 0) {
-          const { error: couponUpdateError } = await supabase
-            .from('coupons')
-            .update({ used_count: supabase.rpc('increment', { inc_amount: 1 }) })
-            .eq('code', input.couponCode);
-
-          if (couponUpdateError) throw couponUpdateError;
         }
 
         // Update product inventory

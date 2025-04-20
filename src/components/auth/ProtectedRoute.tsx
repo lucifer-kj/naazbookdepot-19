@@ -4,6 +4,11 @@ import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '@/lib/context/AuthContext';
 import { Skeleton } from '@/components/ui/skeleton';
 
+interface PublicOnlyRouteProps {
+  children: React.ReactNode;
+  adminOnly?: boolean;
+}
+
 export const ProtectedRoute: React.FC = () => {
   const { user, isLoading } = useAuth();
 
@@ -26,8 +31,11 @@ export const ProtectedRoute: React.FC = () => {
   return <Outlet />;
 };
 
-export const PublicOnlyRoute: React.FC = () => {
-  const { user, isLoading } = useAuth();
+export const PublicOnlyRoute: React.FC<PublicOnlyRouteProps> = ({ 
+  children, 
+  adminOnly = false 
+}) => {
+  const { user, isLoading, isAdmin } = useAuth();
 
   if (isLoading) {
     return (
@@ -42,8 +50,11 @@ export const PublicOnlyRoute: React.FC = () => {
   }
 
   if (user) {
+    if (adminOnly && !isAdmin) {
+      return <Navigate to="/login" replace />;
+    }
     return <Navigate to="/" replace />;
   }
 
-  return <Outlet />;
+  return <>{children}</>;
 };

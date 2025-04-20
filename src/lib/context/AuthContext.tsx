@@ -23,17 +23,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         setUser(currentSession?.user ?? null);
         
         if (currentSession?.user) {
-          setTimeout(async () => {
+          const { data: userData, error } = await supabase
+            .from('users')
+            .select('role')
+            .eq('id', currentSession.user.id)
+            .single();
+
+          if (!error && userData) {
             const userProfile = await fetchUserProfile(currentSession.user.id);
             setProfile(userProfile);
-            setIsAdmin(userProfile?.is_admin ?? false);
-            setIsLoading(false);
-          }, 0);
+            setIsAdmin(userData.role === 'admin');
+          } else {
+            setProfile(null);
+            setIsAdmin(false);
+          }
         } else {
           setProfile(null);
           setIsAdmin(false);
-          setIsLoading(false);
         }
+        
+        setIsLoading(false);
       }
     );
 
@@ -42,11 +51,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setUser(currentSession?.user ?? null);
       
       if (currentSession?.user) {
-        fetchUserProfile(currentSession.user.id).then(userProfile => {
-          setProfile(userProfile);
-          setIsAdmin(userProfile?.is_admin ?? false);
-          setIsLoading(false);
-        });
+        supabase
+          .from('users')
+          .select('role')
+          .eq('id', currentSession.user.id)
+          .single()
+          .then(({ data: userData, error }) => {
+            if (!error && userData) {
+              fetchUserProfile(currentSession.user.id).then(userProfile => {
+                setProfile(userProfile);
+                setIsAdmin(userData.role === 'admin');
+              });
+            }
+            setIsLoading(false);
+          });
       } else {
         setIsLoading(false);
       }

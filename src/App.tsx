@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,6 +14,7 @@ import { ErrorBoundary } from "./components/ui/error-boundary";
 import Dashboard from "./pages/admin/Dashboard";
 import OrderList from "./pages/admin/OrderList";
 import OrderDetail from "./pages/admin/OrderDetail";
+import AdminLogin from "./pages/admin/Login";  // New admin login page
 import Index from "./pages/Index";
 import Books from "./pages/Books";
 import Perfumes from "./pages/Perfumes";
@@ -98,6 +100,8 @@ const App = () => (
                 </Route>
                 
                 {/* Admin Routes */}
+                <Route path="/admin/login" element={<PublicOnlyRoute adminOnly={true}><AdminLogin /></PublicOnlyRoute>} />
+                
                 <Route path="/admin" element={<AdminRoute />}>
                   <Route element={<AdminLayout />}>
                     <Route index element={<Dashboard />} />

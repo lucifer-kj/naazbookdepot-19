@@ -3,6 +3,7 @@ import React from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/context/AuthContext';
 import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from 'sonner';
 
 export const AdminRoute: React.FC = () => {
   const { isLoading, isAdmin, user } = useAuth();
@@ -21,10 +22,12 @@ export const AdminRoute: React.FC = () => {
   }
 
   if (!user) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    toast.error('Please log in to access admin area');
+    return <Navigate to="/admin/login" state={{ from: location }} replace />;
   }
 
   if (!isAdmin) {
+    toast.error('Access denied. Admin privileges required.');
     return <Navigate to="/" replace />;
   }
 

@@ -1,43 +1,20 @@
 
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { BookOpen, SprayCan, BookMarked, UserCircle, LogOut } from 'lucide-react';
+import { BookOpen, SprayCan, BookMarked, UserCircle, LogOut, ShoppingCart } from 'lucide-react';
+import { useAuth } from '@/lib/context/AuthContext';
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const [session, setSession] = React.useState(null);
-
-  React.useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-      }
-    );
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+  const { user, profile, signOut } = useAuth();
 
   const handleLogout = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      
-      if (error) {
-        toast.error(error.message);
-        return;
-      }
-
-      toast.success('Logged out successfully');
+      await signOut();
       navigate('/');
     } catch (error) {
       console.error('Logout error:', error);
-      toast.error('An unexpected error occurred');
     }
   };
 
@@ -64,11 +41,16 @@ const Navbar = () => {
         </div>
 
         <div className="flex items-center space-x-4">
-          {session ? (
+          <Link to="/cart" className="flex items-center space-x-2 text-gray-700 hover:text-naaz-green">
+            <ShoppingCart size={20} />
+            <span>Cart</span>
+          </Link>
+          
+          {user ? (
             <>
               <Link to="/account" className="flex items-center space-x-2 text-gray-700 hover:text-naaz-green">
                 <UserCircle size={20} />
-                <span>Account</span>
+                <span>{profile ? `${profile.first_name || 'My'} Account` : 'Account'}</span>
               </Link>
               <Button 
                 variant="ghost" 

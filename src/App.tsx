@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppProviders } from "./lib/providers";
+import { ProtectedRoute, AdminRoute, PublicOnlyRoute } from './components/auth/ProtectedRoute';
 import Index from "./pages/Index";
 import Books from "./pages/Books";
 import Perfumes from "./pages/Perfumes";
@@ -16,11 +17,14 @@ import BlogPost from "./pages/BlogPost";
 import FAQ from "./pages/FAQ";
 import Contact from "./pages/Contact";
 import Account from "./pages/Account";
+import AccountSettings from "./pages/AccountSettings";
+import AddressManagement from "./pages/AddressManagement";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import ProductPage from "./pages/ProductPage";
 
 const queryClient = new QueryClient({
@@ -40,6 +44,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <Routes>
+            {/* Public Routes */}
             <Route path="/" element={<Index />} />
             <Route path="/books" element={<Books />} />
             <Route path="/perfumes" element={<Perfumes />} />
@@ -49,13 +54,31 @@ const App = () => (
             <Route path="/blog/:slug" element={<BlogPost />} />
             <Route path="/faq" element={<FAQ />} />
             <Route path="/contact" element={<Contact />} />
-            <Route path="/account" element={<Account />} />
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/checkout" element={<Checkout />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/product/:productId" element={<ProductPage />} />
+            <Route path="/cart" element={<Cart />} />
+            
+            {/* Auth Routes (only accessible if NOT logged in) */}
+            <Route element={<PublicOnlyRoute />}>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+            </Route>
+            
+            {/* Protected Routes (only accessible if logged in) */}
+            <Route element={<ProtectedRoute />}>
+              <Route path="/account" element={<Account />} />
+              <Route path="/account/settings" element={<AccountSettings />} />
+              <Route path="/account/addresses" element={<AddressManagement />} />
+              <Route path="/checkout" element={<Checkout />} />
+            </Route>
+            
+            {/* Admin Routes */}
+            <Route element={<AdminRoute />}>
+              {/* Add admin routes here */}
+            </Route>
+            
+            {/* 404 Route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

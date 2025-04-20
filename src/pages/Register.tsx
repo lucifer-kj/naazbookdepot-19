@@ -1,12 +1,12 @@
-
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useAuth } from '@/lib/context/AuthContext';
+import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 const Register = () => {
   const [firstName, setFirstName] = useState('');
@@ -15,6 +15,10 @@ const Register = () => {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [marketing, setMarketing] = useState(false);
+  const [terms, setTerms] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { signUp } = useAuth();
   const navigate = useNavigate();
 
   const handleRegister = async (event: React.FormEvent) => {
@@ -25,31 +29,37 @@ const Register = () => {
       return;
     }
 
+    setIsLoading(true);
+    
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            first_name: firstName,
-            last_name: lastName,
-            phone: phone
-          }
-        }
+      const { error } = await signUp(email, password, {
+        first_name: firstName,
+        last_name: lastName,
+        phone: phone,
+        marketing_opt_in: marketing
       });
 
-      if (error) {
-        toast.error(error.message);
-        return;
-      }
-
-      if (data.user) {
-        toast.success('Registration successful. Please check your email to verify your account.');
+      if (!error) {
+        // Create activity log
+        try {
+          await fetch('/api/log-activity', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              action_type: 'register',
+              details: { method: 'email' }
+            }),
+          });
+        } catch (logError) {
+          console.error('Failed to log activity:', logError);
+        }
+        
         navigate('/login');
       }
-    } catch (error) {
-      console.error('Registration error:', error);
-      toast.error('An unexpected error occurred');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -75,6 +85,7 @@ const Register = () => {
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                     required
+                    disabled={isLoading}
                   />
                 </div>
                 <div>
@@ -86,6 +97,7 @@ const Register = () => {
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                     required
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -99,6 +111,7 @@ const Register = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  disabled={isLoading}
                 />
               </div>
               
@@ -110,6 +123,7 @@ const Register = () => {
                   placeholder="Your phone number"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
+                  disabled={isLoading}
                 />
               </div>
               
@@ -123,6 +137,7 @@ const Register = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={6}
+                  disabled={isLoading}
                 />
               </div>
               
@@ -136,25 +151,52 @@ const Register = () => {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                   minLength={6}
+                  disabled={isLoading}
                 />
               </div>
               
               <div className="flex items-center">
-                <input type="checkbox" id="marketing" className="h-4 w-4 text-naaz-gold focus:ring-naaz-green" />
+                <input 
+                  type="checkbox" 
+                  id="marketing" 
+                  className="h-4 w-4 text-naaz-gold focus:ring-naaz-green"
+                  checked={marketing}
+                  onChange={(e) => setMarketing(e.target.checked)}
+                  disabled={isLoading}
+                />
                 <label htmlFor="marketing" className="ml-2 block text-sm text-gray-700">
                   Subscribe to our newsletter for exclusive offers and updates
                 </label>
               </div>
               
               <div className="flex items-center">
-                <input type="checkbox" id="terms" className="h-4 w-4 text-naaz-gold focus:ring-naaz-green" required />
+                <input 
+                  type="checkbox" 
+                  id="terms" 
+                  className="h-4 w-4 text-naaz-gold focus:ring-naaz-green"
+                  checked={terms}
+                  onChange={(e) => setTerms(e.target.checked)}
+                  required
+                  disabled={isLoading}
+                />
                 <label htmlFor="terms" className="ml-2 block text-sm text-gray-700">
                   I agree to the <Link to="/terms" className="text-naaz-gold hover:underline">Terms of Service</Link> and <Link to="/privacy" className="text-naaz-gold hover:underline">Privacy Policy</Link>
                 </label>
               </div>
               
-              <Button type="submit" className="w-full">
-                Create Account
+              <Button 
+                type="submit" 
+                className="w-full"
+                disabled={isLoading || !terms}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating Account...
+                  </>
+                ) : (
+                  'Create Account'
+                )}
               </Button>
             </form>
             

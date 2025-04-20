@@ -2,18 +2,32 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { getDashboardStats, getRecentOrders, getNewCustomers, getLowStockProducts } from '@/lib/api/admin-service';
+import { OrderStatus } from '@/lib/api/admin-service';
+
+// Define proper type for the dashboard data
+interface DashboardData {
+  salesSummary: {
+    daily: { amount: number; change: number };
+    weekly: { amount: number; change: number };
+    monthly: { amount: number; change: number };
+  };
+  ordersByStatus: Record<string, number>;
+  recentOrders: any[];
+  newCustomers: any[];
+  lowStockProducts: any[];
+}
 
 const useDashboardData = () => {
   const { toast } = useToast();
   const [timeframe, setTimeframe] = useState<'daily' | 'weekly' | 'monthly'>('daily');
   const [isLoading, setIsLoading] = useState(true);
-  const [dashboardData, setDashboardData] = useState({
+  const [dashboardData, setDashboardData] = useState<DashboardData>({
     salesSummary: {
       daily: { amount: 0, change: 0 },
       weekly: { amount: 0, change: 0 },
       monthly: { amount: 0, change: 0 }
     },
-    ordersByStatus: [],
+    ordersByStatus: {},
     recentOrders: [],
     newCustomers: [],
     lowStockProducts: []

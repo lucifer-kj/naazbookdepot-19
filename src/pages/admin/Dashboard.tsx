@@ -38,7 +38,10 @@ const Dashboard = () => {
     color: orderStatusColors[status as OrderStatus] || "#9ca3af"
   }));
 
+  // Calculate total orders - sum all counts in the ordersByStatus object
   const totalOrders = Object.values(dashboardData.ordersByStatus).reduce((sum, count) => sum + Number(count), 0);
+  
+  // Get the pending orders count - safely access the property with optional chaining
   const pendingOrders = dashboardData.ordersByStatus?.pending || 0;
 
   return (

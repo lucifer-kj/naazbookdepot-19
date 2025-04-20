@@ -3,7 +3,7 @@ import React from 'react';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { AnalyticsProvider } from './context/AnalyticsContext';
-import { HelmetProvider } from 'react-helmet';
+import { Helmet, HelmetProvider } from 'react-helmet-async';
 
 interface AppProvidersProps {
   children: React.ReactNode;

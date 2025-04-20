@@ -555,6 +555,50 @@ export type Database = {
           },
         ]
       }
+      order_shipments: {
+        Row: {
+          carrier: string
+          created_at: string
+          estimated_delivery: string | null
+          id: string
+          order_id: string
+          shipping_method: string
+          tracking_number: string
+          updated_at: string
+          weight: number
+        }
+        Insert: {
+          carrier: string
+          created_at?: string
+          estimated_delivery?: string | null
+          id?: string
+          order_id: string
+          shipping_method: string
+          tracking_number: string
+          updated_at?: string
+          weight: number
+        }
+        Update: {
+          carrier?: string
+          created_at?: string
+          estimated_delivery?: string | null
+          id?: string
+          order_id?: string
+          shipping_method?: string
+          tracking_number?: string
+          updated_at?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_shipments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_timeline: {
         Row: {
           created_at: string

@@ -18,10 +18,12 @@ export interface AuthContextType {
   isLoading: boolean;
   isAdmin: boolean;
   isSuperAdmin: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, metadata?: any) => Promise<void>;
-  signOut: () => Promise<void>;
-  resetPassword: (email: string) => Promise<void>;
-  updatePassword: (newPassword: string) => Promise<void>;
-  updateProfile: (data: Partial<UserProfile>) => Promise<{error?: any}>;
+  connectionStatus: 'connected' | 'connecting' | 'disconnected';
+  signIn: (email: string, password: string) => Promise<{ success: boolean; user?: User; session?: Session; }>;
+  signUp: (email: string, password: string, metadata?: any) => Promise<{ success: boolean; user?: User; session?: Session; }>;
+  signOut: () => Promise<{ success: boolean; }>;
+  resetPassword: (email: string) => Promise<{ success: boolean; }>;
+  updatePassword: (newPassword: string) => Promise<{ success: boolean; }>;
+  updateProfile: (data: Partial<UserProfile>) => Promise<{error?: any, profile?: UserProfile}>;
+  reconnect: () => Promise<void>;
 }

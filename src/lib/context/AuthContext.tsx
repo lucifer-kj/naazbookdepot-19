@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Session, User, AuthChangeEvent } from '@supabase/supabase-js';
@@ -22,7 +21,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'connecting' | 'disconnected'>('connecting');
   const [refreshAttempts, setRefreshAttempts] = useState(0);
 
-  // Function to refresh user profile
   const refreshUserProfile = useCallback(async (userId: string) => {
     try {
       const userProfile = await fetchUserProfile(userId);
@@ -34,11 +32,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       } else {
         console.log('No profile data returned from fetchUserProfile, checking admin by email');
         
-        // Fallback admin check
         const isAdminByEmail = await checkIsAdminByEmail();
         setIsAdmin(isAdminByEmail);
         
-        // Create a minimal profile with available data
         const authUser = await supabase.auth.getUser();
         if (authUser.data?.user?.email) {
           const email = authUser.data.user.email;
@@ -68,12 +64,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, []);
 
-  // Function to handle session recovery
   const recoverSession = useCallback(async () => {
     try {
       setRefreshAttempts(prev => prev + 1);
       
-      // Try to refresh the session
       const { data, error } = await supabase.auth.refreshSession();
       
       if (error) {
@@ -107,7 +101,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [refreshUserProfile, refreshAttempts]);
 
-  // Handle connection status
   useEffect(() => {
     const checkConnection = async () => {
       try {
@@ -121,7 +114,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     
     checkConnection();
     
-    // Periodically check connection
     const intervalId = window.setInterval(() => {
       if (connectionStatus !== 'connected') {
         checkConnection();
@@ -131,9 +123,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     return () => window.clearInterval(intervalId);
   }, [connectionStatus]);
 
-  // Set up auth state change listener
   useEffect(() => {
-    // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: AuthChangeEvent, currentSession: Session | null) => {
         console.log('Auth state changed:', event);
@@ -142,7 +132,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         setUser(currentSession?.user ?? null);
         
         if (currentSession?.user) {
-          // Use setTimeout to prevent deadlocks with Supabase client
           setTimeout(async () => {
             await refreshUserProfile(currentSession.user.id);
           }, 0);
@@ -156,7 +145,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     );
 
-    // Check for existing session
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
@@ -170,7 +158,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setIsLoading(false);
       setConnectionStatus('disconnected');
       
-      // Log the error
       logError({
         type: 'auth_error',
         error: {
@@ -185,12 +172,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     };
   }, [refreshUserProfile]);
 
-  // Setup automatic retry for disconnected state
   useEffect(() => {
     if (connectionStatus === 'disconnected' && refreshAttempts < 3) {
       const timer = setTimeout(() => {
         recoverSession();
-      }, 5000 * (refreshAttempts + 1)); // Exponential backoff
+      }, 5000 * (refreshAttempts + 1));
       
       return () => clearTimeout(timer);
     }
@@ -279,7 +265,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  // Manual connection recovery function
   const reconnect = async () => {
     setConnectionStatus('connecting');
     try {

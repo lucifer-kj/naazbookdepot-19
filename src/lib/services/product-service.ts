@@ -1,9 +1,9 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useProductRealtime } from "./realtime-service";
 import { logError } from "./error-service";
+import { useState, useEffect } from 'react';
 
 export interface Product {
   id: string;

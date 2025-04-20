@@ -28,7 +28,7 @@ const Navbar = () => {
               alt="Naaz Group Logo" 
               className="w-10 h-10 object-cover"
             />
-            <span>The Naaz Group</span>
+            <span>Naaz Book Depot</span>
           </Link>
         </div>
 

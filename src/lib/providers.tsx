@@ -14,9 +14,7 @@ export const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
     <HelmetProvider>
       <AuthProvider>
         <CartProvider>
-          <AnalyticsProvider>
-            {children}
-          </AnalyticsProvider>
+          {children}
         </CartProvider>
       </AuthProvider>
     </HelmetProvider>

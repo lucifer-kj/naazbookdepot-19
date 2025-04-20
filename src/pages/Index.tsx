@@ -14,7 +14,7 @@ import NewArrivals from '../components/NewArrivals';
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col w-full overflow-x-hidden">
       <Navbar />
       <main className="flex-grow">
         <Hero />

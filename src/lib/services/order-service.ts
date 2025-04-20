@@ -54,14 +54,25 @@ export async function saveOrderItems(orderId: string, orderItems: any[]) {
 
 export async function updateInventory(orderItems: any[]) {
   for (const item of orderItems) {
-    // Fix: Use separate statements to avoid type mismatch
+    // Get the current inventory
+    const { data: productData, error: productError } = await supabase
+      .from('products')
+      .select('quantity_in_stock')
+      .eq('id', item.product_id)
+      .single();
+    
+    if (productError) {
+      console.error('Error fetching product:', productError);
+      throw productError;
+    }
+    
+    // Calculate new inventory level
+    const newQuantity = Math.max(0, productData.quantity_in_stock - item.quantity);
+    
+    // Update the inventory
     const { error } = await supabase
       .from('products')
-      .update({ 
-        quantity_in_stock: supabase.rpc('decrement', { 
-          inc_amount: item.quantity 
-        }) 
-      })
+      .update({ quantity_in_stock: newQuantity })
       .eq('id', item.product_id);
       
     if (error) {

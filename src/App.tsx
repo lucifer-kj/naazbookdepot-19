@@ -33,6 +33,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import ProductPage from "./pages/ProductPage";
 import { ProductList } from "./components/admin/products/ProductList";
+import OrderSuccess from "./pages/OrderSuccess";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -64,6 +65,7 @@ const App = () => (
               <Route path="/contact" element={<Contact />} />
               <Route path="/product/:productId" element={<ProductPage />} />
               <Route path="/cart" element={<Cart />} />
+              <Route path="/order-success" element={<OrderSuccess />} />
               
               {/* Auth Routes (only accessible if NOT logged in) */}
               <Route element={<PublicOnlyRoute />}>

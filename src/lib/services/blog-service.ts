@@ -92,10 +92,14 @@ export const getBlogPost = async (slug: string) => {
 };
 
 // Create or update a blog post
-export const saveBlogPost = async (post: Partial<BlogPost> & { slug: string }) => {
-  // Ensure slug is present as it's required
+export const saveBlogPost = async (post: Partial<BlogPost> & { slug: string; title: string }) => {
+  // Ensure slug and title are present as they're required
   if (!post.slug) {
     throw new Error('Slug is required');
+  }
+
+  if (!post.title) {
+    throw new Error('Title is required');
   }
 
   // If updating an existing post

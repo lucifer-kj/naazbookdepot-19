@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Session, User, AuthChangeEvent } from '@supabase/supabase-js';
@@ -15,6 +16,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState<boolean>(false);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -25,7 +27,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         if (currentSession?.user) {
           const { data: userData, error } = await supabase
             .from('users')
-            .select('role')
+            .select('role, is_super_admin')
             .eq('id', currentSession.user.id)
             .single();
 
@@ -33,13 +35,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             const userProfile = await fetchUserProfile(currentSession.user.id);
             setProfile(userProfile);
             setIsAdmin(userData.role === 'admin');
+            setIsSuperAdmin(!!userData.is_super_admin);
           } else {
             setProfile(null);
             setIsAdmin(false);
+            setIsSuperAdmin(false);
           }
         } else {
           setProfile(null);
           setIsAdmin(false);
+          setIsSuperAdmin(false);
         }
         
         setIsLoading(false);
@@ -53,7 +58,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       if (currentSession?.user) {
         supabase
           .from('users')
-          .select('role')
+          .select('role, is_super_admin')
           .eq('id', currentSession.user.id)
           .single()
           .then(({ data: userData, error }) => {
@@ -61,6 +66,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
               fetchUserProfile(currentSession.user.id).then(userProfile => {
                 setProfile(userProfile);
                 setIsAdmin(userData.role === 'admin');
+                setIsSuperAdmin(!!userData.is_super_admin);
               });
             }
             setIsLoading(false);
@@ -98,6 +104,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         session,
         isLoading,
         isAdmin,
+        isSuperAdmin,
         signIn,
         signUp,
         signOut,

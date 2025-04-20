@@ -8,6 +8,7 @@ export interface UserProfile {
   email: string;
   phone?: string;
   is_admin: boolean;
+  is_super_admin: boolean;
 }
 
 export interface AuthContextType {
@@ -16,6 +17,7 @@ export interface AuthContextType {
   session: Session | null;
   isLoading: boolean;
   isAdmin: boolean;
+  isSuperAdmin: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, metadata?: any) => Promise<void>;
   signOut: () => Promise<void>;

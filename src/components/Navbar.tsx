@@ -32,7 +32,7 @@ const Navbar = () => {
               className="w-8 h-8 sm:w-10 sm:h-10 object-cover"
             />
             <span className="hidden sm:inline">Naaz Book Depot</span>
-            <span className="sm:hidden">Naaz</span>
+            <span className="sm:hidden">Naaz Book Depot </span>
           </Link>
         </div>
 

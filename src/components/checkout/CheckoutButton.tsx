@@ -23,7 +23,7 @@ const CheckoutButton: React.FC<CheckoutButtonProps> = ({
 }) => {
   const { toast } = useToast();
   const [loading, setLoading] = React.useState(false);
-  const { cart } = useCart();
+  const { cart, clearCart } = useCart();
   
   const handleCheckout = async () => {
     if (!cart || cart.items.length === 0) {

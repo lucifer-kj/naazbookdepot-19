@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { CartSummary } from "../types/cart";
@@ -59,8 +58,7 @@ export async function verifyPayment(sessionId: string) {
     const { data, error } = await supabase.functions.invoke(
       "verify-payment",
       {
-        method: "GET",
-        queryParams: { session_id: sessionId },
+        body: { session_id: sessionId }
       }
     );
 

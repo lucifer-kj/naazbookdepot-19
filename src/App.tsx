@@ -5,7 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppProviders } from "./lib/providers";
-import { ProtectedRoute, PublicOnlyRoute } from './components/auth/ProtectedRoute';
+import { ProtectedRoute, AdminRoute, PublicOnlyRoute } from './components/auth/ProtectedRoute';
 import { SidebarProvider } from "@/components/ui/sidebar";
 import Index from "./pages/Index";
 import Books from "./pages/Books";
@@ -27,6 +27,11 @@ import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import ProductPage from "./pages/ProductPage";
+
+// Admin Pages
+import { AdminLayout } from "./components/admin/AdminLayout";
+import Dashboard from "./pages/admin/Dashboard";
+import Orders from "./pages/admin/Orders";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -73,6 +78,15 @@ const App = () => (
                 <Route path="/account/settings" element={<AccountSettings />} />
                 <Route path="/account/addresses" element={<AddressManagement />} />
                 <Route path="/checkout" element={<Checkout />} />
+              </Route>
+              
+              {/* Admin Routes */}
+              <Route element={<AdminRoute />}>
+                <Route path="/admin" element={<AdminLayout />}>
+                  <Route index element={<Dashboard />} />
+                  <Route path="orders" element={<Orders />} />
+                  {/* Add more admin routes here */}
+                </Route>
               </Route>
               
               {/* 404 Route */}

@@ -1,73 +1,70 @@
 
-import React from 'react';
-import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '@/lib/context/AuthContext';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export const ProtectedRoute = () => {
   const { user, isLoading } = useAuth();
-  const location = useLocation();
 
-  // If still loading, show nothing (or you could add a loading spinner here)
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-naaz-green"></div>
+      <div className="flex items-center justify-center min-h-screen p-4">
+        <div className="w-full max-w-md space-y-4">
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-64 w-full" />
+          <Skeleton className="h-12 w-full" />
+        </div>
       </div>
     );
   }
 
-  // If not authenticated, redirect to login
   if (!user) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Navigate to="/login" replace />;
   }
 
-  // If authenticated, render the child routes
-  return <Outlet />;
-};
-
-export const AdminRoute = () => {
-  const { isAdmin, isLoading } = useAuth();
-  const location = useLocation();
-
-  // If still loading, show nothing (or you could add a loading spinner here)
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-naaz-green"></div>
-      </div>
-    );
-  }
-
-  // If not admin, redirect to home
-  if (!isAdmin) {
-    return <Navigate to="/" state={{ from: location }} replace />;
-  }
-
-  // If admin, render the child routes
   return <Outlet />;
 };
 
 export const PublicOnlyRoute = () => {
   const { user, isLoading } = useAuth();
-  const location = useLocation();
-  
-  // Get the intended destination from state, or default to home
-  const from = location.state?.from?.pathname || '/';
 
-  // If still loading, show nothing (or you could add a loading spinner here)
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-naaz-green"></div>
+      <div className="flex items-center justify-center min-h-screen p-4">
+        <div className="w-full max-w-md space-y-4">
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-64 w-full" />
+          <Skeleton className="h-12 w-full" />
+        </div>
       </div>
     );
   }
 
-  // If authenticated, redirect to the intended destination or home
   if (user) {
-    return <Navigate to={from} replace />;
+    return <Navigate to="/" replace />;
   }
 
-  // If not authenticated, render the child routes
+  return <Outlet />;
+};
+
+export const AdminRoute = () => {
+  const { isLoading, isAdmin } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen p-4">
+        <div className="w-full max-w-md space-y-4">
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-64 w-full" />
+          <Skeleton className="h-12 w-full" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return <Navigate to="/" replace />;
+  }
+
   return <Outlet />;
 };

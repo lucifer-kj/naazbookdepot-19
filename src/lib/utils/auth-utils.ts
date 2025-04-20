@@ -21,7 +21,8 @@ export async function fetchUserProfile(userId: string): Promise<UserProfile | nu
       last_name: data.last_name || '',
       email: data.email || '',
       phone: data.phone,
-      is_admin: data.role === 'admin'
+      is_admin: data.role === 'admin',
+      is_super_admin: !!data.is_super_admin
     };
 
     return userProfile;

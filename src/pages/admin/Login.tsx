@@ -20,30 +20,44 @@ const AdminLogin = () => {
     setLoading(true);
 
     try {
+      // First sign in the user
       await signIn(email, password);
       
-      // Additional check for admin role
-      const { data: { user } } = await supabase.auth.getUser();
+      // Get the current session to verify the user is authenticated
+      const { data: sessionData } = await supabase.auth.getSession();
       
-      if (user) {
-        const { data: profile, error } = await supabase
-          .from('users')
-          .select('role')
-          .eq('id', user.id)
-          .single();
+      if (!sessionData.session) {
+        throw new Error('Authentication failed');
+      }
+      
+      // Check if the user has admin privileges
+      const { data: profile, error } = await supabase
+        .from('users')
+        .select('role, is_super_admin')
+        .eq('id', sessionData.session.user.id)
+        .single();
 
-        if (error) throw error;
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        throw new Error('Failed to verify admin privileges');
+      }
 
-        if (profile?.role === 'admin') {
-          toast.success('Admin login successful');
-          navigate('/admin');
-        } else {
-          toast.error('Access denied. Admin privileges required.');
-          await supabase.auth.signOut();
-        }
+      if (profile?.role === 'admin') {
+        toast.success('Admin login successful');
+        navigate('/admin');
+      } else {
+        toast.error('Access denied. Admin privileges required.');
+        await supabase.auth.signOut();
       }
     } catch (error: any) {
+      console.error('Admin login error:', error);
       toast.error(error.message || 'Login failed');
+      // Ensure user is signed out on error
+      try {
+        await supabase.auth.signOut();
+      } catch (signOutError) {
+        console.error('Sign out error:', signOutError);
+      }
     } finally {
       setLoading(false);
     }

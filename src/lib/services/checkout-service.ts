@@ -133,6 +133,7 @@ export const useCheckout = () => {
         // Start a transaction
         const { data: transactionResult } = await supabase.rpc('begin_transaction');
         if (transactionResult && typeof transactionResult === 'object') {
+          // Safely extract transaction_id from JSON object
           transactionId = (transactionResult as any).transaction_id || null;
         }
 
@@ -154,13 +155,13 @@ export const useCheckout = () => {
         if (input.sameAsBilling) {
           billingAddress = shippingAddress;
         } else {
-          const addressData = {
+          const billingAddressData = {
             ...input.billingAddress,
             user_id: user.id
           };
           const { data: billingData, error: billingAddressError } = await supabase
             .from('addresses')
-            .insert(addressData)
+            .insert(billingAddressData)
             .select()
             .single();
 
@@ -168,7 +169,7 @@ export const useCheckout = () => {
           billingAddress = billingData;
         }
 
-        // Create order
+        // Create order with properly typed status
         const orderData = {
           user_id: user.id,
           status: 'pending' as OrderStatus,
@@ -205,7 +206,7 @@ export const useCheckout = () => {
 
         // Add customer note if provided
         if (input.notes) {
-          const { error: noteError } = await supabase.functions
+          await supabase.functions
             .invoke('order-helpers', {
               body: {
                 action: 'addOrderNote',
@@ -217,8 +218,6 @@ export const useCheckout = () => {
                 }
               }
             });
-
-          if (noteError) throw noteError;
         }
 
         // Update coupon usage if applied

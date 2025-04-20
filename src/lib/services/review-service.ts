@@ -1,16 +1,5 @@
 
-// Fix for the review-service.ts file - we need to address the order_id missing issue
-// Assuming the issue is on line 135, we'll need to modify the code to properly access
-// the order ID or remove that part if it's not needed.
-
-// Here's an example of what the fix might look like:
-// Replace:
-// const { order_id } = verificationData;
-// With:
-// const order_id = verificationData.id;
-
-// Since we don't have the full content of the file, I'll make a generic fix
-// that addresses the specific error mentioned in the build report.
+import { supabase } from "@/integrations/supabase/client";
 
 export const verifyPurchase = async (productId: string, userId: string) => {
   try {
@@ -29,8 +18,7 @@ export const verifyPurchase = async (productId: string, userId: string) => {
       .limit(1)
       .single();
       
-    // Instead of accessing order_id directly, we access the id property
-    // of the verification data
+    // Return verification data with correct properties
     return {
       verified: !!data,
       // Access the ID directly, not through order_id

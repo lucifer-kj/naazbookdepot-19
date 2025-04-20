@@ -13,7 +13,7 @@ export interface WishlistItem {
     slug: string;
     price: number;
     sale_price: number | null;
-    main_image_url: string;
+    main_image_url: string | null;
     quantity_in_stock: number;
   };
 }
@@ -30,7 +30,7 @@ export const useWishlist = () => {
       }
 
       const { data, error } = await supabase
-        .from('wishlist')
+        .from('wishlist_items')
         .select(`
           id,
           user_id,
@@ -42,7 +42,6 @@ export const useWishlist = () => {
             slug,
             price,
             sale_price,
-            main_image_url,
             quantity_in_stock
           )
         `)
@@ -68,7 +67,7 @@ export const useIsInWishlist = (productId: string | undefined) => {
       if (!user) return false;
 
       const { data, error } = await supabase
-        .from('wishlist')
+        .from('wishlist_items')
         .select('id')
         .eq('user_id', user.id)
         .eq('product_id', productId)
@@ -96,7 +95,7 @@ export const useAddToWishlist = () => {
 
       // Check if already in wishlist
       const { data: existing } = await supabase
-        .from('wishlist')
+        .from('wishlist_items')
         .select('id')
         .eq('user_id', user.id)
         .eq('product_id', productId)
@@ -108,7 +107,7 @@ export const useAddToWishlist = () => {
 
       // Add to wishlist
       const { data, error } = await supabase
-        .from('wishlist')
+        .from('wishlist_items')
         .insert({
           user_id: user.id,
           product_id: productId
@@ -152,7 +151,7 @@ export const useRemoveFromWishlist = () => {
       }
 
       const { error } = await supabase
-        .from('wishlist')
+        .from('wishlist_items')
         .delete()
         .eq('id', itemId)
         .eq('user_id', user.id);
@@ -209,7 +208,8 @@ export const useMoveToCart = () => {
       let transactionId = null;
       
       if (transactionResult && typeof transactionResult === 'object') {
-        transactionId = (transactionResult as any).transaction_id || null;
+        // Safely extract transaction_id
+        transactionId = transactionResult.transaction_id || null;
       }
 
       try {
@@ -239,7 +239,7 @@ export const useMoveToCart = () => {
 
         // Remove from wishlist
         const { error: deleteError } = await supabase
-          .from('wishlist')
+          .from('wishlist_items')
           .delete()
           .eq('id', itemId)
           .eq('user_id', user.id);
@@ -370,7 +370,7 @@ export const useMoveAllToCart = () => {
         // Remove successful items from wishlist
         if (successfulItems.length > 0) {
           const { error: deleteError } = await supabase
-            .from('wishlist')
+            .from('wishlist_items')
             .delete()
             .in('id', successfulItems)
             .eq('user_id', user.id);
@@ -424,7 +424,7 @@ export const useClearWishlist = () => {
       }
 
       const { error } = await supabase
-        .from('wishlist')
+        .from('wishlist_items')
         .delete()
         .eq('user_id', user.id);
 

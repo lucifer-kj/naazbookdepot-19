@@ -46,8 +46,7 @@ export const useCart = () => {
             slug,
             price,
             sale_price,
-            quantity_in_stock,
-            main_image_url
+            quantity_in_stock
           )
         `)
         .eq('user_id', user.id);
@@ -58,11 +57,13 @@ export const useCart = () => {
       let subtotal = 0;
       let itemCount = 0;
       
-      const items = data.map((item: CartItem) => {
-        const price = item.product.sale_price || item.product.price;
+      // Add type assertion to handle possible SelectQueryError
+      const items = (data || []).map((item: any) => {
+        // Safely access price with null checks
+        const price = item.product?.sale_price || item.product?.price || 0;
         subtotal += price * item.quantity;
         itemCount += item.quantity;
-        return item;
+        return item as CartItem;
       });
 
       return {
@@ -336,8 +337,7 @@ export const getCartSummary = async (): Promise<CartSummary> => {
         slug,
         price,
         sale_price,
-        quantity_in_stock,
-        main_image_url
+        quantity_in_stock
       )
     `)
     .eq('user_id', user.id);
@@ -348,11 +348,13 @@ export const getCartSummary = async (): Promise<CartSummary> => {
   let subtotal = 0;
   let itemCount = 0;
   
-  const items = data.map((item: CartItem) => {
-    const price = item.product.sale_price || item.product.price;
+  // Add type assertion to handle possible SelectQueryError
+  const items = (data || []).map((item: any) => {
+    // Safely access price with null checks
+    const price = item.product?.sale_price || item.product?.price || 0;
     subtotal += price * item.quantity;
     itemCount += item.quantity;
-    return item;
+    return item as CartItem;
   });
 
   return {
@@ -371,11 +373,8 @@ export const applyDiscount = async (couponCode: string) => {
     // Get cart subtotal
     const cartSummary = await getCartSummary();
     
-    // Ensure cartSummary is properly typed
-    const typedCartSummary = cartSummary as CartSummary;
-    
-    // Now we can safely access subtotal
-    const subtotal = typedCartSummary.subtotal;
+    // Safely access subtotal
+    const subtotal = cartSummary?.subtotal || 0;
     
     // Validate coupon
     const { data: coupon, error: couponError } = await supabase

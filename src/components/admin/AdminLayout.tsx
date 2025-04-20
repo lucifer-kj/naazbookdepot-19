@@ -136,7 +136,7 @@ export const AdminLayout = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={profile?.avatar_url} alt={profile?.first_name} />
+                  <AvatarImage src={profile?.avatar_url || ''} alt={profile?.first_name} />
                   <AvatarFallback className="bg-naaz-green text-white">
                     {profile?.first_name?.[0] || 'A'}
                   </AvatarFallback>
@@ -163,17 +163,20 @@ export const AdminLayout = () => {
                 {/* Breadcrumbs */}
                 <Breadcrumb>
                   <BreadcrumbItem>
-                    <BreadcrumbLink as={Link} to="/admin">Admin</BreadcrumbLink>
+                    <BreadcrumbLink asChild>
+                      <Link to="/admin">Admin</Link>
+                    </BreadcrumbLink>
                   </BreadcrumbItem>
                   {paths.slice(1).map((path, index) => (
                     <BreadcrumbItem key={path}>
                       {index === paths.length - 2 ? (
-                        <BreadcrumbLink 
-                          as={Link} 
-                          to={`/${paths.slice(0, index + 2).join('/')}`}
-                          className="capitalize"
-                        >
-                          {path}
+                        <BreadcrumbLink asChild>
+                          <Link 
+                            to={`/${paths.slice(0, index + 2).join('/')}`}
+                            className="capitalize"
+                          >
+                            {path}
+                          </Link>
                         </BreadcrumbLink>
                       ) : (
                         <span className="capitalize">{path}</span>

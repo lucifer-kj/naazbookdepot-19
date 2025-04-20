@@ -314,7 +314,7 @@ const Dashboard = () => {
                     <TableCell>{formatCurrency(order.total_amount)}</TableCell>
                     <TableCell>
                       <Badge variant={
-                        order.status === 'delivered' ? 'success' :
+                        order.status === 'delivered' ? 'default' :
                         order.status === 'shipped' ? 'default' :
                         order.status === 'processing' ? 'outline' :
                         order.status === 'pending' ? 'secondary' : 'destructive'

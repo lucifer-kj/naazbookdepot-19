@@ -42,6 +42,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import type { DateRange } from 'react-day-picker';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -80,10 +81,7 @@ const Orders = () => {
   const [totalOrders, setTotalOrders] = useState(0);
   const [filterStatus, setFilterStatus] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [dateRange, setDateRange] = useState<{
-    from: Date | undefined;
-    to: Date | undefined;
-  }>({
+  const [dateRange, setDateRange] = useState<DateRange>({
     from: undefined,
     to: undefined,
   });
@@ -277,7 +275,7 @@ const Orders = () => {
                 <Calendar
                   mode="range"
                   selected={dateRange}
-                  onSelect={setDateRange}
+                  onSelect={(range) => setDateRange(range)}
                   initialFocus
                 />
               </PopoverContent>
@@ -377,7 +375,7 @@ const Orders = () => {
                     <TableCell>
                       <Badge 
                         variant={
-                          order.status === 'delivered' ? 'success' :
+                          order.status === 'delivered' ? 'default' :
                           order.status === 'shipped' ? 'default' :
                           order.status === 'processing' ? 'outline' :
                           order.status === 'pending' ? 'secondary' : 'destructive'

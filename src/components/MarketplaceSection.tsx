@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 const MarketplaceSection = () => {
   return (
     <section className="py-8 md:py-16 px-4">
-      <div className="container mx-auto">
+      <div className="w-full max-w-[2000px] mx-auto">
         <div className="grid md:grid-cols-2 gap-6 md:gap-8 items-center">
           <div className="animate-fade-up">
             <h2 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-playfair font-bold text-naaz-green mb-4 md:mb-6">

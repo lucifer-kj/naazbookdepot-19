@@ -18,8 +18,8 @@ const Hero = () => {
       />
 
       {/* Content */}
-      <div className="relative z-10 container mx-auto px-4 h-full flex items-center">
-        <div className="max-w-xl md:max-w-2xl animate-fade-up">
+      <div className="relative z-10 w-full max-w-[2000px] mx-auto px-4 h-full flex items-center">
+        <div className="max-w-xl md:max-w-2xl lg:max-w-3xl xl:max-w-4xl animate-fade-up">
           <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-playfair font-bold text-white mb-4 md:mb-6">
             Explore our premium collection of Islamic perfumes, books, and essential items
           </h1>

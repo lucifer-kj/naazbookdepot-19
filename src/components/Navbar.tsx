@@ -83,7 +83,7 @@ const Navbar = () => {
 
   return (
     <nav className="bg-white shadow-md w-full">
-      <div className="container mx-auto px-4 py-4">
+      <div className="w-full max-w-[2000px] mx-auto px-4 py-4">
         <div className="flex justify-between items-center">
           <Link to="/" className="text-xl md:text-2xl font-playfair font-bold text-naaz-green">
             The Naaz Group

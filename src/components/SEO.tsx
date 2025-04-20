@@ -59,7 +59,7 @@ const SEO: React.FC<SEOProps> = ({
   // Combine with custom schema if provided
   const fullSchema = [baseSchema, organizationSchema];
   if (schema && Array.isArray(schema)) {
-    fullSchema.push(...schema);
+    schema.forEach(item => fullSchema.push(item as any));
   }
   
   return (

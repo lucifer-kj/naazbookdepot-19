@@ -77,7 +77,7 @@ export async function sendOrderConfirmationEmail(orderId: string): Promise<boole
 
     // Fetch the user's email and name
     const { data: user, error: userError } = await supabase
-      .from("profiles")
+      .from("users")
       .select("email, first_name, last_name")
       .eq("id", order.user_id)
       .single();
@@ -147,7 +147,7 @@ export async function sendShippingUpdateEmail(
   }
 ): Promise<boolean> {
   try {
-    // Fetch order and user details (similar to order confirmation)
+    // Fetch order and user details
     const { data: order, error: orderError } = await supabase
       .from("orders")
       .select(`
@@ -165,7 +165,7 @@ export async function sendShippingUpdateEmail(
 
     // Fetch the user's email and name
     const { data: user, error: userError } = await supabase
-      .from("profiles")
+      .from("users")
       .select("email, first_name, last_name")
       .eq("id", order.user_id)
       .single();
@@ -214,7 +214,7 @@ export async function sendWelcomeEmail(userId: string): Promise<boolean> {
   try {
     // Fetch user information
     const { data: user, error: userError } = await supabase
-      .from("profiles")
+      .from("users")
       .select("email, first_name, last_name")
       .eq("id", userId)
       .single();

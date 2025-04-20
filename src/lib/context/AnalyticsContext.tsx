@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { initializeAnalytics, trackPageView } from '../services/analytics-service';
+import { logError } from '../services/error-service';
 
 interface AnalyticsContextType {
   initialized: boolean;
@@ -33,6 +34,13 @@ export const AnalyticsProvider: React.FC<AnalyticsProviderProps> = ({
       initializeAnalytics(measurementId);
       setInitialized(true);
     } catch (error) {
+      logError({
+        type: 'unknown',
+        error: {
+          message: error instanceof Error ? error.message : 'Failed to initialize analytics',
+          stack: error instanceof Error ? error.stack : undefined
+        }
+      });
       console.error('Failed to initialize analytics:', error);
     }
   }, [measurementId]);
@@ -40,7 +48,11 @@ export const AnalyticsProvider: React.FC<AnalyticsProviderProps> = ({
   // Track page views
   useEffect(() => {
     if (initialized) {
-      trackPageView(location.pathname + location.search);
+      try {
+        trackPageView(location.pathname + location.search);
+      } catch (error) {
+        console.error('Page view tracking error:', error);
+      }
     }
   }, [initialized, location]);
   

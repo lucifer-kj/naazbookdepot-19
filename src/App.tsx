@@ -9,6 +9,7 @@ import { ProtectedRoute, PublicOnlyRoute } from './components/auth/ProtectedRout
 import { AdminRoute } from './components/auth/AdminRoute';
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AdminLayout } from "./components/admin/AdminLayout";
+import { ErrorBoundary } from "./components/ui/error-boundary";
 import Dashboard from "./pages/admin/Dashboard";
 import OrderList from "./pages/admin/OrderList";
 import OrderDetail from "./pages/admin/OrderDetail";
@@ -34,24 +35,31 @@ import ResetPassword from "./pages/ResetPassword";
 import ProductPage from "./pages/ProductPage";
 import { ProductList } from "./components/admin/products/ProductList";
 import OrderSuccess from "./pages/OrderSuccess";
-import { AnalyticsProvider } from "./lib/context/AnalyticsContext";
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 60 * 1000, // 1 minute
       retry: 1,
+      onError: (error) => {
+        console.error('Query error:', error);
+      },
+    },
+    mutations: {
+      onError: (error) => {
+        console.error('Mutation error:', error);
+      },
     },
   },
 });
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AppProviders>
-      <TooltipProvider>
-        <SidebarProvider>
-          <BrowserRouter>
-            <AnalyticsProvider>
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <AppProviders>
+        <BrowserRouter>
+          <TooltipProvider>
+            <SidebarProvider>
               <Toaster />
               <Sonner />
               <Routes>
@@ -98,12 +106,12 @@ const App = () => (
                 {/* 404 Route */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
-            </AnalyticsProvider>
-          </BrowserRouter>
-        </SidebarProvider>
-      </TooltipProvider>
-    </AppProviders>
-  </QueryClientProvider>
+            </SidebarProvider>
+          </TooltipProvider>
+        </BrowserRouter>
+      </AppProviders>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;

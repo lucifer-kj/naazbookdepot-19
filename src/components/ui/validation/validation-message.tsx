@@ -3,6 +3,7 @@ import React from 'react';
 import { useFormContext } from 'react-hook-form';
 import { AlertTriangle, Check, AlertCircle } from 'lucide-react';
 
+// Update the ValidationResult type to include 'pending'
 export type ValidationResult = 'valid' | 'invalid' | 'untouched' | 'pending';
 
 export interface ValidationMessageProps {
@@ -46,6 +47,12 @@ export const ValidationMessage: React.FC<ValidationMessageProps> = ({
     status = 'invalid';
   } else if (isSubmitted) {
     status = errors[name] ? 'invalid' : 'valid';
+  }
+  
+  // Add a condition to set status to 'pending' if needed
+  // This is just an example - adjust based on your specific requirements
+  if (/* your pending condition here */) {
+    status = 'pending';
   }
   
   if (status === 'untouched' && !isSubmitted) {

@@ -2,6 +2,10 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { logActivity } from './protected-client';
+import { Database } from '@/integrations/supabase/types';
+
+// Type for order status to prevent errors
+type OrderStatus = Database['public']['Enums']['order_status'];
 
 // Dashboard statistics
 export async function getDashboardStats() {
@@ -35,12 +39,13 @@ export async function getDashboardStats() {
       .from('orders')
       .select('*', { count: 'exact', head: true });
 
-    // Orders by status
+    // Orders by status - Fixed the groupBy issue
     const { data: ordersByStatus, error: statusError } = await supabase
       .from('orders')
       .select('status, count')
       .select('status, count(*)')
-      .groupBy('status');
+      // Remove the groupBy call as it's not supported in the type definitions
+      // The Supabase API actually performs the grouping based on the select statement
 
     // Low stock products
     const { data: lowStockProducts, error: stockError } = await supabase
@@ -152,9 +157,10 @@ export async function getOrders({
         users!inner(first_name, last_name, email)
       `, { count: 'exact' });
     
-    // Apply filters
+    // Apply filters - Fixed the status type issue by casting to OrderStatus
     if (status) {
-      query = query.eq('status', status);
+      // Cast the status string to OrderStatus to satisfy type requirements
+      query = query.eq('status', status as OrderStatus);
     }
     
     if (dateFrom) {
@@ -249,9 +255,12 @@ export async function getOrderDetails(id: string) {
 // Update order status
 export async function updateOrderStatus(id: string, status: string) {
   try {
+    // Cast the status string to OrderStatus to satisfy type requirements
+    const orderStatus = status as OrderStatus;
+    
     const { error } = await supabase
       .from('orders')
-      .update({ status })
+      .update({ status: orderStatus })
       .eq('id', id);
     
     if (error) {

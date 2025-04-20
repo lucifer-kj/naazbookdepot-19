@@ -6,6 +6,7 @@ import { Toaster } from 'sonner';
 import { NetworkStatusProvider } from '@/components/ui/network-status';
 import { initErrorTracking } from './services/error-service';
 import ErrorBoundary from '@/components/ui/error-boundary';
+import { CartProvider } from './context/CartContext';
 
 export const AppProviders: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Initialize error tracking on mount
@@ -18,8 +19,10 @@ export const AppProviders: React.FC<{ children: React.ReactNode }> = ({ children
       <AuthProvider>
         <RealtimeProvider>
           <NetworkStatusProvider>
-            {children}
-            <Toaster richColors closeButton position="top-right" />
+            <CartProvider>
+              {children}
+              <Toaster richColors closeButton position="top-right" />
+            </CartProvider>
           </NetworkStatusProvider>
         </RealtimeProvider>
       </AuthProvider>

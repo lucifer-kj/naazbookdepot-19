@@ -10,7 +10,8 @@ import { AdminRoute } from './components/auth/AdminRoute';
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AdminLayout } from "./components/admin/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
-import Orders from "./pages/admin/Orders";
+import OrderList from "./pages/admin/OrderList";
+import OrderDetail from "./pages/admin/OrderDetail";
 import Index from "./pages/Index";
 import Books from "./pages/Books";
 import Perfumes from "./pages/Perfumes";
@@ -85,7 +86,8 @@ const App = () => (
                 <Route path="/admin" element={<AdminLayout />}>
                   <Route index element={<Dashboard />} />
                   <Route path="products" element={<ProductList />} />
-                  <Route path="orders" element={<Orders />} />
+                  <Route path="orders" element={<OrderList />} />
+                  <Route path="orders/:orderId" element={<OrderDetail />} />
                 </Route>
               </Route>
               

@@ -31,3 +31,9 @@ enabled = true
 [functions]
 [functions.order-helpers]
 verify_jwt = true
+
+[functions.create-razorpay-order]
+verify_jwt = true
+
+[functions.razorpay-webhook]
+verify_jwt = false

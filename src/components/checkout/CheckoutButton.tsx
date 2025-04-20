@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
 import { createCheckoutSession } from "@/lib/services/payment-service";
-import { useCart } from "@/lib/services/cart";
+import { useCart, useClearCart } from "@/lib/services/cart";
 
 interface CheckoutButtonProps {
   shippingAddress: any;
@@ -23,7 +23,8 @@ const CheckoutButton: React.FC<CheckoutButtonProps> = ({
 }) => {
   const { toast } = useToast();
   const [loading, setLoading] = React.useState(false);
-  const { cart, clearCart } = useCart();
+  const { data: cart } = useCart();
+  const clearCartMutation = useClearCart();
   
   const handleCheckout = async () => {
     if (!cart || cart.items.length === 0) {

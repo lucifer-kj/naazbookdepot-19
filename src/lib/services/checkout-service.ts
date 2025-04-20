@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { logActivity } from "@/lib/api/protected-client";
 import { saveAddresses } from "./address-service";
 import { validateCoupon } from "./coupon-service";
-import { createOrder, saveOrderItems, updateInventory } from "./order-service";
+import { createOrder, saveOrderItems, updateInventory } from "./order";
 import type { CheckoutInput } from "../types/checkout";
 
 /**

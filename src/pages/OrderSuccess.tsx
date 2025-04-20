@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useToast } from "@/components/ui/use-toast";
@@ -8,14 +7,14 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, ArrowRight, Loader2 } from "lucide-react";
-import { useCart } from "@/lib/services/cart";
+import { useClearCart } from "@/lib/services/cart";
 
 const OrderSuccess: React.FC = () => {
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get('session_id');
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { clearCart } = useCart();
+  const clearCartMutation = useClearCart();
   
   const [loading, setLoading] = useState(true);
   const [orderData, setOrderData] = useState<any>(null);
@@ -34,7 +33,7 @@ const OrderSuccess: React.FC = () => {
         setOrderData(paymentData.order);
         
         // Clear the cart after successful payment
-        clearCart();
+        clearCartMutation.mutate();
       } catch (err) {
         console.error("Verification error:", err);
         setError("Could not verify payment status. Please contact customer support.");
@@ -44,7 +43,7 @@ const OrderSuccess: React.FC = () => {
     }
     
     verifyOrder();
-  }, [sessionId, clearCart]);
+  }, [sessionId, clearCartMutation]);
 
   // Format date
   const formatDate = (dateString: string) => {

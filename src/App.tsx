@@ -9,6 +9,7 @@ import { AppProviders } from "./lib/providers";
 import { ProtectedRoute, PublicOnlyRoute } from './components/auth/ProtectedRoute';
 import { AdminRoute } from './components/auth/AdminRoute';
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { AdminLayout } from "./components/admin/AdminLayout";
 import { ErrorBoundary } from "./components/ui/error-boundary";
 import Dashboard from "./pages/admin/Dashboard";
 import OrderList from "./pages/admin/OrderList";

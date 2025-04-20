@@ -16,10 +16,12 @@ export const AppProviders: React.FC<{ children: React.ReactNode }> = ({ children
   return (
     <ErrorBoundary>
       <AuthProvider>
-        <NetworkStatusProvider>
-          {children}
-          <Toaster richColors closeButton position="top-right" />
-        </NetworkStatusProvider>
+        <RealtimeProvider>
+          <NetworkStatusProvider>
+            {children}
+            <Toaster richColors closeButton position="top-right" />
+          </NetworkStatusProvider>
+        </RealtimeProvider>
       </AuthProvider>
     </ErrorBoundary>
   );

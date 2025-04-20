@@ -20,6 +20,12 @@ export async function calculateShippingRates(params: ShippingRateParams): Promis
     zone = shippingZones.find(zone => zone.countries.includes("*") && zone.states.includes("*")) as ShippingZone;
   }
   
+  // If still no zone found (which shouldn't happen with proper default zone setup), return empty array
+  if (!zone) {
+    console.error("No shipping zone found and no default zone available");
+    return [];
+  }
+  
   // Calculate base shipping rate
   const baseRate = zone.base_rate + (weight * zone.per_kg_rate);
   

@@ -1,61 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Session, User, AuthChangeEvent } from '@supabase/supabase-js';
-import { toast } from 'sonner';
-
-interface UserProfile {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  phone?: string;
-  is_admin: boolean;
-}
-
-interface AuthContextType {
-  user: User | null;
-  profile: UserProfile | null;
-  session: Session | null;
-  isLoading: boolean;
-  isAdmin: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, metadata?: any) => Promise<void>;
-  signOut: () => Promise<void>;
-  resetPassword: (email: string) => Promise<void>;
-  updatePassword: (newPassword: string) => Promise<void>;
-  updateProfile: (data: Partial<UserProfile>) => Promise<{error?: any}>;
-}
+import { AuthContextType, UserProfile } from '../types/auth';
+import { fetchUserProfile } from '../utils/auth-utils';
+import * as authService from '../services/auth-service';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-async function fetchUserProfile(userId: string) {
-  try {
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', userId)
-      .single();
-
-    if (error) {
-      console.error('Error fetching user profile:', error);
-      return null;
-    }
-
-    const userProfile: UserProfile = {
-      id: data.id,
-      first_name: data.first_name || '',
-      last_name: data.last_name || '',
-      email: data.email || '',
-      phone: data.phone,
-      is_admin: data.role === 'admin'
-    };
-
-    return userProfile;
-  } catch (error) {
-    console.error('Error fetching user profile:', error);
-    return null;
-  }
-}
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
   children 
@@ -107,105 +57,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     };
   }, []);
 
-  const signIn = async (email: string, password: string) => {
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-    } catch (error: any) {
-      toast.error(`Sign in error: ${error.message}`);
-      throw error;
-    }
-  };
-
-  const signUp = async (email: string, password: string, metadata?: any) => {
-    try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: metadata,
-        },
-      });
-
-      if (error) throw error;
-      
-      toast.success('Check your email for the confirmation link');
-    } catch (error: any) {
-      toast.error(`Sign up error: ${error.message}`);
-      throw error;
-    }
-  };
-
-  const signOut = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-    } catch (error: any) {
-      toast.error(`Sign out error: ${error.message}`);
-      throw error;
-    }
-  };
-
-  const resetPassword = async (email: string) => {
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-      
-      if (error) throw error;
-      
-      toast.success('Check your email for the password reset link');
-    } catch (error: any) {
-      toast.error(`Password reset error: ${error.message}`);
-      throw error;
-    }
-  };
-
-  const updatePassword = async (newPassword: string) => {
-    try {
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword,
-      });
-      
-      if (error) throw error;
-      
-      toast.success('Password updated successfully');
-    } catch (error: any) {
-      toast.error(`Password update error: ${error.message}`);
-      throw error;
-    }
-  };
-
+  const signIn = authService.signIn;
+  const signUp = authService.signUp;
+  const signOut = authService.signOut;
+  const resetPassword = authService.resetPassword;
+  const updatePassword = authService.updatePassword;
+  
   const updateProfile = async (data: Partial<UserProfile>) => {
-    try {
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
-
-      const { error } = await supabase
-        .from('users')
-        .update({
-          first_name: data.first_name,
-          last_name: data.last_name,
-          phone: data.phone,
-        })
-        .eq('id', user.id);
-
-      if (error) throw error;
-      
-      const updatedProfile = await fetchUserProfile(user.id);
-      setProfile(updatedProfile);
-      
-      toast.success('Profile updated successfully');
-      return { error: null };
-    } catch (error: any) {
-      toast.error(`Profile update error: ${error.message}`);
-      return { error };
+    if (!user) return { error: new Error('User not authenticated') };
+    const result = await authService.updateProfile(user.id, data);
+    if (result.profile) {
+      setProfile(result.profile);
     }
+    return result;
   };
 
   return (

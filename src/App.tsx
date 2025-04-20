@@ -41,13 +41,17 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 60 * 1000, // 1 minute
       retry: 1,
-      onError: (error) => {
-        console.error('Query error:', error);
+      meta: {
+        onError: (error: Error) => {
+          console.error('Query error:', error);
+        },
       },
     },
     mutations: {
-      onError: (error) => {
-        console.error('Mutation error:', error);
+      meta: {
+        onError: (error: Error) => {
+          console.error('Mutation error:', error);
+        },
       },
     },
   },
@@ -56,8 +60,8 @@ const queryClient = new QueryClient({
 const App = () => (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
-      <AppProviders>
-        <BrowserRouter>
+      <BrowserRouter>
+        <AppProviders>
           <TooltipProvider>
             <SidebarProvider>
               <Toaster />
@@ -108,8 +112,8 @@ const App = () => (
               </Routes>
             </SidebarProvider>
           </TooltipProvider>
-        </BrowserRouter>
-      </AppProviders>
+        </AppProviders>
+      </BrowserRouter>
     </QueryClientProvider>
   </ErrorBoundary>
 );

@@ -54,8 +54,8 @@ export async function saveOrderItems(orderId: string, orderItems: any[]) {
 
 export async function updateInventory(orderItems: any[]) {
   for (const item of orderItems) {
-    // Fix: This was incorrectly typed as a number
-    await supabase
+    // Fix: Use separate statements to avoid type mismatch
+    const { error } = await supabase
       .from('products')
       .update({ 
         quantity_in_stock: supabase.rpc('decrement', { 
@@ -63,5 +63,10 @@ export async function updateInventory(orderItems: any[]) {
         }) 
       })
       .eq('id', item.product_id);
+      
+    if (error) {
+      console.error('Error updating inventory:', error);
+      throw error;
+    }
   }
 }

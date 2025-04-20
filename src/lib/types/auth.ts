@@ -27,3 +27,12 @@ export interface AuthContextType {
   updateProfile: (data: Partial<UserProfile>) => Promise<{error?: any, profile?: UserProfile}>;
   reconnect: () => Promise<void>;
 }
+
+// Add a type for the RPC function response
+export interface UserProfileRPC {
+  first_name: string | null;
+  last_name: string | null;
+  phone: string | null;
+  role: string | null;
+  is_super_admin: boolean | null;
+}

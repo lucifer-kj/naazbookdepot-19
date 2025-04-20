@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { UserProfile } from '../types/auth';
 import { logError } from '../services/error-service';
@@ -28,28 +27,28 @@ export async function fetchUserProfile(userId: string): Promise<UserProfile | nu
     // Check if user email indicates admin status as fallback
     const isAdminEmail = user.email?.includes('admin') || user.email === 'admin@naaz.com';
     
-    // Try to get additional profile info from public.users table
+    // Create a basic profile with auth data
+    const basicProfile: UserProfile = {
+      id: userId,
+      first_name: '',
+      last_name: '',
+      email: user.email || '',
+      phone: '',
+      is_admin: isAdminEmail,
+      is_super_admin: false
+    };
+    
+    // Attempt to get additional profile info from public.users table using a direct query
+    // to avoid RLS recursion issues
     try {
-      const { data: profileData, error: profileError } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle();
+      const { data: profileData, error: profileError } = await supabase.rpc(
+        'get_user_profile',
+        { user_id: userId }
+      );
       
       if (profileError) {
-        // Instead of failing, log the error and continue with basic profile
         console.error('Error fetching extended profile, using basic profile:', profileError);
-        
-        // Return a minimal profile with available data
-        return {
-          id: userId,
-          first_name: '',
-          last_name: '',
-          email: user.email || '',
-          phone: '',
-          is_admin: isAdminEmail,
-          is_super_admin: false
-        };
+        return basicProfile;
       }
       
       if (profileData) {
@@ -63,18 +62,9 @@ export async function fetchUserProfile(userId: string): Promise<UserProfile | nu
           is_admin: profileData.role === 'admin' || isAdminEmail,
           is_super_admin: !!profileData.is_super_admin
         };
-      } else {
-        // No profile data found, use basic profile
-        return {
-          id: userId,
-          first_name: '',
-          last_name: '',
-          email: user.email || '',
-          phone: '',
-          is_admin: isAdminEmail,
-          is_super_admin: false
-        };
       }
+      
+      return basicProfile;
     } catch (error) {
       // In case of any uncaught error, still return a basic profile
       console.error('Unexpected error in fetchUserProfile:', error);
@@ -86,15 +76,7 @@ export async function fetchUserProfile(userId: string): Promise<UserProfile | nu
         }
       });
       
-      return {
-        id: userId,
-        first_name: '',
-        last_name: '',
-        email: user.email || '',
-        phone: '',
-        is_admin: isAdminEmail,
-        is_super_admin: false
-      };
+      return basicProfile;
     }
   } catch (error) {
     console.error('Error in fetchUserProfile:', error);

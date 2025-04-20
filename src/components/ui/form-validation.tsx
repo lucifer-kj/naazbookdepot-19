@@ -2,7 +2,7 @@ import React from 'react';
 import { useFormContext, ValidationMode } from 'react-hook-form';
 import { AlertTriangle, Check, AlertCircle, HelpCircle } from 'lucide-react';
 
-export type ValidationResult = 'valid' | 'invalid' | 'pending' | 'untouched';
+export type ValidationResult = 'valid' | 'invalid' | 'untouched' | 'pending';
 
 export interface ValidationMessageProps {
   name: string;

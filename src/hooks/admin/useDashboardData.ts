@@ -38,17 +38,20 @@ const useDashboardData = () => {
       try {
         setIsLoading(true);
         
-        const stats = await getDashboardStats();
-        const orders = await getRecentOrders(5);
-        const customers = await getNewCustomers(5);
-        const lowStock = await getLowStockProducts(5);
+        // Use Promise.all to fetch data in parallel
+        const [stats, orders, customers, lowStock] = await Promise.all([
+          getDashboardStats(),
+          getRecentOrders(5),
+          getNewCustomers(5),
+          getLowStockProducts(5)
+        ]);
         
         setDashboardData({
           salesSummary: stats.salesSummary,
-          ordersByStatus: stats.ordersByStatus,
-          recentOrders: orders,
-          newCustomers: customers,
-          lowStockProducts: lowStock
+          ordersByStatus: stats.ordersByStatus || {},
+          recentOrders: orders || [],
+          newCustomers: customers || [],
+          lowStockProducts: lowStock || []
         });
       } catch (error) {
         console.error('Error loading dashboard data:', error);
@@ -64,9 +67,10 @@ const useDashboardData = () => {
     
     loadDashboardData();
     
+    // Set up auto-refresh interval
     const interval = setInterval(() => {
       loadDashboardData();
-    }, 5 * 60 * 1000);
+    }, 5 * 60 * 1000); // Refresh every 5 minutes
     
     return () => clearInterval(interval);
   }, [toast]);

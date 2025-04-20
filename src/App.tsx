@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -38,6 +37,8 @@ import ResetPassword from "./pages/ResetPassword";
 import ProductPage from "./pages/ProductPage";
 import { ProductList } from "./components/admin/products/ProductList";
 import OrderSuccess from "./pages/OrderSuccess";
+import Categories from '@/pages/admin/Categories';
+import Customers from '@/pages/admin/Customers';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -139,10 +140,13 @@ const App = () => (
                 <Route path="/admin" element={<AdminRoute />}>
                   <Route element={<AdminLayout />}>
                     <Route index element={<Dashboard />} />
-                    <Route path="products" element={<ProductList />} />
-                    <Route path="products/:productId" element={<ProductEditor />} />
                     <Route path="orders" element={<OrderList />} />
-                    <Route path="orders/:orderId" element={<OrderDetail />} />
+                    <Route path="orders/:id" element={<OrderDetail />} />
+                    <Route path="products" element={<ProductList />} />
+                    <Route path="products/:id" element={<ProductEditor />} />
+                    <Route path="products/new" element={<ProductEditor />} />
+                    <Route path="categories" element={<Categories />} />
+                    <Route path="customers" element={<Customers />} />
                   </Route>
                 </Route>
                 

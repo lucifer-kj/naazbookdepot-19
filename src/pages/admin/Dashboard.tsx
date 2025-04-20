@@ -10,6 +10,12 @@ import NewCustomers from '@/components/admin/dashboard/NewCustomers';
 import useDashboardData from '@/hooks/admin/useDashboardData';
 import { OrderStatus } from '@/lib/api/admin-service';
 
+interface OrderStatusData {
+  name: string;
+  value: number;
+  color: string;
+}
+
 const orderStatusColors: Record<OrderStatus, string> = {
   pending: "#f97316",    // Orange
   processing: "#0ea5e9", // Blue
@@ -32,7 +38,8 @@ const salesTrendData = [
 const Dashboard = () => {
   const { dashboardData, isLoading, timeframe, setTimeframe } = useDashboardData();
 
-  const orderStatusData = Object.entries(dashboardData.ordersByStatus).map(([status, count]) => ({
+  // Convert the ordersByStatus object to an array of OrderStatusData objects
+  const orderStatusData: OrderStatusData[] = Object.entries(dashboardData.ordersByStatus).map(([status, count]) => ({
     name: status.charAt(0).toUpperCase() + status.slice(1),
     value: Number(count),
     color: orderStatusColors[status as OrderStatus] || "#9ca3af"
@@ -42,7 +49,7 @@ const Dashboard = () => {
   const totalOrders = Object.values(dashboardData.ordersByStatus).reduce((sum, count) => sum + Number(count), 0);
   
   // Get the pending orders count - safely access the property with optional chaining
-  const pendingOrders = dashboardData.ordersByStatus?.pending || 0;
+  const pendingOrders = dashboardData.ordersByStatus?.pending ? Number(dashboardData.ordersByStatus.pending) : 0;
 
   return (
     <div className="space-y-6">

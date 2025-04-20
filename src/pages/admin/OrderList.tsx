@@ -1,608 +1,280 @@
 
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import {
+import { 
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from '@/components/ui/pagination';
-import { Calendar as CalendarIcon, Search, Filter, ArrowUpDown, MoreHorizontal, Eye, Edit, CheckCircle, Clock, Truck, CheckCircle2, XCircle } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Calendar, Filter, Search, RefreshCw } from 'lucide-react';
+import { getOrders, OrderStatus } from '@/lib/api/admin-service';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
-import { Calendar } from '@/components/ui/calendar';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import type { DateRange } from 'react-day-picker';
-import { OrderStatus, useAdminOrders, useBulkUpdateOrderStatus } from '@/lib/services/admin-order-service';
-import { Checkbox } from '@/components/ui/checkbox';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
+import { 
+  Table, 
+  TableBody, 
+  TableCaption, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from '@/components/ui/table';
+import { Skeleton } from '@/components/ui/skeleton';
 
-const statusOptions = [
-  { label: "All", value: "" },
-  { label: "Pending", value: "pending" },
-  { label: "Processing", value: "processing" },
-  { label: "Shipped", value: "shipped" },
-  { label: "Delivered", value: "delivered" },
-  { label: "Cancelled", value: "cancelled" },
-];
-
-const getStatusIcon = (status: OrderStatus) => {
-  switch (status) {
-    case 'pending':
-      return <Clock className="h-4 w-4 text-amber-500" />;
-    case 'processing':
-      return <CheckCircle className="h-4 w-4 text-blue-500" />;
-    case 'shipped':
-      return <Truck className="h-4 w-4 text-purple-500" />;
-    case 'delivered':
-      return <CheckCircle2 className="h-4 w-4 text-green-500" />;
-    case 'cancelled':
-      return <XCircle className="h-4 w-4 text-red-500" />;
-    default:
-      return null;
-  }
+// Define the order status colors
+const orderStatusColors = {
+  pending: "bg-orange-100 text-orange-600",
+  processing: "bg-blue-100 text-blue-600",
+  shipped: "bg-purple-100 text-purple-600",
+  delivered: "bg-green-100 text-green-600",
+  cancelled: "bg-red-100 text-red-600"
 };
 
 const OrderList = () => {
-  const { toast } = useToast();
-  const [currentPage, setCurrentPage] = useState(1);
-  const [filterStatus, setFilterStatus] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [dateRange, setDateRange] = useState<DateRange>({
-    from: undefined,
-    to: undefined,
-  });
-  const [sortField, setSortField] = useState<string>("created_at");
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
-  const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
-  const [selectAll, setSelectAll] = useState(false);
-
-  // Fetch orders data
-  const { data, isLoading, isError, refetch } = useAdminOrders({
-    status: filterStatus as OrderStatus | undefined,
-    search: searchQuery,
-    dateFrom: dateRange.from?.toISOString(),
-    dateTo: dateRange.to?.toISOString(),
-    page: currentPage,
-    sortField,
-    sortDirection
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [page, setPage] = useState(1);
+  const [filter, setFilter] = useState({
+    status: '',
+    search: '',
+    dateFrom: '',
+    dateTo: ''
   });
 
-  const bulkUpdateStatus = useBulkUpdateOrderStatus();
-
-  useEffect(() => {
-    // Clear selections when filters change
-    setSelectedOrderIds([]);
-    setSelectAll(false);
-  }, [filterStatus, searchQuery, dateRange, sortField, sortDirection]);
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    setCurrentPage(1); // Reset to first page
-    refetch();
-  };
-
-  const handleSort = (field: string) => {
-    if (field === sortField) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      setSortField(field);
-      setSortDirection("asc");
-    }
-  };
-
-  const handleResetFilters = () => {
-    setFilterStatus("");
-    setSearchQuery("");
-    setDateRange({ from: undefined, to: undefined });
-    setSortField("created_at");
-    setSortDirection("desc");
-    setCurrentPage(1);
-  };
-
-  const handleBulkStatusUpdate = async (status: OrderStatus) => {
-    if (selectedOrderIds.length === 0) {
-      toast({
-        variant: "destructive",
-        title: "No orders selected",
-        description: "Please select at least one order to update"
-      });
-      return;
-    }
-
-    try {
-      await bulkUpdateStatus.mutateAsync({
-        orderIds: selectedOrderIds,
-        status
-      });
-      setSelectedOrderIds([]);
-      setSelectAll(false);
-    } catch (error) {
-      console.error("Failed to update orders:", error);
-    }
-  };
-
-  const toggleSelectAll = () => {
-    if (selectAll) {
-      setSelectedOrderIds([]);
-    } else {
-      const allIds = data?.orders.map(order => order.id) || [];
-      setSelectedOrderIds(allIds);
-    }
-    setSelectAll(!selectAll);
-  };
-
-  const toggleOrderSelection = (orderId: string) => {
-    setSelectedOrderIds(prev => 
-      prev.includes(orderId)
-        ? prev.filter(id => id !== orderId)
-        : [...prev, orderId]
-    );
-  };
-
-  const getStatusCounts = () => {
-    const orders = data?.orders || [];
-    const counts = {
-      all: orders.length,
-      pending: 0,
-      processing: 0,
-      shipped: 0,
-      delivered: 0,
-      cancelled: 0
+  // Fetch orders
+  React.useEffect(() => {
+    const fetchOrders = async () => {
+      setIsLoading(true);
+      try {
+        const { orders, totalCount } = await getOrders({
+          page,
+          limit: 10,
+          status: filter.status as OrderStatus | '',
+          search: filter.search,
+          dateFrom: filter.dateFrom,
+          dateTo: filter.dateTo
+        });
+        
+        setOrders(orders);
+        setTotalCount(totalCount);
+      } catch (error) {
+        console.error('Error fetching orders:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
     
-    orders.forEach(order => {
-      if (counts[order.status as keyof typeof counts] !== undefined) {
-        counts[order.status as keyof typeof counts]++;
-      }
-    });
-    
-    return counts;
+    fetchOrders();
+  }, [page, filter]);
+
+  // Handle status filter change
+  const handleStatusChange = (value: string) => {
+    setFilter(prev => ({
+      ...prev,
+      status: value
+    }));
+    setPage(1);
   };
 
-  const statuses = getStatusCounts();
+  // Handle search
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPage(1);
+  };
 
-  if (isError) {
-    return (
-      <div className="space-y-6">
-        <h2 className="text-3xl font-bold tracking-tight">Orders</h2>
-        <Card>
-          <CardContent className="p-6">
-            <div className="text-center">
-              <p className="text-red-600">Failed to load orders. Please try again later.</p>
-              <Button onClick={() => refetch()} className="mt-4">Retry</Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  // Handle row click to view order details
+  const handleRowClick = (orderId: string) => {
+    navigate(`/admin/orders/${orderId}`);
+  };
+
+  // Calculate total pages
+  const totalPages = Math.ceil(totalCount / 10);
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex justify-between items-center">
         <h2 className="text-3xl font-bold tracking-tight">Orders</h2>
-        <div className="flex items-center gap-2">
-          <Button size="sm" variant="default">
-            Export Orders
-          </Button>
-        </div>
+        <Button onClick={() => navigate('/admin/orders/new')}>
+          Create Order
+        </Button>
       </div>
       
-      {/* Status Tabs */}
-      <Tabs defaultValue="all" className="w-full">
-        <TabsList className="grid grid-cols-3 md:grid-cols-6">
-          <TabsTrigger value="all" onClick={() => setFilterStatus("")}>
-            All <span className="ml-1 opacity-70">({data?.totalCount || 0})</span>
-          </TabsTrigger>
-          <TabsTrigger value="pending" onClick={() => setFilterStatus("pending")}>
-            Pending <span className="ml-1 opacity-70">({statuses.pending})</span>
-          </TabsTrigger>
-          <TabsTrigger value="processing" onClick={() => setFilterStatus("processing")}>
-            Processing <span className="ml-1 opacity-70">({statuses.processing})</span>
-          </TabsTrigger>
-          <TabsTrigger value="shipped" onClick={() => setFilterStatus("shipped")}>
-            Shipped <span className="ml-1 opacity-70">({statuses.shipped})</span>
-          </TabsTrigger>
-          <TabsTrigger value="delivered" onClick={() => setFilterStatus("delivered")}>
-            Delivered <span className="ml-1 opacity-70">({statuses.delivered})</span>
-          </TabsTrigger>
-          <TabsTrigger value="cancelled" onClick={() => setFilterStatus("cancelled")}>
-            Cancelled <span className="ml-1 opacity-70">({statuses.cancelled})</span>
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
-      
-      {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>Filters</CardTitle>
+          <CardTitle>Filter Orders</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSearch} className="grid gap-4 md:grid-cols-5">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search order ID, customer..."
-                className="pl-8"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div>
+              <Select value={filter.status} onValueChange={handleStatusChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="processing">Processing</SelectItem>
+                  <SelectItem value="shipped">Shipped</SelectItem>
+                  <SelectItem value="delivered">Delivered</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger>
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                {statusOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "justify-start text-left font-normal",
-                    !dateRange.from && !dateRange.to && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {dateRange.from ? (
-                    dateRange.to ? (
-                      <>
-                        {formatDate(dateRange.from)} - {formatDate(dateRange.to)}
-                      </>
-                    ) : (
-                      formatDate(dateRange.from)
-                    )
-                  ) : (
-                    "Date range"
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="range"
-                  selected={dateRange}
-                  onSelect={(range) => setDateRange(range)}
-                  initialFocus
+            <div>
+              <form onSubmit={handleSearch} className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+                <Input
+                  type="search"
+                  placeholder="Search orders..."
+                  className="pl-8"
+                  value={filter.search}
+                  onChange={(e) => setFilter(prev => ({ ...prev, search: e.target.value }))}
                 />
-              </PopoverContent>
-            </Popover>
-            
-            <div className="flex gap-2">
-              <Button type="submit">Apply Filters</Button>
-              <Button type="button" variant="outline" onClick={handleResetFilters}>
-                Reset
-              </Button>
+              </form>
             </div>
-          </form>
+            
+            <div>
+              <div className="flex items-center space-x-2">
+                <Calendar className="h-4 w-4 text-gray-500" />
+                <Input
+                  type="date"
+                  placeholder="From Date"
+                  value={filter.dateFrom}
+                  onChange={(e) => setFilter(prev => ({ ...prev, dateFrom: e.target.value }))}
+                />
+              </div>
+            </div>
+            
+            <div>
+              <div className="flex items-center space-x-2">
+                <Calendar className="h-4 w-4 text-gray-500" />
+                <Input
+                  type="date"
+                  placeholder="To Date"
+                  value={filter.dateTo}
+                  onChange={(e) => setFilter(prev => ({ ...prev, dateTo: e.target.value }))}
+                />
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-4 flex justify-end">
+            <Button
+              variant="outline"
+              className="flex items-center"
+              onClick={() => {
+                setFilter({
+                  status: '',
+                  search: '',
+                  dateFrom: '',
+                  dateTo: ''
+                });
+                setPage(1);
+              }}
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Reset Filters
+            </Button>
+          </div>
         </CardContent>
       </Card>
       
-      {/* Bulk Actions */}
-      {selectedOrderIds.length > 0 && (
-        <Card className="mb-4">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="font-medium">{selectedOrderIds.length} orders selected</span>
-              </div>
-              <div className="flex gap-2">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline">
-                      Update Status
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Change status to</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    {(["pending", "processing", "shipped", "delivered", "cancelled"] as OrderStatus[]).map(status => (
-                      <DropdownMenuItem 
-                        key={status}
-                        onClick={() => handleBulkStatusUpdate(status)}
-                      >
-                        {getStatusIcon(status)}
-                        <span className="ml-2 capitalize">{status}</span>
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="destructive">
-                      Clear Selection
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Clear Selection</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Are you sure you want to clear your selection of {selectedOrderIds.length} orders?
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction 
-                        onClick={() => {
-                          setSelectedOrderIds([]);
-                          setSelectAll(false);
-                        }}
-                      >
-                        Clear
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-      
-      {/* Orders Table */}
       <Card>
         <CardContent className="p-0">
           <Table>
+            <TableCaption>
+              {totalCount > 0 ? (
+                <div className="flex items-center justify-between py-4">
+                  <div>
+                    Showing {(page - 1) * 10 + 1} to {Math.min(page * 10, totalCount)} of {totalCount} orders
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPage(p => Math.max(1, p - 1))}
+                      disabled={page === 1}
+                    >
+                      Previous
+                    </Button>
+                    <div className="text-sm">
+                      Page {page} of {totalPages}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                      disabled={page === totalPages}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div>No orders found</div>
+              )}
+            </TableCaption>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[50px]">
-                  <Checkbox 
-                    checked={selectAll} 
-                    onCheckedChange={toggleSelectAll}
-                    aria-label="Select all orders"
-                  />
-                </TableHead>
-                <TableHead>
-                  <Button 
-                    variant="ghost" 
-                    className="font-medium px-0"
-                    onClick={() => handleSort("id")}
-                  >
-                    Order ID
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                  </Button>
-                </TableHead>
-                <TableHead>
-                  <Button 
-                    variant="ghost" 
-                    className="font-medium px-0"
-                    onClick={() => handleSort("customer")}
-                  >
-                    Customer
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                  </Button>
-                </TableHead>
-                <TableHead>
-                  <Button 
-                    variant="ghost" 
-                    className="font-medium px-0"
-                    onClick={() => handleSort("created_at")}
-                  >
-                    Date
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                  </Button>
-                </TableHead>
-                <TableHead>
-                  <Button 
-                    variant="ghost" 
-                    className="font-medium px-0"
-                    onClick={() => handleSort("total_amount")}
-                  >
-                    Total
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                  </Button>
-                </TableHead>
-                <TableHead>
-                  <Button 
-                    variant="ghost" 
-                    className="font-medium px-0"
-                    onClick={() => handleSort("status")}
-                  >
-                    Status
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                  </Button>
-                </TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead>Order ID</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Customer</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Amount</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                Array(5).fill(0).map((_, index) => (
+                Array.from({ length: 5 }).map((_, index) => (
                   <TableRow key={index}>
-                    <TableCell colSpan={7} className="h-12 text-center">
-                      <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : data?.orders && data.orders.length > 0 ? (
-                data.orders.map((order) => (
-                  <TableRow key={order.id}>
-                    <TableCell>
-                      <Checkbox 
-                        checked={selectedOrderIds.includes(order.id)}
-                        onCheckedChange={() => toggleOrderSelection(order.id)}
-                        aria-label={`Select order ${order.id}`}
-                      />
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      <Link to={`/admin/orders/${order.id}`} className="hover:underline">
-                        #{order.id.substring(0, 8)}
-                      </Link>
-                    </TableCell>
-                    <TableCell>
-                      {order.customer?.name || 'Anonymous'}
-                    </TableCell>
-                    <TableCell>{formatDate(order.created_at)}</TableCell>
-                    <TableCell>{formatCurrency(order.total_amount)}</TableCell>
-                    <TableCell>
-                      <Badge 
-                        variant={
-                          order.status === 'delivered' ? 'default' :
-                          order.status === 'shipped' ? 'default' :
-                          order.status === 'processing' ? 'outline' :
-                          order.status === 'pending' ? 'secondary' : 'destructive'
-                        }
-                        className="flex w-fit items-center gap-1"
-                      >
-                        {getStatusIcon(order.status as OrderStatus)}
-                        <span className="capitalize">
-                          {order.status}
-                        </span>
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem asChild>
-                            <Link to={`/admin/orders/${order.id}`}>
-                              <Eye className="mr-2 h-4 w-4" />
-                              View Details
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuLabel>Change Status</DropdownMenuLabel>
-                          {(["pending", "processing", "shipped", "delivered", "cancelled"] as OrderStatus[])
-                            .filter(status => status !== order.status)
-                            .map(status => (
-                              <DropdownMenuItem 
-                                key={status}
-                                onClick={() => handleBulkStatusUpdate(status)}
-                              >
-                                {getStatusIcon(status)}
-                                <span className="ml-2 capitalize">{status}</span>
-                              </DropdownMenuItem>
-                            ))
-                          }
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
+                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
                   </TableRow>
                 ))
               ) : (
-                <TableRow>
-                  <TableCell colSpan={7} className="h-24 text-center">
-                    No orders found.
-                  </TableCell>
-                </TableRow>
+                orders.map((order) => (
+                  <TableRow 
+                    key={order.id}
+                    className="cursor-pointer hover:bg-gray-50"
+                    onClick={() => handleRowClick(order.id)}
+                  >
+                    <TableCell>{order.id.substring(0, 8)}</TableCell>
+                    <TableCell>{formatDate(order.created_at)}</TableCell>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">{order.customer.name}</div>
+                        <div className="text-sm text-gray-500">{order.customer.email}</div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge 
+                        variant="outline" 
+                        className={`${orderStatusColors[order.status as OrderStatus] || ""}`}
+                      >
+                        {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {formatCurrency(order.total_amount)}
+                    </TableCell>
+                  </TableRow>
+                ))
               )}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
-      
-      {/* Pagination */}
-      {data && data.pageCount > 1 && (
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious 
-                href="#" 
-                onClick={(e) => {
-                  e.preventDefault();
-                  if (currentPage > 1) setCurrentPage(currentPage - 1);
-                }}
-                className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
-              />
-            </PaginationItem>
-            
-            {Array.from({ length: data.pageCount }).map((_, index) => {
-              const page = index + 1;
-              
-              // Show first page, last page, and pages around current page
-              if (
-                page === 1 ||
-                page === data.pageCount ||
-                (page >= currentPage - 1 && page <= currentPage + 1)
-              ) {
-                return (
-                  <PaginationItem key={page}>
-                    <PaginationLink
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setCurrentPage(page);
-                      }}
-                      isActive={page === currentPage}
-                    >
-                      {page}
-                    </PaginationLink>
-                  </PaginationItem>
-                );
-              }
-              
-              // Show ellipsis for gaps
-              if (
-                (page === 2 && currentPage > 3) ||
-                (page === data.pageCount - 1 && currentPage < data.pageCount - 2)
-              ) {
-                return (
-                  <PaginationItem key={page}>
-                    <PaginationEllipsis />
-                  </PaginationItem>
-                );
-              }
-              
-              return null;
-            })}
-            
-            <PaginationItem>
-              <PaginationNext
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  if (currentPage < data.pageCount) setCurrentPage(currentPage + 1);
-                }}
-                className={currentPage === data.pageCount ? "pointer-events-none opacity-50" : ""}
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      )}
     </div>
   );
 };

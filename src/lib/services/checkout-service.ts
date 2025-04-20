@@ -155,13 +155,13 @@ export const useCheckout = () => {
         if (input.sameAsBilling) {
           billingAddress = shippingAddress;
         } else {
-          const billingAddressData = {
+          const billingAddressInput = {
             ...input.billingAddress,
             user_id: user.id
           };
           const { data: billingData, error: billingAddressError } = await supabase
             .from('addresses')
-            .insert(billingAddressData)
+            .insert(billingAddressInput)
             .select()
             .single();
 
@@ -257,7 +257,7 @@ export const useCheckout = () => {
           await supabase.rpc('commit_transaction', { transaction_id: transactionId });
         }
 
-        // Log activity
+        // Log activity - fixed PostgrestFilterBuilder issue by awaiting the result
         await supabase
           .from('activity_logs')
           .insert({

@@ -8,7 +8,7 @@ export const verifyPurchase = async (productId: string, userId: string) => {
       .from('order_items')
       .select(`
         id,
-        order:order_id (
+        order:orders!order_items_order_id_fkey (
           status
         )
       `)
@@ -16,12 +16,11 @@ export const verifyPurchase = async (productId: string, userId: string) => {
       .in('order.status', ['delivered', 'shipped'])
       .eq('order.user_id', userId)
       .limit(1)
-      .single();
+      .maybeSingle();
       
     // Return verification data with correct properties
     return {
       verified: !!data,
-      // Access the ID directly, not through order_id
       orderId: data?.id || null
     };
   } catch (error) {

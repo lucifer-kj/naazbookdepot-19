@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -209,7 +210,7 @@ export const useMoveToCart = () => {
       
       if (transactionResult && typeof transactionResult === 'object') {
         // Safely extract transaction_id
-        transactionId = transactionResult.transaction_id || null;
+        transactionId = transactionResult && (transactionResult as any).transaction_id;
       }
 
       try {
@@ -293,7 +294,7 @@ export const useMoveAllToCart = () => {
       let transactionId = null;
       
       if (transactionResult && typeof transactionResult === 'object') {
-        transactionId = (transactionResult as any).transaction_id || null;
+        transactionId = transactionResult && (transactionResult as any).transaction_id;
       }
       
       try {

@@ -255,7 +255,7 @@ export const useCheckout = () => {
           await supabase.rpc('commit_transaction', { transaction_id: transactionId });
         }
 
-        // Log activity - don't assign return value to prevent type error
+        // Log activity - FIX: Don't try to return the activity log insert result
         await supabase
           .from('activity_logs')
           .insert({

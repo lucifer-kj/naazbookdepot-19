@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/lib/context/AuthContext';
 import { Loader2 } from 'lucide-react';
 import { logActivity } from '@/lib/api/protected-client';
+import { toast } from 'sonner'; // Import toast from sonner instead of shadcn/ui
 
 const AccountSettings = () => {
   const { profile, updateProfile, updatePassword } = useAuth();

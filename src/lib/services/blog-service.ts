@@ -92,7 +92,13 @@ export const getBlogPost = async (slug: string) => {
 };
 
 // Create or update a blog post
-export const saveBlogPost = async (post: Partial<BlogPost> & { id?: string }) => {
+export const saveBlogPost = async (post: Partial<BlogPost> & { slug: string }) => {
+  // Ensure slug is present as it's required
+  if (!post.slug) {
+    throw new Error('Slug is required');
+  }
+
+  // If updating an existing post
   if (post.id) {
     const { data, error } = await supabase
       .from('blog_posts')
@@ -104,6 +110,7 @@ export const saveBlogPost = async (post: Partial<BlogPost> & { id?: string }) =>
     if (error) throw error;
     return data;
   } else {
+    // For new posts
     const { data, error } = await supabase
       .from('blog_posts')
       .insert(post)

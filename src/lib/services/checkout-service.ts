@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -254,7 +255,7 @@ export const useCheckout = () => {
           await supabase.rpc('commit_transaction', { transaction_id: transactionId });
         }
 
-        // Log activity - fixed PostgrestFilterBuilder issue by awaiting the result
+        // Log activity - don't assign return value to prevent type error
         await supabase
           .from('activity_logs')
           .insert({

@@ -63,7 +63,12 @@ export const getFAQCategories = async () => {
 };
 
 // Create or update a FAQ
-export const saveFAQ = async (faq: Partial<FAQ> & { id?: string }) => {
+export const saveFAQ = async (faq: Partial<FAQ> & { question: string; answer: string }) => {
+  // Ensure required fields are present
+  if (!faq.question || !faq.answer) {
+    throw new Error('Question and answer are required');
+  }
+  
   if (faq.id) {
     const { data, error } = await supabase
       .from('faqs')

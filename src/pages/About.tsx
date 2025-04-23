@@ -14,7 +14,7 @@ const About = () => {
   ];
 
   const services = [
-    'Printing and distribution of Qur'an and Islamic literature',
+    "Printing and distribution of Qur'an and Islamic literature",
     'Commercial color printing services',
     'Educational books in Urdu, Bengali, Arabic, and more',
     'Collaborative printing projects with other publishers and businesses'

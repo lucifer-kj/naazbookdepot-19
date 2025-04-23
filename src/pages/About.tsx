@@ -74,7 +74,7 @@ const About = () => {
               <div className="relative">
                 <div className="border-8 border-naaz-cream p-3 rounded-lg shadow-xl">
                   <img 
-                    src="/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png" 
+                    src="https://drive.google.com/file/d/1LdJ_4TRlXp67kOyC3wV72r1uiZaxHjsW/view?usp=drivesdk"
                     alt="Naaz Book Depot Historical Photo" 
                     className="rounded w-full h-auto"
                   />

@@ -10,6 +10,7 @@ import { AdminRoute } from './components/auth/AdminRoute';
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AdminLayout } from "./components/admin/AdminLayout";
 import { ErrorBoundary } from "./components/ui/error-boundary";
+import { HelmetProvider } from 'react-helmet-async';
 import Dashboard from "./pages/admin/Dashboard";
 import OrderList from "./pages/admin/OrderList";
 import OrderDetail from "./pages/admin/OrderDetail";
@@ -65,97 +66,99 @@ const App = () => (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <AppProviders>
-          <TooltipProvider>
-            <SidebarProvider>
-              <Toaster />
-              <Sonner />
-              <Routes>
-                {/* Public Routes */}
-                <Route path="/" element={<Index />} />
-                <Route path="/books" element={<Books />} />
-                <Route path="/perfumes" element={<Perfumes />} />
-                <Route path="/essentials" element={<Essentials />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/blog" element={<Blog />} />
-                <Route path="/blog/:slug" element={<BlogPost />} />
-                <Route path="/faq" element={<FAQ />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/product/:productId" element={<ProductPage />} />
-                <Route path="/cart" element={<Cart />} />
-                <Route path="/order-success" element={<OrderSuccess />} />
-                
-                {/* Auth Routes (only accessible if NOT logged in) */}
-                <Route 
-                  path="/login" 
-                  element={
-                    <PublicOnlyRoute>
-                      <Login />
-                    </PublicOnlyRoute>
-                  } 
-                />
-                <Route 
-                  path="/register" 
-                  element={
-                    <PublicOnlyRoute>
-                      <Register />
-                    </PublicOnlyRoute>
-                  } 
-                />
-                <Route 
-                  path="/forgot-password" 
-                  element={
-                    <PublicOnlyRoute>
-                      <ForgotPassword />
-                    </PublicOnlyRoute>
-                  } 
-                />
-                <Route 
-                  path="/reset-password" 
-                  element={
-                    <PublicOnlyRoute>
-                      <ResetPassword />
-                    </PublicOnlyRoute>
-                  } 
-                />
-                
-                {/* Protected Routes (only accessible if logged in) */}
-                <Route element={<ProtectedRoute />}>
-                  <Route path="/account" element={<Account />} />
-                  <Route path="/account/settings" element={<AccountSettings />} />
-                  <Route path="/account/addresses" element={<AddressManagement />} />
-                  <Route path="/checkout" element={<Checkout />} />
-                </Route>
-                
-                {/* Admin Routes */}
-                <Route 
-                  path="/admin/login" 
-                  element={
-                    <PublicOnlyRoute adminOnly={true}>
-                      <AdminLogin />
-                    </PublicOnlyRoute>
-                  } 
-                />
-                
-                <Route path="/admin" element={<AdminRoute />}>
-                  <Route element={<AdminLayout />}>
-                    <Route index element={<Dashboard />} />
-                    <Route path="orders" element={<OrderList />} />
-                    <Route path="orders/:id" element={<OrderDetail />} />
-                    <Route path="products" element={<ProductList />} />
-                    <Route path="products/:id" element={<ProductEditor />} />
-                    <Route path="products/new" element={<ProductEditor />} />
-                    <Route path="categories" element={<Categories />} />
-                    <Route path="customers" element={<Customers />} />
+        <HelmetProvider>
+          <AppProviders>
+            <TooltipProvider>
+              <SidebarProvider>
+                <Toaster />
+                <Sonner />
+                <Routes>
+                  {/* Public Routes */}
+                  <Route path="/" element={<Index />} />
+                  <Route path="/books" element={<Books />} />
+                  <Route path="/perfumes" element={<Perfumes />} />
+                  <Route path="/essentials" element={<Essentials />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/blog" element={<Blog />} />
+                  <Route path="/blog/:slug" element={<BlogPost />} />
+                  <Route path="/faq" element={<FAQ />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/product/:productId" element={<ProductPage />} />
+                  <Route path="/cart" element={<Cart />} />
+                  <Route path="/order-success" element={<OrderSuccess />} />
+                  
+                  {/* Auth Routes (only accessible if NOT logged in) */}
+                  <Route 
+                    path="/login" 
+                    element={
+                      <PublicOnlyRoute>
+                        <Login />
+                      </PublicOnlyRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/register" 
+                    element={
+                      <PublicOnlyRoute>
+                        <Register />
+                      </PublicOnlyRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/forgot-password" 
+                    element={
+                      <PublicOnlyRoute>
+                        <ForgotPassword />
+                      </PublicOnlyRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/reset-password" 
+                    element={
+                      <PublicOnlyRoute>
+                        <ResetPassword />
+                      </PublicOnlyRoute>
+                    } 
+                  />
+                  
+                  {/* Protected Routes (only accessible if logged in) */}
+                  <Route element={<ProtectedRoute />}>
+                    <Route path="/account" element={<Account />} />
+                    <Route path="/account/settings" element={<AccountSettings />} />
+                    <Route path="/account/addresses" element={<AddressManagement />} />
+                    <Route path="/checkout" element={<Checkout />} />
                   </Route>
-                </Route>
-                
-                {/* 404 Route */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </SidebarProvider>
-          </TooltipProvider>
-        </AppProviders>
+                  
+                  {/* Admin Routes */}
+                  <Route 
+                    path="/admin/login" 
+                    element={
+                      <PublicOnlyRoute adminOnly={true}>
+                        <AdminLogin />
+                      </PublicOnlyRoute>
+                    } 
+                  />
+                  
+                  <Route path="/admin" element={<AdminRoute />}>
+                    <Route element={<AdminLayout />}>
+                      <Route index element={<Dashboard />} />
+                      <Route path="orders" element={<OrderList />} />
+                      <Route path="orders/:id" element={<OrderDetail />} />
+                      <Route path="products" element={<ProductList />} />
+                      <Route path="products/:id" element={<ProductEditor />} />
+                      <Route path="products/new" element={<ProductEditor />} />
+                      <Route path="categories" element={<Categories />} />
+                      <Route path="customers" element={<Customers />} />
+                    </Route>
+                  </Route>
+                  
+                  {/* 404 Route */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </SidebarProvider>
+            </TooltipProvider>
+          </AppProviders>
+        </HelmetProvider>
       </BrowserRouter>
     </QueryClientProvider>
   </ErrorBoundary>

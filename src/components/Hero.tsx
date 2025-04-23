@@ -18,7 +18,7 @@ const Hero = () => {
       />
 
       {/* Glassmorphism Quranic Verse Overlay - Hidden on mobile */}
-      <div className="hidden lg:block absolute top-8 right-8 max-w-[300px] p-6 rounded-xl backdrop-blur-md bg-white/10 border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.12)] text-right">
+      <div className="lg:block absolute top-8 right-8 max-w-[300px] p-6 rounded-xl backdrop-blur-md bg-white/10 border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.12)] text-right">
         <p className="font-['Noto_Naskh_Arabic'] text-white text-xl leading-relaxed mb-4 direction-rtl">
           اقْرَأْ بِاسْمِ رَبِّكَ الَّذِي خَلَقَ
           <br />

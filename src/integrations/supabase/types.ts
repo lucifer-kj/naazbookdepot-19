@@ -376,6 +376,7 @@ export type Database = {
           start_date: string
           usage_limit: number | null
           used_count: number
+          user_id: string | null
         }
         Insert: {
           code: string
@@ -388,6 +389,7 @@ export type Database = {
           start_date: string
           usage_limit?: number | null
           used_count?: number
+          user_id?: string | null
         }
         Update: {
           code?: string
@@ -400,6 +402,7 @@ export type Database = {
           start_date?: string
           usage_limit?: number | null
           used_count?: number
+          user_id?: string | null
         }
         Relationships: []
       }

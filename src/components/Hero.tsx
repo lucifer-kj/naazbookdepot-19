@@ -1,24 +1,43 @@
+
 import React from 'react';
 import { ChevronDown, Phone, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useIsMobile } from '../hooks/use-mobile';
+import { useEffect, useState } from 'react';
 
 const Hero = () => {
+  // State for rotating contact info
+  const [currentInfo, setCurrentInfo] = useState(0);
+  const contactInfo = [
+    { icon: <Phone size={14} />, text: '033 22350051' },
+    { icon: <Phone size={14} />, text: '033 22350960' },
+    { icon: <Phone size={14} />, text: '+91 91634 31395' },
+    { icon: <Mail size={14} />, text: 'naazgroupofficial@gmail.com' }
+  ];
+
+  // Rotate through contact info every 3 seconds
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentInfo((prev) => (prev + 1) % contactInfo.length);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, []);
+
   return (
     <>
-      {/* Contact Info Strip */}
-      <div className="md:block bg-naaz-green/95 text-white py-2">
+      {/* Contact Info Strip - Now with rotation animation */}
+      <div className="md:block bg-naaz-green/95 text-white py-1.5">
         <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center text-sm">
-            <div className="flex items-center gap-6">
-              <div className="flex items-center gap-2">
-                <Phone size={14} />
-                <span>033 22350051 | 033 22350960 | +91 91634 31395</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Mail size={14} />
-                <a href="mailto:naazgroupofficial@gmail.com" className="hover:text-naaz-gold transition-colors">
-                  naazgroupofficial@gmail.com
-                </a>
+          <div className="flex justify-between items-center text-sm overflow-hidden">
+            <div className="w-full flex justify-center md:justify-start">
+              <div 
+                className="flex items-center gap-2 transition-all duration-500 ease-in-out"
+                key={currentInfo}
+              >
+                {contactInfo[currentInfo].icon}
+                <span className="animate-fade-in">
+                  {contactInfo[currentInfo].text}
+                </span>
               </div>
             </div>
           </div>
@@ -38,13 +57,14 @@ const Hero = () => {
         />
 
         {/* Glassmorphism Quranic Verse Overlay - Hidden on mobile */}
-        <div className="lg:block absolute top-8 right-8 max-w-[300px] p-6 rounded-xl backdrop-blur-md bg-white/10 border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.12)] text-right">
+        <div className="hidden lg:block absolute top-8 right-8 max-w-[300px] p-6 rounded-xl backdrop-blur-md bg-white/10 border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.12)] text-right">
           <p className="font-['Noto_Naskh_Arabic'] text-white text-xl leading-relaxed mb-4 direction-rtl">
             اقْرَأْ بِاسْمِ رَبِّكَ الَّذِي خَلَقَ
             <br />
             خَلَقَ الْإِنسَانَ مِنْ عَلَقٍ
             <br />
-            اقْرَأْ وَرَبُّكَ الْأَك
+            اقْرَأْ وَرَبُّكَ الْأَكْرَمُ
+            <br />
             الَّذِي عَلَّمَ بِالْقَلَمِ
             <br />
             عَلَّمَ الْإِنسَانَ مَا لَمْ يَعْلَمْ

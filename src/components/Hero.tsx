@@ -6,7 +6,7 @@ const Hero = () => {
   return (
     <>
       {/* Contact Info Strip */}
-      <div className="hidden md:block bg-naaz-green/95 text-white py-2">
+      <div className="md:block bg-naaz-green/95 text-white py-2">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center text-sm">
             <div className="flex items-center gap-6">
@@ -38,14 +38,13 @@ const Hero = () => {
         />
 
         {/* Glassmorphism Quranic Verse Overlay - Hidden on mobile */}
-        <div className="hidden lg:block absolute top-8 right-8 max-w-[300px] p-6 rounded-xl backdrop-blur-md bg-white/10 border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.12)] text-right">
+        <div className="lg:block absolute top-8 right-8 max-w-[300px] p-6 rounded-xl backdrop-blur-md bg-white/10 border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.12)] text-right">
           <p className="font-['Noto_Naskh_Arabic'] text-white text-xl leading-relaxed mb-4 direction-rtl">
             اقْرَأْ بِاسْمِ رَبِّكَ الَّذِي خَلَقَ
             <br />
             خَلَقَ الْإِنسَانَ مِنْ عَلَقٍ
             <br />
-            اقْرَأْ وَرَبُّكَ الْأَكْرَمُ
-            <br />
+            اقْرَأْ وَرَبُّكَ الْأَك
             الَّذِي عَلَّمَ بِالْقَلَمِ
             <br />
             عَلَّمَ الْإِنسَانَ مَا لَمْ يَعْلَمْ

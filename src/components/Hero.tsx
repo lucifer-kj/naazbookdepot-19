@@ -17,6 +17,31 @@ const Hero = () => {
         }}
       />
 
+      {/* Glassmorphism Quranic Verse Overlay - Hidden on mobile */}
+      <div className="hidden lg:block absolute top-8 right-8 max-w-[300px] p-6 rounded-xl backdrop-blur-md bg-white/10 border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.12)] text-right">
+        <p className="font-['Noto_Naskh_Arabic'] text-white text-xl leading-relaxed mb-4 direction-rtl">
+          اقْرَأْ بِاسْمِ رَبِّكَ الَّذِي خَلَقَ
+          <br />
+          خَلَقَ الْإِنسَانَ مِنْ عَلَقٍ
+          <br />
+          اقْرَأْ وَرَبُّكَ الْأَكْرَمُ
+          <br />
+          الَّذِي عَلَّمَ بِالْقَلَمِ
+          <br />
+          عَلَّمَ الْإِنسَانَ مَا لَمْ يَعْلَمْ
+        </p>
+        <p className="text-white/80 text-sm italic leading-relaxed">
+          "Read in the name of your Lord who created—
+          Created man from a clot.
+          Read, and your Lord is the Most Generous—
+          Who taught by the pen—
+          Taught man that which he knew not."
+          <span className="block mt-1 text-white/60 text-xs">
+            (Surah Al-&apos;Alaq, 96:1–5)
+          </span>
+        </p>
+      </div>
+
       {/* Content */}
       <div className="relative z-10 container mx-auto px-4 h-full flex items-center">
         <div className="max-w-2xl animate-fade-up">

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Facebook, Instagram, Twitter, Mail, Phone, MapPin } from 'lucide-react';
@@ -97,15 +96,23 @@ const Footer = () => {
             <ul className="space-y-4">
               <li className="flex items-start gap-3">
                 <MapPin size={20} className="text-naaz-gold flex-shrink-0 mt-1" />
-                <span className="text-white/80">123 Chowringhee Road, Kolkata, West Bengal, India</span>
+                <span className="text-white/80">1, Ismail Madani Lane, Kolkata, West Bengal - 700073, India</span>
               </li>
-              <li className="flex items-center gap-3">
-                <Phone size={20} className="text-naaz-gold" />
-                <span className="text-white/80">+91 98765 43210</span>
+              <li>
+                <div className="flex items-start gap-3">
+                  <Phone size={20} className="text-naaz-gold flex-shrink-0 mt-1" />
+                  <div className="text-white/80 space-y-1">
+                    <a href="tel:03322350051" className="block hover:text-naaz-gold transition-colors">033 22350051</a>
+                    <a href="tel:03322350960" className="block hover:text-naaz-gold transition-colors">033 22350960</a>
+                    <a href="tel:+919163431395" className="block hover:text-naaz-gold transition-colors">+91 91634 31395</a>
+                  </div>
+                </div>
               </li>
               <li className="flex items-center gap-3">
                 <Mail size={20} className="text-naaz-gold" />
-                <span className="text-white/80">info@naazgroup.com</span>
+                <a href="mailto:naazgroupofficial@gmail.com" className="text-white/80 hover:text-naaz-gold transition-colors">
+                  naazgroupofficial@gmail.com
+                </a>
               </li>
             </ul>
           </div>

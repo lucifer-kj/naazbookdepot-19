@@ -9,8 +9,6 @@ const About = () => {
   const contacts = [
     { number: '+91 90510 85118', type: 'Mobile' },
     { number: '+91 91634 33935', type: 'Mobile' },
-    { number: '033 2235 0051', type: 'Landline' },
-    { number: '033 2235 0960', type: 'Landline' }
   ];
 
   const services = [

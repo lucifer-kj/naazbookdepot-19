@@ -2,12 +2,12 @@
 import React from 'react';
 import { ChevronDown, Phone, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useIsMobile } from '../hooks/use-mobile';
 import { useEffect, useState } from 'react';
 
 const Hero = () => {
   // State for rotating contact info
   const [currentInfo, setCurrentInfo] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const contactInfo = [
     { icon: <Phone size={14} />, text: '033 22350051' },
     { icon: <Phone size={14} />, text: '033 22350960' },
@@ -15,30 +15,32 @@ const Hero = () => {
     { icon: <Mail size={14} />, text: 'naazgroupofficial@gmail.com' }
   ];
 
-  // Rotate through contact info every 3 seconds
+  // Infinite loop animation for contact info
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentInfo((prev) => (prev + 1) % contactInfo.length);
-    }, 3000);
-    return () => clearInterval(timer);
+    const interval = setInterval(() => {
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setCurrentInfo((prev) => (prev + 1) % contactInfo.length);
+        setIsTransitioning(false);
+      }, 300); // Match this with CSS transition duration
+    }, 4000); // Total time each info is displayed
+
+    return () => clearInterval(interval);
   }, []);
 
   return (
     <>
-      {/* Contact Info Strip - Now with rotation animation */}
-      <div className="md:block bg-naaz-green/95 text-white py-1.5">
+      {/* Infinite Contact Info Strip */}
+      <div className="bg-naaz-green/95 text-white py-1.5 overflow-hidden">
         <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center text-sm overflow-hidden">
-            <div className="w-full flex justify-center md:justify-start">
-              <div 
-                className="flex items-center gap-2 transition-all duration-500 ease-in-out"
-                key={currentInfo}
-              >
-                {contactInfo[currentInfo].icon}
-                <span className="animate-fade-in">
-                  {contactInfo[currentInfo].text}
-                </span>
-              </div>
+          <div className="flex justify-center md:justify-start">
+            <div 
+              className={`flex items-center gap-2 transition-all duration-300 ease-in-out ${
+                isTransitioning ? 'opacity-0 translate-y-2' : 'opacity-100 translate-y-0'
+              }`}
+            >
+              {contactInfo[currentInfo].icon}
+              <span>{contactInfo[currentInfo].text}</span>
             </div>
           </div>
         </div>
@@ -114,3 +116,4 @@ const Hero = () => {
 };
 
 export default Hero;
+

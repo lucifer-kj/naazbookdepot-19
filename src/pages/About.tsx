@@ -79,9 +79,6 @@ const About = () => {
                     className="rounded w-full h-auto"
                   />
                 </div>
-                <div className="absolute -bottom-5 -right-5 w-32 h-32 bg-naaz-gold rounded-full flex items-center justify-center text-center p-2">
-                  <span className="text-naaz-green font-playfair font-bold text-lg">Since 1967</span>
-                </div>
               </div>
             </div>
           </div>

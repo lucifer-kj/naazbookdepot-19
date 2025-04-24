@@ -12,6 +12,11 @@ export const AdminRoute = () => {
   const location = useLocation();
   const { isVerifying, isVerified, error } = useAdminVerification();
 
+  // No user - redirect to admin login
+  if (!user) {
+    return <Navigate to="/admin/login" state={{ from: location }} replace />;
+  }
+
   // Show loading state while verifying
   if (isVerifying) {
     return (
@@ -28,11 +33,6 @@ export const AdminRoute = () => {
         </div>
       </div>
     );
-  }
-
-  // No user - redirect to login
-  if (!user) {
-    return <Navigate to="/admin/login" state={{ from: location }} replace />;
   }
 
   // Show error state if verification failed

@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 export const useAdminVerification = () => {
-  const { user, isAdmin } = useAuth();
+  const { user } = useAuth();
   const [isVerifying, setIsVerifying] = useState(true);
   const [isVerified, setIsVerified] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -15,21 +15,40 @@ export const useAdminVerification = () => {
       try {
         if (!user) {
           setError('No user found');
+          setIsVerifying(false);
           return;
         }
 
-        // Verify admin status using the RLS-safe function we created
-        const { data, error: verifyError } = await supabase
+        // First try to verify using the database function
+        const { data: isAdminResult, error: verifyError } = await supabase
           .rpc('is_admin', { user_id: user.id });
 
         if (verifyError) {
-          throw verifyError;
-        }
+          console.error('Admin verification error:', verifyError);
+          // If the RPC fails, try to verify directly through the users table
+          const { data: userData, error: userError } = await supabase
+            .from('users')
+            .select('role, is_super_admin')
+            .eq('id', user.id)
+            .single();
 
-        setIsVerified(!!data);
-        if (!data) {
-          setError('Access denied. Admin privileges required.');
-          toast.error('Access denied. Admin privileges required.');
+          if (userError) {
+            throw userError;
+          }
+
+          const isAdmin = userData?.role === 'admin' || userData?.is_super_admin === true;
+          setIsVerified(isAdmin);
+          
+          if (!isAdmin) {
+            setError('Access denied. Admin privileges required.');
+            toast.error('Access denied. Admin privileges required.');
+          }
+        } else {
+          setIsVerified(!!isAdminResult);
+          if (!isAdminResult) {
+            setError('Access denied. Admin privileges required.');
+            toast.error('Access denied. Admin privileges required.');
+          }
         }
       } catch (err) {
         console.error('Admin verification error:', err);
@@ -41,7 +60,7 @@ export const useAdminVerification = () => {
     };
 
     verifyAdmin();
-  }, [user, isAdmin]);
+  }, [user]);
 
   return { isVerifying, isVerified, error };
 };

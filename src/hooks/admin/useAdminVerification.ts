@@ -19,9 +19,9 @@ export const useAdminVerification = () => {
           return;
         }
 
-        // Use the new secure check_is_admin function
+        // Use the existing is_admin function
         const { data: isAdminResult, error: verifyError } = await supabase
-          .rpc('check_is_admin', { user_id: user.id });
+          .rpc('is_admin', { user_id: user.id });
 
         if (verifyError) {
           console.error('Admin verification error:', verifyError);

@@ -5,7 +5,7 @@ import { useAuth } from '@/lib/context/AuthContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAdminVerification } from '@/hooks/admin/useAdminVerification';
-import { Shield, AlertCircle } from 'lucide-react';
+import { Shield, AlertCircle, RefreshCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
@@ -48,6 +48,10 @@ export const AdminRoute = () => {
 
   // Show error state if verification failed
   if (error || !isVerified) {
+    const handleRetry = () => {
+      window.location.reload();
+    };
+
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-4">
         <div className="w-full max-w-md mb-4">
@@ -68,6 +72,10 @@ export const AdminRoute = () => {
         </div>
         
         <div className="flex gap-2 mt-4">
+          <Button variant="outline" onClick={handleRetry}>
+            <RefreshCcw className="mr-2 h-4 w-4" />
+            Retry Verification
+          </Button>
           <Button variant="outline" asChild>
             <a href="/">Go to Home Page</a>
           </Button>

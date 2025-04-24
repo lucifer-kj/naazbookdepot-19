@@ -38,13 +38,63 @@ const useDashboardData = () => {
         setIsLoading(true);
         setError(null);
 
-        // Use the secure admin dashboard function to avoid recursion
-        const { data, error: dbError } = await supabase.rpc('get_admin_dashboard_data');
-        
-        if (dbError) {
-          console.error('Error fetching dashboard data:', dbError);
-          throw new Error(`Failed to fetch dashboard data: ${dbError.message}`);
+        // Fetch low stock products
+        const { data: lowStockProducts, error: lowStockError } = await supabase
+          .from('products')
+          .select('id, name, sku, price, quantity_in_stock')
+          .lt('quantity_in_stock', 10)
+          .order('quantity_in_stock', { ascending: true })
+          .limit(5);
+
+        if (lowStockError) {
+          console.error('Error fetching low stock products:', lowStockError);
+          throw new Error(`Failed to fetch low stock products: ${lowStockError.message}`);
         }
+
+        // Fetch recent orders with customer info
+        const { data: recentOrders, error: ordersError } = await supabase
+          .from('orders')
+          .select(`
+            id, created_at, status, total_amount,
+            user_id,
+            users:user_id (first_name, last_name, email)
+          `)
+          .order('created_at', { ascending: false })
+          .limit(5);
+
+        if (ordersError) {
+          console.error('Error fetching recent orders:', ordersError);
+          throw new Error(`Failed to fetch recent orders: ${ordersError.message}`);
+        }
+
+        // Format the orders data for display
+        const formattedOrders = recentOrders?.map(order => ({
+          id: order.id,
+          created_at: order.created_at,
+          status: order.status,
+          total_amount: order.total_amount,
+          customer: {
+            name: order.users ? `${order.users.first_name || ''} ${order.users.last_name || ''}`.trim() || 'Guest' : 'Guest',
+            email: order.users?.email || 'guest@example.com'
+          }
+        })) || [];
+
+        // Count orders by status
+        const { data: statusCounts, error: statusError } = await supabase
+          .from('orders')
+          .select('status, count')
+          .group('status');
+
+        if (statusError) {
+          console.error('Error fetching order status counts:', statusError);
+          throw new Error(`Failed to fetch order status counts: ${statusError.message}`);
+        }
+
+        // Convert to expected format
+        const ordersByStatus: Record<string, number> = {};
+        statusCounts?.forEach(item => {
+          ordersByStatus[item.status] = Number(item.count);
+        });
 
         // 4. Get sales summary (still using the simpler calculation for now)
         const getSalesSummary = async (timeframe: string) => {
@@ -83,10 +133,10 @@ const useDashboardData = () => {
             weekly: weeklySummary,
             monthly: monthlySummary
           },
-          ordersByStatus: data?.ordersByStatus || {},
-          recentOrders: data?.recentOrders || [],
+          ordersByStatus: ordersByStatus,
+          recentOrders: formattedOrders,
           newCustomers: [], // Will implement later
-          lowStockProducts: data?.lowStockProducts || []
+          lowStockProducts: lowStockProducts || []
         });
       } catch (error) {
         console.error('Error loading dashboard data:', error);

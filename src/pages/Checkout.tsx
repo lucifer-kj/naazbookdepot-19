@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -8,7 +7,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useToast } from '@/components/ui/use-toast';
-import CheckoutButton from '@/components/checkout/CheckoutButton'; // Fixed import
+import CheckoutButton from '@/components/checkout/CheckoutButton';
 import RazorpayCheckoutButton from '@/components/checkout/RazorpayCheckoutButton';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -16,7 +15,6 @@ import { Button } from '@/components/ui/button';
 import { useCartContext } from '@/lib/context/CartContext';
 import { FormError } from '@/components/ui/form-error';
 
-// Validation schema
 const addressSchema = z.object({
   firstName: z.string().min(2, { message: "First name must be at least 2 characters" }),
   lastName: z.string().min(2, { message: "Last name must be at least 2 characters" }),
@@ -45,7 +43,6 @@ const Checkout = () => {
   const navigate = useNavigate();
   const { cart } = useCartContext();
 
-  // Form setup
   const form = useForm<z.infer<typeof checkoutSchema>>({
     resolver: zodResolver(checkoutSchema),
     defaultValues: {
@@ -79,18 +76,15 @@ const Checkout = () => {
     },
   });
 
-  // Calculate cart totals - ensure numeric operations
   const subtotal = cart.subtotal || 0;
   const shipping = cart.items.length > 0 ? 100 : 0;
   const tax = Math.round(subtotal * 0.05);
   const total = subtotal + shipping + tax;
-  
-  // Handle form submission
+
   const onSubmit = async (data: z.infer<typeof checkoutSchema>) => {
     try {
       setError("");
       
-      // If same as shipping is checked, use shipping address for billing
       if (data.sameAsShipping) {
         data.billing = data.shipping;
       }
@@ -104,7 +98,6 @@ const Checkout = () => {
     }
   };
 
-  // Update billing fields when sameAsShipping changes
   React.useEffect(() => {
     const sameAsShipping = form.watch("sameAsShipping");
     
@@ -599,6 +592,8 @@ const Checkout = () => {
                   billingAddress={billingAddress}
                   shippingCost={shipping}
                   taxAmount={tax}
+                  paymentMethod={formValues.paymentMethod}
+                  notes={formValues.notes}
                 />
               )}
             </div>
@@ -618,7 +613,6 @@ const Checkout = () => {
             <h1 className="text-3xl font-playfair font-bold text-naaz-green">Checkout</h1>
           </div>
           
-          {/* Checkout Progress */}
           <div className="mb-10">
             <div className="flex items-center">
               <div className={`flex-1 ${step >= 1 ? 'text-naaz-green' : 'text-gray-400'}`}>
@@ -662,7 +656,6 @@ const Checkout = () => {
             </div>
           </div>
           
-          {/* Checkout Content */}
           <div className="grid lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2">
               <div className="bg-white rounded-lg shadow-md p-6">
@@ -670,7 +663,6 @@ const Checkout = () => {
               </div>
             </div>
             
-            {/* Order Summary */}
             <div className="lg:col-span-1">
               <div className="bg-white rounded-lg shadow-md p-6 sticky top-20">
                 <h2 className="text-xl font-playfair font-semibold text-naaz-green mb-6 pb-4 border-b border-gray-200">

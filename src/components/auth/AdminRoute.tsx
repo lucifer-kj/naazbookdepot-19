@@ -5,7 +5,7 @@ import { useAuth } from '@/lib/context/AuthContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAdminVerification } from '@/hooks/admin/useAdminVerification';
-import { Shield } from 'lucide-react';
+import { Shield, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
@@ -52,10 +52,19 @@ export const AdminRoute = () => {
       <div className="flex flex-col items-center justify-center min-h-screen p-4">
         <div className="w-full max-w-md mb-4">
           <Alert variant="destructive">
+            <AlertCircle className="h-5 w-5" />
             <AlertDescription>
               {error || 'You do not have permission to access this area.'}
             </AlertDescription>
           </Alert>
+
+          <div className="mt-4">
+            <Alert>
+              <AlertDescription className="text-sm">
+                If you believe this is an error, please ensure your account has admin privileges in the database.
+              </AlertDescription>
+            </Alert>
+          </div>
         </div>
         
         <div className="flex gap-2 mt-4">

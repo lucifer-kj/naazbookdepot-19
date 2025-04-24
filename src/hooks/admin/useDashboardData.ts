@@ -38,54 +38,15 @@ const useDashboardData = () => {
         setIsLoading(true);
         setError(null);
 
-        // 1. Fetch low stock products
-        const { data: lowStockData, error: lowStockError } = await supabase
-          .from('products')
-          .select('*')
-          .lt('quantity_in_stock', 10)
-          .order('quantity_in_stock', { ascending: true })
-          .limit(5);
-
-        if (lowStockError) {
-          console.error('Error fetching low stock products:', lowStockError);
-          throw new Error(`Failed to fetch low stock products: ${lowStockError.message}`);
-        }
-
-        // 2. Fetch orders data without joining user data
-        const { data: ordersData, error: ordersError } = await supabase
-          .from('orders')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(5);
-
-        if (ordersError) {
-          console.error('Error fetching orders data:', ordersError);
-          throw new Error(`Failed to fetch recent orders: ${ordersError.message}`);
-        }
-
-        // 3. Fetch order status counts
-        const getOrderCount = async (status: OrderStatus) => {
-          const { count, error } = await supabase
-            .from('orders')
-            .select('id', { count: 'exact' })
-            .eq('status', status);
-            
-          if (error) {
-            console.error(`Error fetching ${status} order count:`, error);
-            return 0;
-          }
-          
-          return count || 0;
-        };
+        // Use the secure admin dashboard function to avoid recursion
+        const { data, error: dbError } = await supabase.rpc('get_admin_dashboard_data');
         
-        // Get counts for each status using the proper OrderStatus type
-        const pendingCount = await getOrderCount('pending');
-        const processingCount = await getOrderCount('processing');
-        const shippedCount = await getOrderCount('shipped');
-        const deliveredCount = await getOrderCount('delivered');
-        const cancelledCount = await getOrderCount('cancelled');
+        if (dbError) {
+          console.error('Error fetching dashboard data:', dbError);
+          throw new Error(`Failed to fetch dashboard data: ${dbError.message}`);
+        }
 
-        // 4. Get sales summary
+        // 4. Get sales summary (still using the simpler calculation for now)
         const getSalesSummary = async (timeframe: string) => {
           try {
             // This is a simplified calculation for the example
@@ -115,32 +76,17 @@ const useDashboardData = () => {
         const weeklySummary = await getSalesSummary('weekly');
         const monthlySummary = await getSalesSummary('monthly');
 
-        // Format orders with simple user info to avoid RLS issues
-        const formattedOrders = ordersData?.map(order => ({
-          ...order,
-          customer: {
-            name: `Customer ${order.user_id ? order.user_id.substring(0, 5) : 'Guest'}`,
-            email: order.user_id ? `user${order.user_id.substring(0, 5)}@example.com` : 'guest@example.com'
-          }
-        })) || [];
-
-        // Set all gathered data
+        // Set the dashboard data from our secure database function
         setDashboardData({
           salesSummary: {
             daily: dailySummary,
             weekly: weeklySummary,
             monthly: monthlySummary
           },
-          ordersByStatus: {
-            pending: pendingCount,
-            processing: processingCount,
-            shipped: shippedCount,
-            delivered: deliveredCount,
-            cancelled: cancelledCount
-          },
-          recentOrders: formattedOrders,
+          ordersByStatus: data?.ordersByStatus || {},
+          recentOrders: data?.recentOrders || [],
           newCustomers: [], // Will implement later
-          lowStockProducts: lowStockData || []
+          lowStockProducts: data?.lowStockProducts || []
         });
       } catch (error) {
         console.error('Error loading dashboard data:', error);

@@ -25,23 +25,39 @@ export const useAdminVerification = () => {
 
         if (verifyError) {
           console.error('Admin verification error:', verifyError);
-          // If the RPC fails, try to verify directly through the users table
-          const { data: userData, error: userError } = await supabase
-            .from('users')
-            .select('role, is_super_admin')
-            .eq('id', user.id)
-            .single();
-
-          if (userError) {
-            throw userError;
-          }
-
-          const isAdmin = userData?.role === 'admin' || userData?.is_super_admin === true;
-          setIsVerified(isAdmin);
           
-          if (!isAdmin) {
-            setError('Access denied. Admin privileges required.');
-            toast.error('Access denied. Admin privileges required.');
+          // Fallback to direct query with better error handling
+          try {
+            const { data: userData, error: userError } = await supabase
+              .from('users')
+              .select('role, is_super_admin')
+              .eq('id', user.id)
+              .single();
+
+            if (userError) {
+              if (userError.code === 'PGRST116') {
+                console.error('User not found in database:', userError);
+                setError('User profile not found. Please contact an administrator.');
+                toast.error('User profile not found.');
+              } else {
+                console.error('Error fetching user data:', userError);
+                setError(`Database error: ${userError.message}`);
+                toast.error('Failed to verify admin privileges');
+              }
+              setIsVerified(false);
+            } else {
+              const isAdmin = userData?.role === 'admin' || userData?.is_super_admin === true;
+              setIsVerified(isAdmin);
+              
+              if (!isAdmin) {
+                setError('Access denied. Admin privileges required.');
+                toast.error('Access denied. Admin privileges required.');
+              }
+            }
+          } catch (innerError) {
+            console.error('Inner verification error:', innerError);
+            setError('Failed to verify admin status');
+            toast.error('Failed to verify admin status');
           }
         } else {
           setIsVerified(!!isAdminResult);

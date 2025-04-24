@@ -1,16 +1,27 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/context/AuthContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAdminVerification } from '@/hooks/admin/useAdminVerification';
 import { Shield } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 export const AdminRoute = () => {
   const { user } = useAuth();
   const location = useLocation();
   const { isVerifying, isVerified, error } = useAdminVerification();
+
+  // Show toast when error occurs
+  useEffect(() => {
+    if (error) {
+      toast.error('Admin verification failed', {
+        description: error
+      });
+    }
+  }, [error]);
 
   // No user - redirect to admin login
   if (!user) {
@@ -38,13 +49,22 @@ export const AdminRoute = () => {
   // Show error state if verification failed
   if (error || !isVerified) {
     return (
-      <div className="flex items-center justify-center min-h-screen p-4">
-        <div className="w-full max-w-md">
+      <div className="flex flex-col items-center justify-center min-h-screen p-4">
+        <div className="w-full max-w-md mb-4">
           <Alert variant="destructive">
             <AlertDescription>
               {error || 'You do not have permission to access this area.'}
             </AlertDescription>
           </Alert>
+        </div>
+        
+        <div className="flex gap-2 mt-4">
+          <Button variant="outline" asChild>
+            <a href="/">Go to Home Page</a>
+          </Button>
+          <Button asChild>
+            <a href="/admin/login">Return to Admin Login</a>
+          </Button>
         </div>
       </div>
     );

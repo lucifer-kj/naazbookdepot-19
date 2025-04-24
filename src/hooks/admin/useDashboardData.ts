@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { OrderStatus } from '@/lib/api/admin-service';
 
 interface DashboardData {
   salesSummary: {
@@ -37,8 +38,6 @@ const useDashboardData = () => {
         setIsLoading(true);
         setError(null);
 
-        // Load data in separate queries to avoid RLS recursion
-
         // 1. Fetch low stock products
         const { data: lowStockData, error: lowStockError } = await supabase
           .from('products')
@@ -65,7 +64,7 @@ const useDashboardData = () => {
         }
 
         // 3. Fetch order status counts
-        const getOrderCount = async (status: string) => {
+        const getOrderCount = async (status: OrderStatus) => {
           const { count, error } = await supabase
             .from('orders')
             .select('id', { count: 'exact' })
@@ -79,7 +78,7 @@ const useDashboardData = () => {
           return count || 0;
         };
         
-        // Get counts for each status
+        // Get counts for each status using the proper OrderStatus type
         const pendingCount = await getOrderCount('pending');
         const processingCount = await getOrderCount('processing');
         const shippedCount = await getOrderCount('shipped');

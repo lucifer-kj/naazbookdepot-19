@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/context/AuthContext';
@@ -21,6 +20,35 @@ const AdminLogin = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { signIn, isAdmin } = useAuth();
+
+  // Method to register super admin if not exists
+  const registerSuperAdmin = async () => {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: 'eatnjoy01@gmail.com',
+        password: 'Admin@123',
+        options: {
+          data: {
+            first_name: 'Admin',
+            last_name: 'User',
+            role: 'admin',
+            is_super_admin: true
+          }
+        }
+      });
+
+      if (error) {
+        console.error('Super admin registration error:', error);
+        toast.error(`Registration failed: ${error.message}`);
+        return false;
+      }
+
+      return true;
+    } catch (err) {
+      console.error('Super admin registration error:', err);
+      return false;
+    }
+  };
 
   // Check connection status on load
   useEffect(() => {
@@ -46,7 +74,8 @@ const AdminLogin = () => {
     const intervalId = setInterval(checkConnection, 30000);
     return () => clearInterval(intervalId);
   }, [navigate, isAdmin]);
-
+  
+  // Modify handleAdminLogin to attempt registration if needed
   const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -66,7 +95,15 @@ const AdminLogin = () => {
         throw new Error('Password must be at least 6 characters');
       }
       
-      // Try to sign in
+      // If this is the super admin email, try to register first if needed
+      if (email === 'eatnjoy01@gmail.com') {
+        const registered = await registerSuperAdmin();
+        if (!registered) {
+          throw new Error('Could not register super admin');
+        }
+      }
+
+      // Proceed with sign in
       await signIn(email, password);
       
       // Get the current session to verify the user is authenticated

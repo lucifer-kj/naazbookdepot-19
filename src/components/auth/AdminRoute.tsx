@@ -8,12 +8,12 @@ import { useAdminVerification } from '@/hooks/admin/useAdminVerification';
 import { Shield } from 'lucide-react';
 
 export const AdminRoute = () => {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth(); // Add isAdmin directly from useAuth
   const location = useLocation();
   const { isVerifying, isVerified, error } = useAdminVerification();
 
-  // No user - redirect to admin login
-  if (!user) {
+  // No user or not an admin - redirect to admin login
+  if (!user || !isAdmin) {
     return <Navigate to="/admin/login" state={{ from: location }} replace />;
   }
 

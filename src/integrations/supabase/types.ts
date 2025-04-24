@@ -1014,6 +1014,10 @@ export type Database = {
         Args: { post_id: string }
         Returns: undefined
       }
+      is_admin: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
       rollback_transaction: {
         Args: { transaction_id: string }
         Returns: undefined

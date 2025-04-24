@@ -38,27 +38,43 @@ const useDashboardData = () => {
       try {
         setIsLoading(true);
         
-        // Use Promise.all to fetch data in parallel
-        const [stats, orders, customers, lowStock] = await Promise.all([
+        const [stats, orders, customers, lowStock] = await Promise.allSettled([
           getDashboardStats(),
           getRecentOrders(5),
           getNewCustomers(5),
           getLowStockProducts(5)
         ]);
+
+        const processResult = (result: PromiseSettledResult<any>) => {
+          if (result.status === 'fulfilled') {
+            return result.value;
+          }
+          console.error('Error fetching dashboard data:', result.reason);
+          return null;
+        };
+
+        const statsData = processResult(stats);
+        const ordersData = processResult(orders);
+        const customersData = processResult(customers);
+        const lowStockData = processResult(lowStock);
+
+        if (!statsData) {
+          throw new Error('Failed to load dashboard statistics');
+        }
         
         setDashboardData({
-          salesSummary: stats.salesSummary,
-          ordersByStatus: stats.ordersByStatus || {},
-          recentOrders: orders || [],
-          newCustomers: customers || [],
-          lowStockProducts: lowStock || []
+          salesSummary: statsData.salesSummary,
+          ordersByStatus: statsData.ordersByStatus || {},
+          recentOrders: ordersData || [],
+          newCustomers: customersData || [],
+          lowStockProducts: lowStockData || []
         });
       } catch (error) {
         console.error('Error loading dashboard data:', error);
         toast({
           variant: "destructive",
-          title: "Error",
-          description: "Failed to load dashboard data. Please try again."
+          title: "Dashboard Error",
+          description: "Failed to load dashboard data. Please check your permissions and try again."
         });
       } finally {
         setIsLoading(false);
@@ -67,11 +83,8 @@ const useDashboardData = () => {
     
     loadDashboardData();
     
-    // Set up auto-refresh interval
-    const interval = setInterval(() => {
-      loadDashboardData();
-    }, 5 * 60 * 1000); // Refresh every 5 minutes
-    
+    // Refresh every 5 minutes
+    const interval = setInterval(loadDashboardData, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, [toast]);
 

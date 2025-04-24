@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { OrderStatus } from '@/lib/api/admin-service';
 
 interface DashboardData {
   salesSummary: {
@@ -19,7 +18,6 @@ interface DashboardData {
 const useDashboardData = () => {
   const [timeframe, setTimeframe] = useState<'daily' | 'weekly' | 'monthly'>('daily');
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [dashboardData, setDashboardData] = useState<DashboardData>({
     salesSummary: {
       daily: { amount: 0, change: 0 },
@@ -36,111 +34,63 @@ const useDashboardData = () => {
     const loadDashboardData = async () => {
       try {
         setIsLoading(true);
-        setError(null);
 
-        // Fetch low stock products
-        const { data: lowStockProducts, error: lowStockError } = await supabase
-          .from('products')
-          .select('id, name, sku, price, quantity_in_stock')
-          .lt('quantity_in_stock', 10)
-          .order('quantity_in_stock', { ascending: true })
-          .limit(5);
-
-        if (lowStockError) {
-          console.error('Error fetching low stock products:', lowStockError);
-          throw new Error(`Failed to fetch low stock products: ${lowStockError.message}`);
-        }
-
-        // Fetch recent orders with customer info
-        const { data: recentOrders, error: ordersError } = await supabase
+        // Fetch orders data
+        const { data: ordersData, error: ordersError } = await supabase
           .from('orders')
           .select(`
-            id, created_at, status, total_amount,
-            user_id,
-            users:user_id (first_name, last_name, email)
+            *,
+            users (
+              first_name,
+              last_name,
+              email
+            )
           `)
           .order('created_at', { ascending: false })
           .limit(5);
 
-        if (ordersError) {
-          console.error('Error fetching recent orders:', ordersError);
-          throw new Error(`Failed to fetch recent orders: ${ordersError.message}`);
-        }
+        if (ordersError) throw ordersError;
 
-        // Format the orders data for display
-        const formattedOrders = recentOrders?.map(order => ({
-          id: order.id,
-          created_at: order.created_at,
-          status: order.status,
-          total_amount: order.total_amount,
-          customer: {
-            name: order.users ? `${order.users.first_name || ''} ${order.users.last_name || ''}`.trim() || 'Guest' : 'Guest',
-            email: order.users?.email || 'guest@example.com'
-          }
-        })) || [];
+        // Fetch low stock products
+        const { data: lowStockData, error: lowStockError } = await supabase
+          .from('products')
+          .select('*')
+          .lt('quantity_in_stock', 10)
+          .order('quantity_in_stock', { ascending: true })
+          .limit(5);
 
-        // Count orders by status using separate queries instead of group
-        const orderStatusCounts: Record<string, number> = {};
-        
-        // Get count for each status separately
-        for (const status of ['pending', 'processing', 'shipped', 'delivered', 'cancelled'] as const) {
-          const { count, error: countError } = await supabase
-            .from('orders')
-            .select('id', { count: 'exact', head: true })
-            .eq('status', status);
-            
-          if (countError) {
-            console.error(`Error counting ${status} orders:`, countError);
-          } else {
-            orderStatusCounts[status] = count || 0;
-          }
-        }
+        if (lowStockError) throw lowStockError;
 
-        // 4. Get sales summary (still using the simpler calculation for now)
-        const getSalesSummary = async (timeframe: string) => {
-          try {
-            // This is a simplified calculation for the example
-            // In a real app, you'd want to use more accurate date filtering
-            let amount = 0;
-            let change = 0;
-            
-            if (timeframe === 'daily') {
-              amount = 1000;
-              change = 5;
-            } else if (timeframe === 'weekly') {
-              amount = 5000;
-              change = 10;
-            } else {
-              amount = 20000;
-              change = 15;
-            }
-            
-            return { amount, change };
-          } catch (error) {
-            console.error(`Error calculating ${timeframe} sales:`, error);
-            return { amount: 0, change: 0 };
-          }
+        // Fetch order status counts
+        const { data: statusCounts, error: statusError } = await supabase
+          .from('orders')
+          .select('status', { count: 'exact' })
+          .eq('status', 'pending');
+
+        if (statusError) throw statusError;
+
+        // Calculate summary data (simplified for example)
+        const summary = {
+          daily: { amount: 1000, change: 5 },
+          weekly: { amount: 5000, change: 10 },
+          monthly: { amount: 20000, change: 15 }
         };
-        
-        const dailySummary = await getSalesSummary('daily');
-        const weeklySummary = await getSalesSummary('weekly');
-        const monthlySummary = await getSalesSummary('monthly');
 
-        // Set the dashboard data from our secure database function
         setDashboardData({
-          salesSummary: {
-            daily: dailySummary,
-            weekly: weeklySummary,
-            monthly: monthlySummary
+          salesSummary: summary,
+          ordersByStatus: {
+            pending: statusCounts?.length || 0,
+            processing: 0,
+            shipped: 0,
+            delivered: 0,
+            cancelled: 0
           },
-          ordersByStatus: orderStatusCounts,
-          recentOrders: formattedOrders,
+          recentOrders: ordersData || [],
           newCustomers: [], // Will implement later
-          lowStockProducts: lowStockProducts || []
+          lowStockProducts: lowStockData || []
         });
       } catch (error) {
         console.error('Error loading dashboard data:', error);
-        setError(error instanceof Error ? error.message : 'Failed to load dashboard data');
         toast.error('Failed to load dashboard data');
       } finally {
         setIsLoading(false);
@@ -154,8 +104,7 @@ const useDashboardData = () => {
     dashboardData,
     isLoading,
     timeframe,
-    setTimeframe,
-    error
+    setTimeframe
   };
 };
 

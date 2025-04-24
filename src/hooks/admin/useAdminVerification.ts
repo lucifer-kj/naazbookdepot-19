@@ -19,33 +19,29 @@ export const useAdminVerification = () => {
           return;
         }
 
-        // Use the existing is_admin function
+        // First try to verify using the database function
         const { data: isAdminResult, error: verifyError } = await supabase
           .rpc('is_admin', { user_id: user.id });
 
         if (verifyError) {
           console.error('Admin verification error:', verifyError);
-          
-          // Fall back to direct check if function fails
+          // If the RPC fails, try to verify directly through the users table
           const { data: userData, error: userError } = await supabase
             .from('users')
             .select('role, is_super_admin')
             .eq('id', user.id)
-            .maybeSingle();
+            .single();
 
           if (userError) {
-            console.error('Error fetching user data:', userError);
-            setError(`Failed to verify admin status: ${userError.message}`);
-            toast.error('Failed to verify admin privileges');
-            setIsVerified(false);
-          } else {
-            const isAdmin = userData?.role === 'admin' || userData?.is_super_admin === true;
-            setIsVerified(isAdmin);
-            
-            if (!isAdmin) {
-              setError('Access denied. Admin privileges required.');
-              toast.error('Access denied. Admin privileges required.');
-            }
+            throw userError;
+          }
+
+          const isAdmin = userData?.role === 'admin' || userData?.is_super_admin === true;
+          setIsVerified(isAdmin);
+          
+          if (!isAdmin) {
+            setError('Access denied. Admin privileges required.');
+            toast.error('Access denied. Admin privileges required.');
           }
         } else {
           setIsVerified(!!isAdminResult);

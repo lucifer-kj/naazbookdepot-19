@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { ErrorBoundary } from '@/components/ui/error-boundary';
 import DashboardHeader from '@/components/admin/dashboard/DashboardHeader';
 import SalesSummaryCards from '@/components/admin/dashboard/SalesSummaryCards';
 import OrderStatusChart from '@/components/admin/dashboard/OrderStatusChart';
@@ -10,9 +9,6 @@ import LowStockAlert from '@/components/admin/dashboard/LowStockAlert';
 import NewCustomers from '@/components/admin/dashboard/NewCustomers';
 import useDashboardData from '@/hooks/admin/useDashboardData';
 import { OrderStatus } from '@/lib/api/admin-service';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
 interface OrderStatusData {
   name: string;
@@ -39,42 +35,8 @@ const salesTrendData = [
   { name: 'Jul', value: 4300 }
 ];
 
-const DashboardContent = () => {
-  const { dashboardData, isLoading, timeframe, setTimeframe, error } = useDashboardData();
-
-  // Show error state
-  if (error) {
-    return (
-      <div className="space-y-6">
-        <DashboardHeader />
-        <Alert variant="destructive">
-          <AlertDescription className="flex flex-col gap-4">
-            <p>Failed to load dashboard data: {error}</p>
-            <Button 
-              onClick={() => window.location.reload()} 
-              variant="outline" 
-              className="self-start"
-            >
-              Retry
-            </Button>
-          </AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
-
-  // Show loading state
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <DashboardHeader />
-        <div className="flex justify-center items-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <span className="ml-2">Loading dashboard data...</span>
-        </div>
-      </div>
-    );
-  }
+const Dashboard = () => {
+  const { dashboardData, isLoading, timeframe, setTimeframe } = useDashboardData();
 
   // Convert the ordersByStatus object to an array of OrderStatusData objects
   const orderStatusData: OrderStatusData[] = Object.entries(dashboardData.ordersByStatus).map(([status, count]) => ({
@@ -114,14 +76,6 @@ const DashboardContent = () => {
         <NewCustomers customers={dashboardData.newCustomers} />
       </div>
     </div>
-  );
-};
-
-const Dashboard = () => {
-  return (
-    <ErrorBoundary>
-      <DashboardContent />
-    </ErrorBoundary>
   );
 };
 

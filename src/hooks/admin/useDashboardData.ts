@@ -79,22 +79,22 @@ const useDashboardData = () => {
           }
         })) || [];
 
-        // Count orders by status
-        const { data: statusCounts, error: statusError } = await supabase
-          .from('orders')
-          .select('status, count')
-          .group('status');
-
-        if (statusError) {
-          console.error('Error fetching order status counts:', statusError);
-          throw new Error(`Failed to fetch order status counts: ${statusError.message}`);
+        // Count orders by status using separate queries instead of group
+        const orderStatusCounts: Record<string, number> = {};
+        
+        // Get count for each status separately
+        for (const status of ['pending', 'processing', 'shipped', 'delivered', 'cancelled'] as const) {
+          const { count, error: countError } = await supabase
+            .from('orders')
+            .select('id', { count: 'exact', head: true })
+            .eq('status', status);
+            
+          if (countError) {
+            console.error(`Error counting ${status} orders:`, countError);
+          } else {
+            orderStatusCounts[status] = count || 0;
+          }
         }
-
-        // Convert to expected format
-        const ordersByStatus: Record<string, number> = {};
-        statusCounts?.forEach(item => {
-          ordersByStatus[item.status] = Number(item.count);
-        });
 
         // 4. Get sales summary (still using the simpler calculation for now)
         const getSalesSummary = async (timeframe: string) => {
@@ -133,7 +133,7 @@ const useDashboardData = () => {
             weekly: weeklySummary,
             monthly: monthlySummary
           },
-          ordersByStatus: ordersByStatus,
+          ordersByStatus: orderStatusCounts,
           recentOrders: formattedOrders,
           newCustomers: [], // Will implement later
           lowStockProducts: lowStockProducts || []

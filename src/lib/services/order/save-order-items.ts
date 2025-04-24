@@ -11,5 +11,10 @@ export async function saveOrderItems(orderId: string, orderItems: any[]) {
     .from('order_items')
     .insert(orderItemsData);
 
-  if (orderItemsError) throw orderItemsError;
+  if (orderItemsError) {
+    console.error('Error saving order items:', orderItemsError);
+    throw orderItemsError;
+  }
+  
+  return true;
 }

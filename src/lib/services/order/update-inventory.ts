@@ -18,14 +18,15 @@ export async function updateInventory(orderItems: any[]) {
     // Calculate new inventory level
     const newQuantity = Math.max(0, productData.quantity_in_stock - item.quantity);
     
-    // Update the inventory using RPC to ensure atomic operation
-    const { error } = await supabase.rpc('decrement', { 
-      inc_amount: item.quantity 
-    });
+    // Update the inventory
+    const { error: updateError } = await supabase
+      .from('products')
+      .update({ quantity_in_stock: newQuantity })
+      .eq('id', item.product_id);
       
-    if (error) {
-      console.error('Error updating inventory:', error);
-      throw error;
+    if (updateError) {
+      console.error('Error updating inventory:', updateError);
+      throw updateError;
     }
   }
 }

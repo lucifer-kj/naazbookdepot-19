@@ -53,6 +53,7 @@ export function adaptStrapiCategory(strapiCategory: StrapiCategory): Category {
     description: strapiCategory.description || '',
     count: strapiCategory.products?.data?.length || 0,
     image: strapiCategory.image?.data ? {
+      id: strapiCategory.image.data.id.toString(), // Fix: Added id property
       src: getMediaUrl({url: strapiCategory.image.data.attributes.url}),
       alt: strapiCategory.image.data.attributes.alternativeText || strapiCategory.name
     } : undefined,

@@ -22,22 +22,12 @@ html, body {
   height: 100%;
 }
 
-/* Islamic geometric pattern background */
-.islamic-pattern {
-  background-image: 
-    radial-gradient(circle at 50% 50%, rgba(23, 87, 70, 0.05) 0%, transparent 70%),
-    linear-gradient(45deg, rgba(211, 175, 55, 0.02) 25%, transparent 25%),
-    linear-gradient(-45deg, rgba(211, 175, 55, 0.02) 25%, transparent 25%);
-  background-size: 60px 60px, 30px 30px, 30px 30px;
-  background-position: 0 0, 0 0, 15px 15px;
-}
-
-/* Smooth scrolling */
+/* Enhanced scrolling */
 html {
   scroll-behavior: smooth;
 }
 
-/* Custom scrollbar */
+/* Modern scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -47,21 +37,32 @@ html {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #175746;
+  background: linear-gradient(180deg, #175746, #d3af37);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #d3af37;
+  background: linear-gradient(180deg, #d3af37, #175746);
 }
 
-/* Animation classes */
+/* Enhanced animation classes */
 .fade-in {
-  animation: fadeIn 0.8s ease-out;
+  animation: fadeIn 0.8s ease-out forwards;
 }
 
 .fade-up {
-  animation: fadeUp 0.8s ease-out;
+  animation: fadeUp 0.8s ease-out forwards;
+}
+
+.scroll-animate {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.6s ease-out;
+}
+
+.scroll-animate.animate-fade-in {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 @keyframes fadeIn {
@@ -84,23 +85,157 @@ html {
   }
 }
 
-/* Custom button styles */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Enhanced button styles */
 .gold-button {
-  @apply bg-naaz-gold text-naaz-green px-8 py-3 rounded-lg font-bold hover:bg-naaz-gold/90 transition-colors;
+  @apply bg-naaz-gold text-naaz-green px-8 py-3 rounded-xl font-bold hover:bg-naaz-gold/90 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl;
 }
 
 .accent-button {
-  @apply border-2 border-white text-white px-8 py-3 rounded-lg font-bold hover:bg-white hover:text-naaz-green transition-colors;
+  @apply border-2 border-white text-white px-8 py-3 rounded-xl font-bold hover:bg-white hover:text-naaz-green transition-all duration-300 transform hover:scale-105;
 }
 
-/* Arabic text direction */
-.direction-rtl {
-  direction: rtl;
-}
-
-/* Glassmorphism effect */
+/* Glassmorphism enhanced */
 .glass {
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(16px);
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+/* Utility animations */
+.animate-slide-down {
+  animation: slideDown 0.3s ease-out;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.2s ease-out;
+}
+
+/* Enhanced hover effects */
+.hover-lift {
+  transition: all 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+/* Text gradient effects */
+.text-gradient {
+  background: linear-gradient(135deg, #175746, #d3af37);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Card hover effects */
+.card-hover {
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+}
+
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(23, 87, 70, 0.15);
+  border-color: rgba(211, 175, 55, 0.3);
+}
+
+/* Floating animation */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Gradient borders */
+.gradient-border {
+  position: relative;
+  background: linear-gradient(white, white) padding-box,
+              linear-gradient(135deg, #175746, #d3af37) border-box;
+  border: 2px solid transparent;
+}
+
+/* Islamic patterns */
+.islamic-pattern {
+  background-image: 
+    radial-gradient(circle at 50% 50%, rgba(23, 87, 70, 0.08) 0%, transparent 70%),
+    linear-gradient(45deg, rgba(211, 175, 55, 0.05) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(211, 175, 55, 0.05) 25%, transparent 25%);
+  background-size: 80px 80px, 40px 40px, 40px 40px;
+  background-position: 0 0, 0 0, 20px 20px;
+}
+
+/* Enhanced focus states */
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  ring: 2px;
+  ring-color: #d3af37;
+  border-color: #175746;
+  box-shadow: 0 0 0 3px rgba(211, 175, 55, 0.1);
+}
+
+/* Loading states */
+.loading-shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Responsive typography */
+@media (max-width: 640px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  h1 { font-size: 2rem; }
+  h2 { font-size: 1.75rem; }
+  h3 { font-size: 1.5rem; }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .text-naaz-green { color: #000 !important; }
+  .bg-naaz-cream { background-color: #fff !important; }
+  .border-naaz-gold { border-color: #000 !important; }
 }

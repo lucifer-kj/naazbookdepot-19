@@ -5,6 +5,7 @@ import { CartProvider } from '@/lib/context/CartContext';
 import Home from './pages/Home';
 import Books from './pages/Books';
 import Cart from './pages/Cart';
+import Catalog from './pages/Catalog';
 import './index.css';
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/books" element={<Books />} />
+            <Route path="/catalog" element={<Catalog />} />
             <Route path="/cart" element={<Cart />} />
           </Routes>
         </div>

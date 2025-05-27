@@ -38,6 +38,12 @@ const CartSummary: React.FC<CartSummaryProps> = ({ subtotal, shipping, total }) 
       >
         Proceed to Checkout
       </Link>
+      
+      <div className="mt-4 p-3 bg-naaz-gold/10 rounded-lg">
+        <p className="text-xs text-naaz-green text-center">
+          "And Allah is the best of providers" - Secure checkout with Islamic blessings
+        </p>
+      </div>
     </div>
   );
 };

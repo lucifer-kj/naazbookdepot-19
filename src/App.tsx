@@ -15,6 +15,9 @@ import Blog from './pages/Blog';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import Shipping from './pages/Shipping';
+import Checkout from './pages/Checkout';
+import OrderConfirmation from './pages/OrderConfirmation';
+import ComingSoon from './pages/ComingSoon';
 import './index.css';
 
 function App() {
@@ -28,6 +31,8 @@ function App() {
               <Route path="/books" element={<Books />} />
               <Route path="/catalog" element={<Catalog />} />
               <Route path="/cart" element={<Cart />} />
+              <Route path="/checkout" element={<Checkout />} />
+              <Route path="/order-confirmation" element={<OrderConfirmation />} />
               <Route path="/account" element={<Account />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
@@ -36,6 +41,8 @@ function App() {
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/shipping" element={<Shipping />} />
+              <Route path="/perfumes" element={<ComingSoon section="perfumes" />} />
+              <Route path="/essentials" element={<ComingSoon section="essentials" />} />
             </Routes>
           </div>
         </Router>

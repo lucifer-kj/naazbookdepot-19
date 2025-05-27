@@ -138,8 +138,8 @@ const Home = () => {
           </div>
         </div>
 
-        {/* Hero Section - Reduced Height */}
-        <section className="relative h-[70vh] overflow-hidden">
+        {/* Hero Section - Increased Height */}
+        <section className="relative h-[72vh] overflow-hidden">
           {/* Background with parallax effect */}
           <div 
             className="absolute inset-0 bg-naaz-green transform scale-110 transition-transform duration-1000" 

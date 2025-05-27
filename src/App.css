@@ -56,22 +56,6 @@
   animation: scroll 30s linear infinite;
 }
 
-/* Slide down animation for dropdowns */
-@keyframes slide-down {
-  0% {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-slide-down {
-  animation: slide-down 0.2s ease-out;
-}
-
 /* Mobile responsive adjustments */
 @media (max-width: 640px) {
   .container {

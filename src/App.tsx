@@ -7,7 +7,7 @@ import './index.css';
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-naaz-cream">
         <Routes>
           <Route path="/" element={<Home />} />
         </Routes>

@@ -42,6 +42,20 @@
   color: #888;
 }
 
+/* Horizontal scrolling animation */
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-scroll {
+  animation: scroll 30s linear infinite;
+}
+
 /* Mobile responsive adjustments */
 @media (max-width: 640px) {
   .container {

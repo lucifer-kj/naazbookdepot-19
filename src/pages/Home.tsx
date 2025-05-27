@@ -3,29 +3,24 @@ import { Link } from 'react-router-dom';
 import { Phone, Mail, ChevronDown, Star, ArrowRight, BookOpen, Heart, Sparkles, ChevronLeft, ChevronRight, MessageCircle, ArrowUp } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+
 const Home = () => {
-  // State for rotating contact info
-  const [currentInfo, setCurrentInfo] = useState(0);
-  const [isTransitioning, setIsTransitioning] = useState(false);
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const [currentProduct, setCurrentProduct] = useState(0);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [typewriterText, setTypewriterText] = useState('');
   const [typewriterIndex, setTypewriterIndex] = useState(0);
+  
   const fullTypewriterText = "Publishing the Light of Knowledge since 1967";
-  const contactInfo = [{
-    icon: <Phone size={14} />,
-    text: '033 22350051'
-  }, {
-    icon: <Phone size={14} />,
-    text: '033 22350960'
-  }, {
-    icon: <Phone size={14} />,
-    text: '+91 91634 31395'
-  }, {
-    icon: <Mail size={14} />,
-    text: 'naazgroupofficial@gmail.com'
-  }];
+  
+  const contactInfo = [
+    { icon: <Phone size={14} />, text: '033 22350051' },
+    { icon: <Phone size={14} />, text: '033 22350960' },
+    { icon: <Phone size={14} />, text: '+91 91634 31395' },
+    { icon: <Mail size={14} />, text: 'naazgroupofficial@gmail.com' },
+    { icon: <Mail size={14} />, text: 'Visit us in Kolkata, West Bengal' }
+  ];
+
   const featuredBooks = [{
     id: 1,
     title: "Sahih Al-Bukhari",
@@ -51,6 +46,7 @@ const Home = () => {
     rating: 5,
     description: "Gardens of the righteous collection"
   }];
+
   const testimonials = [{
     name: "Dr. Fatima Ahmed",
     location: "Kolkata",
@@ -101,18 +97,6 @@ const Home = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Contact info rotation
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setIsTransitioning(true);
-      setTimeout(() => {
-        setCurrentInfo(prev => (prev + 1) % contactInfo.length);
-        setIsTransitioning(false);
-      }, 300);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, []);
-
   // Testimonials carousel
   useEffect(() => {
     const interval = setInterval(() => {
@@ -120,42 +104,52 @@ const Home = () => {
     }, 5000);
     return () => clearInterval(interval);
   }, []);
+
   const nextProduct = () => {
     setCurrentProduct(prev => (prev + 1) % featuredBooks.length);
   };
+  
   const prevProduct = () => {
     setCurrentProduct(prev => (prev - 1 + featuredBooks.length) % featuredBooks.length);
   };
+  
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
       behavior: 'smooth'
     });
   };
-  return <>
+
+  return (
+    <>
       <div className="min-h-screen bg-naaz-cream">
         <Navbar />
         
-        {/* Contact Info Strip */}
+        {/* Horizontal Scrolling Contact Info Strip */}
         <div className="bg-naaz-green text-white py-2 px-4 relative overflow-hidden">
-          <div className="container mx-auto text-center">
-            <div className={`flex items-center justify-center gap-2 transition-all duration-500 ${isTransitioning ? 'opacity-0 transform translate-y-2' : 'opacity-100 transform translate-y-0'}`}>
-              <span className="animate-pulse">{contactInfo[currentInfo].icon}</span>
-              <span className="text-sm font-medium">{contactInfo[currentInfo].text}</span>
-            </div>
+          <div className="flex animate-scroll">
+            {/* Duplicate the contact info for seamless loop */}
+            {[...contactInfo, ...contactInfo].map((info, index) => (
+              <div key={index} className="flex items-center gap-2 mx-8 whitespace-nowrap">
+                <span className="animate-pulse">{info.icon}</span>
+                <span className="text-sm font-medium">{info.text}</span>
+              </div>
+            ))}
           </div>
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-pulse"></div>
         </div>
 
-        {/* Hero Section */}
-        <section className="relative h-screen overflow-hidden">
+        {/* Hero Section - Reduced Height */}
+        <section className="relative h-[70vh] overflow-hidden">
           {/* Background with parallax effect */}
-          <div className="absolute inset-0 bg-naaz-green transform scale-110 transition-transform duration-1000" style={{
-          backgroundImage: "url('/lovable-uploads/61ad7a88-c8e2-42f6-b3b1-567415b3c17e.png')",
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundAttachment: 'fixed'
-        }} />
+          <div 
+            className="absolute inset-0 bg-naaz-green transform scale-110 transition-transform duration-1000" 
+            style={{
+              backgroundImage: "url('/lovable-uploads/61ad7a88-c8e2-42f6-b3b1-567415b3c17e.png')",
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundAttachment: 'fixed'
+            }} 
+          />
           
           {/* Semi-transparent overlay for better text contrast */}
           <div className="absolute inset-0 bg-gradient-to-br from-naaz-green/80 via-naaz-green/60 to-naaz-green/80"></div>
@@ -191,14 +185,13 @@ const Home = () => {
           {/* Content */}
           <div className="relative z-10 container mx-auto px-4 h-full flex items-center">
             <div className="max-w-3xl">
-              <h1 className="text-4xl md:text-7xl font-playfair font-bold text-white mb-6 animate-fade-in transform translate-x-0 opacity-100 transition-all duration-1000 drop-shadow-2xl">
+              <h1 className="text-4xl md:text-6xl font-playfair font-bold text-white mb-6 animate-fade-in transform translate-x-0 opacity-100 transition-all duration-1000 drop-shadow-2xl">
                 Naaz Book Depot
-                
               </h1>
               
               {/* Typewriter effect */}
               <div className="mb-8">
-                <p className="text-xl md:text-3xl text-white/95 font-playfair italic min-h-[2.5rem]">
+                <p className="text-xl md:text-2xl text-white/95 font-playfair italic min-h-[2.5rem]">
                   "{typewriterText}"
                   <span className="animate-pulse ml-1 text-naaz-gold">|</span>
                 </p>
@@ -250,7 +243,8 @@ const Home = () => {
             
             <div className="relative max-w-6xl mx-auto">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8 px-4 md:px-12">
-                {featuredBooks.map((book, index) => <div key={book.id} className={`group bg-white rounded-2xl shadow-lg p-6 text-center transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 ${index === currentProduct ? 'ring-2 ring-naaz-gold transform scale-105' : ''}`}>
+                {featuredBooks.map((book, index) => (
+                  <div key={book.id} className={`group bg-white rounded-2xl shadow-lg p-6 text-center transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 ${index === currentProduct ? 'ring-2 ring-naaz-gold transform scale-105' : ''}`}>
                     <div className="relative overflow-hidden rounded-xl mb-6">
                       <img src={book.image} alt={book.title} className="w-40 h-48 object-cover mx-auto transition-transform duration-500 group-hover:scale-110" />
                       <div className="absolute inset-0 bg-gradient-to-t from-naaz-green/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -263,7 +257,9 @@ const Home = () => {
                     <p className="text-gray-500 text-xs mb-3">{book.description}</p>
                     
                     <div className="flex justify-center mb-3">
-                      {[...Array(book.rating)].map((_, i) => <Star key={i} size={16} className="text-naaz-gold fill-current" />)}
+                      {[...Array(book.rating)].map((_, i) => (
+                        <Star key={i} size={16} className="text-naaz-gold fill-current" />
+                      ))}
                     </div>
                     
                     <p className="text-naaz-green font-bold text-xl mb-4">{book.price}</p>
@@ -276,7 +272,8 @@ const Home = () => {
                         Quick View
                       </button>
                     </div>
-                  </div>)}
+                  </div>
+                ))}
               </div>
               
               {/* Navigation buttons for mobile */}
@@ -411,19 +408,13 @@ const Home = () => {
                   Key Milestones
                 </h3>
                 <div className="space-y-6">
-                  {[{
-                  year: '1967',
-                  desc: 'Founded in Kolkata as a small Islamic bookstore'
-                }, {
-                  year: '1980s',
-                  desc: 'Became a leading distributor of Islamic literature in Bengal'
-                }, {
-                  year: '2000s',
-                  desc: 'Expanded to serve customers across India'
-                }, {
-                  year: '2024',
-                  desc: 'Launched online platform for global reach'
-                }].map((milestone, index) => <div key={index} className="flex items-start group">
+                  {[
+                    { year: '1967', desc: 'Founded in Kolkata as a small Islamic bookstore' },
+                    { year: '1980s', desc: 'Became a leading distributor of Islamic literature in Bengal' },
+                    { year: '2000s', desc: 'Expanded to serve customers across India' },
+                    { year: '2024', desc: 'Launched online platform for global reach' }
+                  ].map((milestone, index) => (
+                    <div key={index} className="flex items-start group">
                       <span className="text-naaz-gold mr-4 font-bold text-lg min-w-[60px] group-hover:scale-110 transition-transform">
                         {milestone.year}
                       </span>
@@ -431,7 +422,8 @@ const Home = () => {
                         <div className="h-0.5 bg-naaz-gold/30 group-hover:bg-naaz-gold transition-colors mb-2"></div>
                         <span className="text-gray-700 leading-relaxed">{milestone.desc}</span>
                       </div>
-                    </div>)}
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -456,7 +448,9 @@ const Home = () => {
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-naaz-green via-naaz-gold to-naaz-green"></div>
                 
                 <div className="flex justify-center mb-6">
-                  {[...Array(testimonials[currentTestimonial].rating)].map((_, i) => <Star key={i} size={24} className="text-naaz-gold fill-current mx-0.5" />)}
+                  {[...Array(testimonials[currentTestimonial].rating)].map((_, i) => (
+                    <Star key={i} size={24} className="text-naaz-gold fill-current mx-0.5" />
+                  ))}
                 </div>
                 
                 <p className="text-gray-700 text-xl italic mb-8 leading-relaxed">
@@ -464,7 +458,11 @@ const Home = () => {
                 </p>
                 
                 <div className="flex items-center justify-center">
-                  <img src={testimonials[currentTestimonial].image} alt={testimonials[currentTestimonial].name} className="w-16 h-16 rounded-full mr-4 border-2 border-naaz-gold" />
+                  <img 
+                    src={testimonials[currentTestimonial].image} 
+                    alt={testimonials[currentTestimonial].name} 
+                    className="w-16 h-16 rounded-full mr-4 border-2 border-naaz-gold" 
+                  />
                   <div>
                     <h4 className="font-semibold text-naaz-green text-lg">{testimonials[currentTestimonial].name}</h4>
                     <p className="text-gray-600">{testimonials[currentTestimonial].location}</p>
@@ -473,7 +471,15 @@ const Home = () => {
               </div>
               
               <div className="flex justify-center mt-8 space-x-3">
-                {testimonials.map((_, index) => <button key={index} className={`w-4 h-4 rounded-full transition-all duration-300 ${index === currentTestimonial ? 'bg-naaz-gold scale-125' : 'bg-gray-300 hover:bg-naaz-gold/50'}`} onClick={() => setCurrentTestimonial(index)} />)}
+                {testimonials.map((_, index) => (
+                  <button 
+                    key={index} 
+                    className={`w-4 h-4 rounded-full transition-all duration-300 ${
+                      index === currentTestimonial ? 'bg-naaz-gold scale-125' : 'bg-gray-300 hover:bg-naaz-gold/50'
+                    }`}
+                    onClick={() => setCurrentTestimonial(index)} 
+                  />
+                ))}
               </div>
             </div>
           </div>
@@ -482,8 +488,8 @@ const Home = () => {
         {/* Enhanced Newsletter Signup */}
         <section className="py-20 px-4 bg-gradient-to-br from-naaz-green to-naaz-green/90 text-white relative overflow-hidden">
           <div className="absolute inset-0 opacity-20" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M20 20c0-11.046-8.954-20-20-20v20h20z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-        }}></div>
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M20 20c0-11.046-8.954-20-20-20v20h20z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+          }}></div>
           
           <div className="container mx-auto text-center relative z-10">
             <div className="max-w-3xl mx-auto">
@@ -497,7 +503,11 @@ const Home = () => {
               
               <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20">
                 <div className="flex flex-col sm:flex-row max-w-md mx-auto gap-4">
-                  <input type="email" placeholder="Enter your email for blessed updates" className="flex-1 px-6 py-4 rounded-xl text-gray-800 outline-none focus:ring-2 focus:ring-naaz-gold transition-all" />
+                  <input 
+                    type="email" 
+                    placeholder="Enter your email for blessed updates" 
+                    className="flex-1 px-6 py-4 rounded-xl text-gray-800 outline-none focus:ring-2 focus:ring-naaz-gold transition-all" 
+                  />
                   <button className="bg-naaz-gold hover:bg-naaz-gold/90 text-naaz-green px-8 py-4 rounded-xl font-bold transition-all duration-300 transform hover:scale-105">
                     Subscribe
                   </button>
@@ -513,18 +523,30 @@ const Home = () => {
 
         {/* Floating WhatsApp Button */}
         <div className="fixed bottom-6 right-6 z-50 md:hidden">
-          <a href="https://wa.me/919163431395" target="_blank" rel="noopener noreferrer" className="bg-green-500 hover:bg-green-600 text-white p-4 rounded-full shadow-2xl transform hover:scale-110 transition-all duration-300 animate-pulse">
+          <a 
+            href="https://wa.me/919163431395" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="bg-green-500 hover:bg-green-600 text-white p-4 rounded-full shadow-2xl transform hover:scale-110 transition-all duration-300 animate-pulse"
+          >
             <MessageCircle size={24} />
           </a>
         </div>
 
         {/* Back to Top Button */}
-        {showBackToTop && <button onClick={scrollToTop} className="fixed bottom-6 left-6 bg-naaz-gold hover:bg-naaz-gold/90 text-white p-3 rounded-full shadow-lg transform hover:scale-110 transition-all duration-300 z-50">
+        {showBackToTop && (
+          <button 
+            onClick={scrollToTop} 
+            className="fixed bottom-6 left-6 bg-naaz-gold hover:bg-naaz-gold/90 text-white p-3 rounded-full shadow-lg transform hover:scale-110 transition-all duration-300 z-50"
+          >
             <ArrowUp size={20} />
-          </button>}
+          </button>
+        )}
 
         <Footer />
       </div>
-    </>;
+    </>
+  );
 };
+
 export default Home;

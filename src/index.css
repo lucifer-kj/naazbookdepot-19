@@ -55,12 +55,52 @@ html {
   background: #d3af37;
 }
 
-/* Fade in animation for better UX */
+/* Animation classes */
 .fade-in {
-  animation: fadeIn 0.5s ease-in;
+  animation: fadeIn 0.8s ease-out;
+}
+
+.fade-up {
+  animation: fadeUp 0.8s ease-out;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { 
+    opacity: 0; 
+  }
+  to { 
+    opacity: 1; 
+  }
+}
+
+@keyframes fadeUp {
+  from { 
+    opacity: 0; 
+    transform: translateY(30px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+/* Custom button styles */
+.gold-button {
+  @apply bg-naaz-gold text-naaz-green px-8 py-3 rounded-lg font-bold hover:bg-naaz-gold/90 transition-colors;
+}
+
+.accent-button {
+  @apply border-2 border-white text-white px-8 py-3 rounded-lg font-bold hover:bg-white hover:text-naaz-green transition-colors;
+}
+
+/* Arabic text direction */
+.direction-rtl {
+  direction: rtl;
+}
+
+/* Glassmorphism effect */
+.glass {
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }

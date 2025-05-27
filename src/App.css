@@ -1,3 +1,4 @@
+
 #root {
   width: 100%;
   margin: 0 auto;
@@ -39,22 +40,6 @@
 
 .read-the-docs {
   color: #888;
-}
-
-/* Enhanced horizontal scrolling animation - Fixed */
-@keyframes scroll {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-50%);
-  }
-}
-
-.animate-scroll {
-  animation: scroll 30s linear infinite;
-  display: flex;
-  width: fit-content;
 }
 
 /* Mobile responsive adjustments */

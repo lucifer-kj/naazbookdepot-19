@@ -125,28 +125,22 @@ const Home = () => {
       <div className="min-h-screen bg-naaz-cream">
         <Navbar />
         
-        {/* Horizontal Scrolling Contact Info Strip - Fixed Animation */}
-        <div className="bg-naaz-green text-white py-2 px-4 relative overflow-hidden">
-          <div className="animate-scroll">
-            {/* First set of contact info */}
-            {contactInfo.map((info, index) => (
-              <div key={`first-${index}`} className="flex items-center gap-2 mx-8 whitespace-nowrap">
-                <span className="animate-pulse">{info.icon}</span>
-                <span className="text-sm font-medium">{info.text}</span>
-              </div>
-            ))}
-            {/* Second set for seamless loop */}
-            {contactInfo.map((info, index) => (
-              <div key={`second-${index}`} className="flex items-center gap-2 mx-8 whitespace-nowrap">
-                <span className="animate-pulse">{info.icon}</span>
-                <span className="text-sm font-medium">{info.text}</span>
-              </div>
-            ))}
+        {/* Static Contact Info Strip */}
+        <div className="bg-naaz-green text-white py-3 px-4">
+          <div className="container mx-auto">
+            <div className="flex flex-wrap items-center justify-center gap-4 md:gap-8">
+              {contactInfo.map((info, index) => (
+                <div key={index} className="flex items-center gap-2 whitespace-nowrap">
+                  <span>{info.icon}</span>
+                  <span className="text-sm font-medium">{info.text}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
         {/* Hero Section - Increased Height */}
-        <section className="relative h-[74vh] overflow-hidden">
+        <section className="relative h-[76vh] overflow-hidden">
           {/* Background with parallax effect */}
           <div 
             className="absolute inset-0 bg-naaz-green transform scale-110 transition-transform duration-1000" 

@@ -1,4 +1,3 @@
-
 #root {
   width: 100%;
   margin: 0 auto;
@@ -42,19 +41,20 @@
   color: #888;
 }
 
-/* Enhanced horizontal scrolling animation */
+/* Enhanced horizontal scrolling animation - Fixed */
 @keyframes scroll {
   0% {
     transform: translateX(0);
   }
   100% {
-    transform: translateX(-100%);
+    transform: translateX(-50%);
   }
 }
 
 .animate-scroll {
-  animation: scroll 25s linear infinite;
-  width: 200%;
+  animation: scroll 30s linear infinite;
+  display: flex;
+  width: fit-content;
 }
 
 /* Mobile responsive adjustments */

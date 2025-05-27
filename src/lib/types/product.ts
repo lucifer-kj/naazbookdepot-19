@@ -5,22 +5,6 @@ export interface Image {
   alt?: string;
 }
 
-export interface Attribute {
-  name: string;
-  options: string[];
-}
-
-export interface Variation {
-  id: number | string;
-  name: string;
-  price: string;
-  stock_status: string;
-  attributes: Array<{
-    name: string;
-    value: string;
-  }>;
-}
-
 export interface Category {
   id: string | number;
   name: string;
@@ -51,8 +35,6 @@ export interface Product {
   sku?: string;
   categories: Category[];
   images: Image[];
-  attributes?: Attribute[];
-  variations?: Variation[];
   related_ids?: (string | number)[];
   average_rating?: string;
   rating_count?: number;

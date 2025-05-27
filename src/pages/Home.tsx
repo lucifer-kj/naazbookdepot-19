@@ -127,15 +127,10 @@ const Home = () => {
         
         {/* Horizontal Scrolling Contact Info Strip */}
         <div className="bg-naaz-green text-white py-2 px-4 relative overflow-hidden">
-          <div className="flex animate-scroll">
-            {/* Duplicate the contact info for seamless loop */}
-            {[...contactInfo, ...contactInfo].map((info, index) => (
               <div key={index} className="flex items-center gap-2 mx-8 whitespace-nowrap">
                 <span className="animate-pulse">{info.icon}</span>
                 <span className="text-sm font-medium">{info.text}</span>
               </div>
-            ))}
-          </div>
         </div>
 
         {/* Hero Section - Increased Height */}

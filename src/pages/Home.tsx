@@ -219,6 +219,7 @@ const Home = () => {
               </div>
             </div>
           </div>
+        </section>
 
         {/* Featured Products Carousel */}
         <section className="py-20 px-4 bg-gradient-to-b from-white to-naaz-cream/50 scroll-animate opacity-0">

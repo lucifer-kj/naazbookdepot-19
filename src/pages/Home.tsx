@@ -220,15 +220,6 @@ const Home = () => {
             </div>
           </div>
 
-          {/* Scroll Down Indicator */}
-          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce text-white">
-            <div className="flex flex-col items-center">
-              <span className="text-sm mb-2 opacity-80">Scroll to explore</span>
-              <ChevronDown size={32} />
-            </div>
-          </div>
-        </section>
-
         {/* Featured Products Carousel */}
         <section className="py-20 px-4 bg-gradient-to-b from-white to-naaz-cream/50 scroll-animate opacity-0">
           <div className="container mx-auto">

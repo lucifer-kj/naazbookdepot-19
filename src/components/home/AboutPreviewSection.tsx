@@ -29,28 +29,22 @@ const AboutPreviewSection = () => {
           </div>
           
           <div className="bg-gradient-to-br from-naaz-cream to-white p-8 rounded-2xl shadow-lg border border-naaz-gold/20">
-            <h3 className="text-2xl font-playfair font-semibold text-naaz-green mb-8">
-              Key Milestones
-            </h3>
-            <div className="space-y-6">
-              {[
-                { year: '1967', desc: 'Founded in Kolkata as a small Islamic bookstore' },
-                { year: '1980s', desc: 'Became a leading distributor of Islamic literature in Bengal' },
-                { year: '2000s', desc: 'Expanded to serve customers across India' },
-                { year: '2024', desc: 'Launched online platform for global reach' }
-              ].map((milestone, index) => (
-                <div key={index} className="flex items-start group">
-                  <span className="text-naaz-gold mr-4 font-bold text-lg min-w-[60px] group-hover:scale-110 transition-transform">
-                    {milestone.year}
-                  </span>
-                  <div className="flex-1">
-                    <div className="h-0.5 bg-naaz-gold/30 group-hover:bg-naaz-gold transition-colors mb-2"></div>
-                    <span className="text-gray-700 leading-relaxed">{milestone.desc}</span>
-                  </div>
-                </div>
-              ))}
+            <img
+              src="lovable-uploads/Owner.jpg"
+              alt="About Naaz Book Depot"
+              className="w-full h-auto rounded-lg shadow-md"
+              loading="lazy"
+            />
+            <div className="mt-6 text-center">
+              <p className="text-lg text-gray-700">
+                Mohammad Irfan
+              </p>
+              <p className="text-sm text-naaz-gold font-semibold mt-1">
+                Owner, Naaz Book Depot
+              </p>
+    
             </div>
-          </div>
+          </div>  
         </div>
       </div>
     </section>

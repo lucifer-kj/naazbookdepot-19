@@ -26,7 +26,7 @@ const HeroSection = () => {
       <div 
         className="absolute inset-0 bg-naaz-green transform scale-110 transition-transform duration-1000" 
         style={{
-          backgroundImage: "url('/lovable-uploads/61ad7a88-c8e2-42f6-b3b1-567415b3c17e.png')",
+          backgroundImage: "url('/lovable-uploads/background.png')",
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundAttachment: 'fixed'

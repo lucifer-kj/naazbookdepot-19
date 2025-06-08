@@ -49,7 +49,6 @@ const Home = () => {
       <ThreeDivisionsShowcase />
       <AboutPreviewSection />
       <TestimonialsSection />
-      <NewsletterSection />
       <FloatingButtons showBackToTop={showBackToTop} scrollToTop={scrollToTop} />
       <Footer />
     </div>

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { CartProvider } from '@/lib/context/CartContext';
@@ -18,6 +17,9 @@ import Shipping from './pages/Shipping';
 import Checkout from './pages/Checkout';
 import OrderConfirmation from './pages/OrderConfirmation';
 import ComingSoon from './pages/ComingSoon';
+import AdminLogin from './pages/admin/AdminLogin';
+import Admin from './pages/admin/Admin';
+import AdminProtectedRoute from './pages/admin/AdminProtectedRoute';
 import './index.css';
 
 function App() {
@@ -27,6 +29,7 @@ function App() {
         <Router>
           <div className="min-h-screen bg-naaz-cream">
             <Routes>
+              {/* Public site routes */}
               <Route path="/" element={<Home />} />
               <Route path="/books" element={<Books />} />
               <Route path="/catalog" element={<Catalog />} />
@@ -43,6 +46,14 @@ function App() {
               <Route path="/shipping" element={<Shipping />} />
               <Route path="/perfumes" element={<ComingSoon section="perfumes" />} />
               <Route path="/essentials" element={<ComingSoon section="essentials" />} />
+
+              {/* Admin routes */}
+              <Route path="/admin/login" element={<AdminLogin />} />
+              <Route path="/admin/*" element={
+                <AdminProtectedRoute>
+                  <Admin />
+                </AdminProtectedRoute>
+              } />
             </Routes>
           </div>
         </Router>

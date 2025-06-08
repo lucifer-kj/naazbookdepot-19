@@ -14,7 +14,7 @@ const Contact = () => {
           <div 
             className="absolute inset-0"
             style={{
-              backgroundImage: "url('/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png')",
+              backgroundImage: "url('/lovable-uploads/alt-bg.png')",
               backgroundSize: 'cover',
               backgroundPosition: 'center',
               filter: 'brightness(0.7)'

@@ -326,18 +326,19 @@ const Books = () => {
       <main className="flex-grow">
         {/* Hero Banner */}
         <motion.div 
-          className="relative h-80 overflow-hidden"
+          className="relative h-64 overflow-hidden"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1 }}
         >
+          {/* Background Image and Gradient */}
           <div 
             className="absolute inset-0"
             style={{
-              backgroundImage: "url('/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png')",
+              backgroundImage: "url('/lovable-uploads/books-bg.png')",
               backgroundSize: 'cover',
               backgroundPosition: 'center',
-              filter: 'brightness(0.6)'
+              filter: 'brightness(0.7)'
             }}
           />
           <div className="absolute inset-0 bg-gradient-to-r from-naaz-green/80 to-transparent" />

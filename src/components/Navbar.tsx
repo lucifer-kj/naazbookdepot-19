@@ -80,7 +80,7 @@ const Navbar = () => {
                 <h1 className="text-2xl md:text-3xl font-playfair font-bold text-naaz-green">
                   Naaz Book Depot
                 </h1>
-                <p className="text-xs md:text-sm text-naaz-green/80 font-arabic">
+                <p className="hidden md:block text-xs md:text-sm text-naaz-green/80 font-arabic">
                   Publishing the Light of Knowledge
                 </p>
               </div>

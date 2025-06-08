@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, ShoppingCart, User, Menu, X, LogOut, ChevronDown } from 'lucide-react';
@@ -14,55 +13,29 @@ const Navbar = () => {
   
   const productsDropdownRef = useRef<HTMLDivElement>(null);
   const productsButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    if (!isProductsDropdownOpen) return;
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        productsDropdownRef.current &&
+        !productsDropdownRef.current.contains(event.target as Node) &&
+        productsButtonRef.current &&
+        !productsButtonRef.current.contains(event.target as Node)
+      ) {
+        setIsProductsDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isProductsDropdownOpen]);
   
   const {
     user,
     isAuthenticated,
     logout
   } = useAuth();
-
-  // Handle dropdown hover behavior
-  useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-
-    const handleMouseLeave = () => {
-      timeoutId = setTimeout(() => {
-        setIsProductsDropdownOpen(false);
-      }, 100); // Small delay to allow moving between button and dropdown
-    };
-
-    const handleMouseEnter = () => {
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-      setIsProductsDropdownOpen(true);
-    };
-
-    const buttonElement = productsButtonRef.current;
-    const dropdownElement = productsDropdownRef.current;
-
-    if (buttonElement) {
-      buttonElement.addEventListener('mouseenter', handleMouseEnter);
-      buttonElement.addEventListener('mouseleave', handleMouseLeave);
-    }
-
-    if (dropdownElement) {
-      dropdownElement.addEventListener('mouseenter', handleMouseEnter);
-      dropdownElement.addEventListener('mouseleave', handleMouseLeave);
-    }
-
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId);
-      if (buttonElement) {
-        buttonElement.removeEventListener('mouseenter', handleMouseEnter);
-        buttonElement.removeEventListener('mouseleave', handleMouseLeave);
-      }
-      if (dropdownElement) {
-        dropdownElement.removeEventListener('mouseenter', handleMouseEnter);
-        dropdownElement.removeEventListener('mouseleave', handleMouseLeave);
-      }
-    };
-  }, []);
 
   const handleSignOut = () => {
     logout();
@@ -97,13 +70,20 @@ const Navbar = () => {
         <nav className="bg-naaz-cream py-4 px-4">
           <div className="container mx-auto flex items-center justify-between">
             {/* Logo */}
-            <Link to="/" className="flex flex-col items-start">
-              <h1 className="text-2xl md:text-3xl font-playfair font-bold text-naaz-green">
-                Naaz Book Depot
-              </h1>
-              <p className="text-xs md:text-sm text-naaz-green/80 font-arabic">
-                Publishing the Light of Knowledge
-              </p>
+            <Link to="/" className="flex items-start flex-row gap-3 items-center">
+              <img
+                src="/lovable-uploads/logo.png"
+                alt="Naaz Book Depot Logo"
+                className="w-10 h-10 object-contain"
+              />
+              <div className="flex flex-col items-start">
+                <h1 className="text-2xl md:text-3xl font-playfair font-bold text-naaz-green">
+                  Naaz Book Depot
+                </h1>
+                <p className="text-xs md:text-sm text-naaz-green/80 font-arabic">
+                  Publishing the Light of Knowledge
+                </p>
+              </div>
             </Link>
 
             {/* Desktop Navigation */}
@@ -114,16 +94,17 @@ const Navbar = () => {
               
               {/* Products Dropdown with improved hover behavior */}
               <div className="relative">
-                <button 
+                <button
                   ref={productsButtonRef}
                   className="flex items-center text-naaz-green hover:text-naaz-gold transition-colors font-medium"
+                  type="button"
+                  onClick={() => setIsProductsDropdownOpen((v) => !v)}
                 >
                   Products
                   <ChevronDown size={16} className={`ml-1 transition-transform ${isProductsDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
-                
                 {isProductsDropdownOpen && (
-                  <div 
+                  <div
                     ref={productsDropdownRef}
                     className="absolute top-full left-0 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-gray-100 py-4 z-50 animate-slide-down"
                   >
@@ -140,6 +121,8 @@ const Navbar = () => {
                             : 'text-gray-400 cursor-not-allowed'
                         }`}
                         onClick={() => setIsProductsDropdownOpen(false)}
+                        tabIndex={category.available ? 0 : -1}
+                        aria-disabled={!category.available}
                       >
                         <span>{category.name}</span>
                         {!category.available && (

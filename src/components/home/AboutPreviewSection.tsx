@@ -42,7 +42,6 @@ const AboutPreviewSection = () => {
               <p className="text-sm text-naaz-gold font-semibold mt-1">
                 Owner, Naaz Book Depot
               </p>
-    
             </div>
           </div>  
         </div>

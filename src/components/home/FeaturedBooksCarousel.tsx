@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Star, ArrowRight } from 'lucide-react';
@@ -19,7 +19,6 @@ interface FeaturedBooksCarouselProps {
 
 const FeaturedBooksCarousel: React.FC<FeaturedBooksCarouselProps> = ({ books }) => {
   const navigate = useNavigate();
-  const [currentProduct, setCurrentProduct] = useState(0);
 
   const handleBookClick = (bookId: number) => {
     navigate(`/product/${bookId}`);
@@ -74,7 +73,7 @@ const FeaturedBooksCarousel: React.FC<FeaturedBooksCarouselProps> = ({ books }) 
                   
                   <div className="flex justify-center mb-3">
                     {[...Array(book.rating)].map((_, i) => (
-                      <Star key={i} size={16} className="text-naaz-gold fill-current" />
+                      <Star key={i} size={16} className="text-naaz-gold" fill="currentColor" />
                     ))}
                   </div>
                   
@@ -82,12 +81,14 @@ const FeaturedBooksCarousel: React.FC<FeaturedBooksCarouselProps> = ({ books }) 
                   
                   <div className="flex gap-2">
                     <button 
+                      type="button"
                       className="flex-1 bg-naaz-green text-white px-4 py-2 rounded-lg hover:bg-naaz-green/90 transition-all duration-300 transform hover:scale-105"
                       onClick={(e) => handleAddToCart(e, book)}
                     >
                       Add to Cart
                     </button>
                     <button 
+                      type="button"
                       className="px-4 py-2 border border-naaz-green text-naaz-green rounded-lg hover:bg-naaz-green hover:text-white transition-all duration-300"
                       onClick={(e) => handleQuickView(e, book.id)}
                     >

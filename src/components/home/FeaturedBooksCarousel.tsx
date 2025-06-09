@@ -34,6 +34,9 @@ const FeaturedBooksCarousel: React.FC<FeaturedBooksCarouselProps> = ({ books }) 
     // Handle add to cart logic
   };
 
+  // Prevent runtime error if books is undefined or null
+  const safeBooks = Array.isArray(books) ? books : [];
+
   return (
     <section className="py-20 px-4 bg-gradient-to-b from-white to-naaz-cream/50 scroll-animate opacity-0">
       <div className="container mx-auto">
@@ -49,7 +52,7 @@ const FeaturedBooksCarousel: React.FC<FeaturedBooksCarouselProps> = ({ books }) 
         
         <div className="relative max-w-6xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 px-4 md:px-12">
-            {books.map((book) => (
+            {safeBooks.map((book) => (
               <motion.div
                 key={book.id}
                 whileHover={{ y: -5 }}

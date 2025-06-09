@@ -1,6 +1,7 @@
-
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { ArrowRight, Gift } from 'lucide-react';
 
 interface CartSummaryProps {
   subtotal: number;
@@ -9,42 +10,65 @@ interface CartSummaryProps {
 }
 
 const CartSummary: React.FC<CartSummaryProps> = ({ subtotal, shipping, total }) => {
+  const navigate = useNavigate();
+
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 h-fit">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.4 }}
+      className="bg-white rounded-lg shadow-md p-6"
+    >
       <h2 className="text-xl font-playfair font-semibold text-naaz-green mb-6">
         Order Summary
       </h2>
       
-      <div className="space-y-3 mb-6">
+      <div className="space-y-4 mb-6">
         <div className="flex justify-between">
-          <span>Subtotal</span>
-          <span>₹{subtotal.toFixed(2)}</span>
+          <span className="text-gray-600">Subtotal</span>
+          <span className="font-medium">₹{subtotal.toFixed(2)}</span>
         </div>
         <div className="flex justify-between">
-          <span>Shipping</span>
-          <span>₹{shipping.toFixed(2)}</span>
+          <span className="text-gray-600">Shipping</span>
+          <span className="font-medium">{shipping === 0 ? 'FREE' : `₹${shipping.toFixed(2)}`}</span>
         </div>
-        <div className="border-t pt-3">
+        <div className="border-t pt-4">
           <div className="flex justify-between font-semibold text-lg">
-            <span>Total</span>
+            <span className="text-gray-800">Total</span>
             <span className="text-naaz-gold">₹{total.toFixed(2)}</span>
           </div>
+          <p className="text-xs text-gray-500 mt-1">
+            Including GST and shipping charges
+          </p>
         </div>
       </div>
-      
-      <Link 
-        to="/checkout"
-        className="block w-full bg-naaz-green text-white text-center py-3 rounded-lg hover:bg-naaz-green/90 transition-colors"
+
+      <button
+        onClick={() => navigate('/checkout')}
+        className="w-full bg-naaz-green text-white py-3 px-6 rounded-lg hover:bg-naaz-green/90 transition-colors flex items-center justify-center font-medium"
       >
         Proceed to Checkout
-      </Link>
+        <ArrowRight size={18} className="ml-2" />
+      </button>
+
+      <div className="mt-6">
+        <div className="flex items-center gap-2 text-naaz-green mb-2">
+          <Gift size={16} />
+          <span className="text-sm font-medium">Gift Message</span>
+        </div>
+        <textarea
+          placeholder="Add a gift message or special instructions..."
+          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-naaz-green/20 focus:border-naaz-green/40"
+          rows={2}
+        />
+      </div>
       
-      <div className="mt-4 p-3 bg-naaz-gold/10 rounded-lg">
-        <p className="text-xs text-naaz-green text-center">
+      <div className="mt-6 p-4 bg-naaz-gold/10 rounded-lg">
+        <p className="text-sm text-naaz-green text-center">
           "And Allah is the best of providers" - Secure checkout with Islamic blessings
         </p>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

@@ -1,6 +1,7 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { TabsContent, Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import ProductDisplay from '../components/product/ProductDisplay';
@@ -151,21 +152,173 @@ const mockReviews = [
   }
 ];
 
+interface TabContentProps {
+  product: Product;
+  reviews?: Array<{
+    id: number;
+    reviewer_name: string;
+    review: string;
+    rating: number;
+    date_created: string;
+    verified: boolean;
+  }>;
+}
+
+const DescriptionTab: React.FC<TabContentProps> = ({ product }) => (
+  <div className="prose max-w-none">
+    <div dangerouslySetInnerHTML={{ __html: product.description }} />
+  </div>
+);
+
+const AdditionalInfoTab: React.FC<TabContentProps> = ({ product }) => (
+  <div className="space-y-4">
+    {product.isbn && (
+      <div className="grid grid-cols-2 gap-4">
+        <span className="font-medium">ISBN</span>
+        <span>{product.isbn}</span>
+      </div>
+    )}
+    {product.publisher && (
+      <div className="grid grid-cols-2 gap-4">
+        <span className="font-medium">Publisher</span>
+        <span>{product.publisher}</span>
+      </div>
+    )}
+    {product.language && (
+      <div className="grid grid-cols-2 gap-4">
+        <span className="font-medium">Language</span>
+        <span>{product.language}</span>
+      </div>
+    )}
+    {product.pages && (
+      <div className="grid grid-cols-2 gap-4">
+        <span className="font-medium">Pages</span>
+        <span>{product.pages}</span>
+      </div>
+    )}
+    {product.binding && (
+      <div className="grid grid-cols-2 gap-4">
+        <span className="font-medium">Binding</span>
+        <span>{product.binding}</span>
+      </div>
+    )}
+  </div>
+);
+
+const ReviewsTab: React.FC<TabContentProps> = ({ reviews = [] }) => (
+  <div className="space-y-6">
+    {reviews.map((review) => (
+      <motion.div
+        key={review.id}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white p-4 rounded-lg shadow-sm"
+      >
+        <div className="flex items-center justify-between mb-2">
+          <span className="font-medium text-naaz-green">{review.reviewer_name}</span>
+          <span className="text-sm text-gray-500">
+            {new Date(review.date_created).toLocaleDateString()}
+          </span>
+        </div>
+        <div className="flex items-center mb-2">
+          {[...Array(5)].map((_, i) => (
+            <span key={i} className={i < review.rating ? 'text-yellow-400' : 'text-gray-300'}>
+              ⭐
+            </span>
+          ))}
+          {review.verified && (
+            <span className="ml-2 text-xs text-green-600">Verified Purchase</span>
+          )}
+        </div>
+        <p className="text-gray-700">{review.review}</p>
+      </motion.div>
+    ))}
+  </div>
+);
+
 const ProductPage: React.FC = () => {
   const { productId } = useParams();
-  
-  // In a real app, you would fetch the product based on productId
-  // For demo purposes, we're using mock data
+  const [activeTab, setActiveTab] = useState("description");
   
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-grow">
-        <ProductDisplay 
-          product={mockProduct}
-          relatedProducts={mockRelatedProducts}
-          reviews={mockReviews}
-        />
+      <main className="flex-grow py-8 px-4">
+        <div className="container mx-auto">
+          <div className="grid lg:grid-cols-3 gap-8">
+            {/* Main Product Content */}
+            <div className="lg:col-span-2">
+              <ProductDisplay 
+                product={mockProduct}
+                relatedProducts={mockRelatedProducts}
+                reviews={mockReviews}
+              />
+              
+              {/* Product Tabs */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="mt-8 bg-white rounded-lg shadow-md p-6"
+              >
+                <Tabs defaultValue="description" className="w-full">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="description">Description</TabsTrigger>
+                    <TabsTrigger value="additional">Additional Info</TabsTrigger>
+                    <TabsTrigger value="reviews">Reviews ({mockReviews.length})</TabsTrigger>
+                  </TabsList>
+                  <div className="mt-6">
+                    <TabsContent value="description">
+                      <DescriptionTab product={mockProduct} />
+                    </TabsContent>
+                    <TabsContent value="additional">
+                      <AdditionalInfoTab product={mockProduct} />
+                    </TabsContent>
+                    <TabsContent value="reviews">
+                      <ReviewsTab product={mockProduct} reviews={mockReviews} />
+                    </TabsContent>
+                  </div>
+                </Tabs>
+              </motion.div>
+            </div>
+
+            {/* Sidebar */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+              className="lg:col-span-1"
+            >
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <h2 className="text-xl font-playfair font-semibold text-naaz-green mb-4">
+                  Recommended Books
+                </h2>
+                <div className="space-y-4">
+                  {mockRelatedProducts.map((product) => (
+                    <motion.div
+                      key={product.id}
+                      whileHover={{ scale: 1.02 }}
+                      className="flex gap-3 p-2 rounded-lg hover:bg-naaz-cream/20 transition-colors"
+                    >
+                      <img
+                        src={product.images[0].src}
+                        alt={product.name}
+                        className="w-20 h-24 object-cover rounded-lg"
+                      />
+                      <div>
+                        <h3 className="font-medium text-naaz-green text-sm line-clamp-2">
+                          {product.name}
+                        </h3>
+                        <p className="text-sm text-gray-600 mt-1">{product.author}</p>
+                        <p className="text-naaz-gold font-semibold mt-1">₹{product.price}</p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
       </main>
       <Footer />
     </div>

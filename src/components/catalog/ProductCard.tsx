@@ -1,5 +1,5 @@
-
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ShoppingCart, Eye, Heart } from 'lucide-react';
 import { Product } from '../product/ProductDisplay';
 import { useCartContext } from '@/lib/context/CartContext';
@@ -15,9 +15,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
   onQuickView, 
   onAddToWishlist 
 }) => {
+  const navigate = useNavigate();
   const { addItem } = useCartContext();
 
-  const handleAddToCart = () => {
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent navigation when clicking add to cart
     addItem({
       productId: product.id,
       name: product.name,
@@ -26,11 +28,28 @@ const ProductCard: React.FC<ProductCardProps> = ({
     });
   };
 
+  const handleProductClick = () => {
+    navigate(`/product/${product.id}`);
+  };
+
+  const handleQuickView = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent navigation when clicking quick view
+    onQuickView?.(product);
+  };
+
+  const handleAddToWishlist = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent navigation when clicking wishlist
+    onAddToWishlist?.(product.id);
+  };
+
   const isOnSale = product.sale_price && product.regular_price && 
     parseFloat(product.sale_price) < parseFloat(product.regular_price);
 
   return (
-    <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 group">
+    <div 
+      className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 group cursor-pointer"
+      onClick={handleProductClick}
+    >
       <div className="relative overflow-hidden">
         <img
           src={product.images[0]?.src || '/placeholder.svg'}
@@ -54,16 +73,16 @@ const ProductCard: React.FC<ProductCardProps> = ({
         
         {/* Quick Actions */}
         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-          <div className="flex gap-2">
+          <div className="flex gap-2" onClick={e => e.stopPropagation()}>
             <button
-              onClick={() => onQuickView?.(product)}
+              onClick={handleQuickView}
               className="bg-white p-2 rounded-full hover:bg-gray-100 transition-colors"
               title="Quick View"
             >
               <Eye size={16} />
             </button>
             <button
-              onClick={() => onAddToWishlist?.(product.id)}
+              onClick={handleAddToWishlist}
               className="bg-white p-2 rounded-full hover:bg-gray-100 transition-colors"
               title="Add to Wishlist"
             >
@@ -74,7 +93,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
       </div>
       
       <div className="p-4">
-        <h3 className="font-playfair font-semibold text-lg mb-1 text-naaz-green line-clamp-2">
+        <h3 className="font-playfair font-semibold text-lg mb-1 text-naaz-green line-clamp-2 hover:text-naaz-gold transition-colors">
           {product.name}
         </h3>
         

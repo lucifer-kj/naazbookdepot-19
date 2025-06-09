@@ -47,14 +47,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   return (
     <div 
-      className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 group cursor-pointer"
+      className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 group cursor-pointer flex flex-col h-full"
       onClick={handleProductClick}
     >
-      <div className="relative overflow-hidden">
+      <div className="relative overflow-hidden aspect-[3/4] w-full">
         <img
           src={product.images[0]?.src || '/placeholder.svg'}
           alt={product.name}
-          className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
         
         {/* Islamic Category Badge */}
@@ -91,8 +91,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
           </div>
         </div>
       </div>
-      
-      <div className="p-4">
+      <div className="flex flex-col flex-1 p-4">
         <h3 className="font-playfair font-semibold text-lg mb-1 text-naaz-green line-clamp-2 hover:text-naaz-gold transition-colors">
           {product.name}
         </h3>
@@ -114,7 +113,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         </div>
         
         {/* Price */}
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-3 mt-auto">
           <div className="flex items-center">
             <span className="text-xl font-bold text-naaz-gold">₹{product.price}</span>
             {isOnSale && (
@@ -130,7 +129,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         <button
           onClick={handleAddToCart}
           disabled={product.stock_status === 'outofstock'}
-          className="w-full bg-naaz-green text-white py-2 px-4 rounded hover:bg-naaz-green/90 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
+          className="w-full bg-naaz-green text-white py-2 px-4 rounded hover:bg-naaz-green/90 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center mt-2"
         >
           <ShoppingCart size={16} className="mr-2" />
           Add to Cart

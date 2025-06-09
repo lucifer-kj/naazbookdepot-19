@@ -1,13 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { Search, Filter, ChevronDown, ChevronUp, X } from 'lucide-react';
+import { Search, ChevronDown, ChevronUp, X } from 'lucide-react';
+import { Filter, Grid, List } from 'lucide-react';
 import ProductGrid from '../components/product/ProductGrid';
 import ProductFilters, { FilterOption } from '../components/product/ProductFilters';
 import ProductSort, { SortOption } from '../components/product/ProductSort';
 import { Product } from '../components/product/ProductDisplay';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import { useSearchParams } from 'react-router-dom';
+import CategorySidebar, { Category } from '../components/catalog/CategorySidebar';
+import SearchBar from '../components/catalog/SearchBar';
+import AdvancedFilters, { FilterOptions } from '../components/catalog/AdvancedFilters';
+import ProductCard from '../components/catalog/ProductCard';
 
 // Mock book data
 const books: Product[] = [
@@ -143,166 +149,119 @@ const books: Product[] = [
   }
 ];
 
-// Filter options
-const filterOptions: FilterOption[] = [
-  {
-    id: 'category',
-    name: 'Category',
-    options: [
-      { value: 'quran', label: 'Quran & Tafsir', count: 2 },
-      { value: 'hadith', label: 'Hadith', count: 2 },
-      { value: 'fiqh', label: 'Fiqh', count: 1 },
-      { value: 'seerah', label: 'Seerah & Biography', count: 1 },
-      { value: 'history', label: 'Islamic History', count: 1 },
-      { value: 'spirituality', label: 'Spirituality', count: 1 }
-    ]
-  },
-  {
-    id: 'price',
-    name: 'Price',
-    options: [
-      { value: 'under-800', label: 'Under ₹800' },
-      { value: '800-1000', label: '₹800 - ₹1000' },
-      { value: '1000-1500', label: '₹1000 - ₹1500' },
-      { value: 'over-1500', label: 'Over ₹1500' }
-    ]
-  },
-  {
-    id: 'rating',
-    name: 'Rating',
-    options: [
-      { value: '5', label: '5 Stars' },
-      { value: '4', label: '4 Stars & Up' },
-      { value: '3', label: '3 Stars & Up' }
-    ]
-  },
-  {
-    id: 'availability',
-    name: 'Availability',
-    options: [
-      { value: 'instock', label: 'In Stock' },
-      { value: 'outofstock', label: 'Out of Stock' }
-    ]
-  }
+// Catalog-style categories and filters
+const categories: Category[] = [
+  { id: 1, name: 'Quran & Tafsir', slug: 'quran-tafsir', count: 45, subcategories: [
+    { id: 11, name: 'Quran Translation', slug: 'quran-translation', count: 25 },
+    { id: 12, name: 'Tafsir Books', slug: 'tafsir', count: 20 }
+  ]},
+  { id: 2, name: 'Hadith', slug: 'hadith', count: 32, subcategories: [
+    { id: 21, name: 'Sahih Bukhari', slug: 'bukhari', count: 8 },
+    { id: 22, name: 'Sahih Muslim', slug: 'muslim', count: 6 },
+    { id: 23, name: 'Other Collections', slug: 'other-hadith', count: 18 }
+  ]},
+  { id: 3, name: 'Fiqh (Jurisprudence)', slug: 'fiqh', count: 28 },
+  { id: 4, name: 'Seerah (Biography)', slug: 'seerah', count: 22 },
+  { id: 5, name: 'Islamic History', slug: 'history', count: 35 },
+  { id: 6, name: 'Spirituality & Sufism', slug: 'spirituality', count: 19 },
+  { id: 7, name: 'Arabic Language', slug: 'arabic', count: 15 },
+  { id: 8, name: "Children's Islamic Books", slug: 'children', count: 24 }
 ];
 
-// Sort options
+const filterOptions: FilterOptions = {
+  priceRange: { min: 100, max: 5000 },
+  languages: ['English', 'Arabic', 'Urdu', 'Bengali', 'Hindi'],
+  bindings: ['Hardcover', 'Paperback', 'Leather Bound'],
+  yearRange: { min: 2000, max: 2024 },
+  availability: ['In Stock', 'Pre-order', 'Out of Stock']
+};
+
 const sortOptions: SortOption[] = [
-  { value: 'popularity', label: 'Most Popular' },
+  { value: 'relevance', label: 'Relevance' },
   { value: 'price-low', label: 'Price: Low to High' },
   { value: 'price-high', label: 'Price: High to Low' },
-  { value: 'rating', label: 'Highest Rated' },
-  { value: 'newest', label: 'Newest First' }
+  { value: 'newest', label: 'Newest First' },
+  { value: 'bestselling', label: 'Best Selling' },
+  { value: 'rating', label: 'Highest Rated' }
 ];
 
 const Books = () => {
-  const [activeFilters, setActiveFilters] = useState<Record<string, string[]>>({
-    category: [],
-    price: [],
-    rating: [],
-    availability: []
-  });
-  const [currentSort, setCurrentSort] = useState('popularity');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filteredBooks, setFilteredBooks] = useState(books);
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [filteredProducts, setFilteredProducts] = useState(books);
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
+  const [activeCategory, setActiveCategory] = useState(searchParams.get('category') || '');
+  const [activeFilters, setActiveFilters] = useState<Record<string, any>>({});
+  const [sortBy, setSortBy] = useState('relevance');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   // Filter books based on active filters and search query
   useEffect(() => {
-    // Simulate loading
     setLoading(true);
-
     const timer = setTimeout(() => {
       let result = [...books];
 
       // Filter by search query
       if (searchQuery) {
-        result = result.filter(book => 
-          book.name.toLowerCase().includes(searchQuery.toLowerCase())
+        result = result.filter(product => 
+          product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          product.author?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          product.description.toLowerCase().includes(searchQuery.toLowerCase())
         );
       }
 
       // Filter by category
-      if (activeFilters.category.length > 0) {
-        result = result.filter(book => 
-          book.categories.some(cat => activeFilters.category.includes(cat.name))
+      if (activeCategory) {
+        result = result.filter(product =>
+          product.categories.some(cat => cat.slug === activeCategory)
         );
       }
 
       // Filter by price range
-      if (activeFilters.price.length > 0) {
-        result = result.filter(book => {
-          const price = parseFloat(book.price);
-          return activeFilters.price.some(range => {
-            switch (range) {
-              case 'under-800': return price < 800;
-              case '800-1000': return price >= 800 && price <= 1000;
-              case '1000-1500': return price > 1000 && price <= 1500;
-              case 'over-1500': return price > 1500;
-              default: return true;
-            }
-          });
-        });
+      if (activeFilters.priceMin) {
+        result = result.filter(product => parseFloat(product.price) >= parseFloat(activeFilters.priceMin));
+      }
+      if (activeFilters.priceMax) {
+        result = result.filter(product => parseFloat(product.price) <= parseFloat(activeFilters.priceMax));
       }
 
-      // Filter by rating
-      if (activeFilters.rating.length > 0) {
-        result = result.filter(book => {
-          const rating = parseFloat(book.average_rating);
-          return activeFilters.rating.some(r => rating >= parseFloat(r));
-        });
-      }
-
-      // Filter by availability
-      if (activeFilters.availability.length > 0) {
-        result = result.filter(book => 
-          activeFilters.availability.includes(book.stock_status)
+      // Filter by language
+      if (activeFilters.languages?.length > 0) {
+        result = result.filter(product =>
+          activeFilters.languages.some((lang: string) => 
+            product.language?.includes(lang)
+          )
         );
       }
 
-      // Sort results
-      result = sortBooks(result, currentSort);
-
-      setFilteredBooks(result);
-      setLoading(false);
-    }, 500); // simulate network delay
-
-    return () => clearTimeout(timer);
-  }, [activeFilters, searchQuery, currentSort]);
-
-  // Handle filter changes
-  const handleFilterChange = (filterId: string, value: string, isChecked: boolean) => {
-    setActiveFilters(prev => {
-      const newFilters = { ...prev };
-      if (isChecked) {
-        newFilters[filterId] = [...(prev[filterId] || []), value];
-      } else {
-        newFilters[filterId] = (prev[filterId] || []).filter(v => v !== value);
+      // Filter by binding
+      if (activeFilters.bindings?.length > 0) {
+        result = result.filter(product =>
+          activeFilters.bindings.includes(product.binding)
+        );
       }
-      return newFilters;
-    });
-  };
 
-  // Clear all filters
-  const handleClearFilters = () => {
-    setActiveFilters({
-      category: [],
-      price: [],
-      rating: [],
-      availability: []
-    });
-    setSearchQuery('');
-  };
+      // Filter by availability
+      if (activeFilters.availability?.length > 0) {
+        result = result.filter(product => {
+          const status = product.stock_status === 'instock' ? 'In Stock' : 'Out of Stock';
+          return activeFilters.availability.includes(status);
+        });
+      }
 
-  // Handle sort change
-  const handleSortChange = (value: string) => {
-    setCurrentSort(value);
-  };
+      // Sort results
+      result = sortProducts(result, sortBy);
+
+      setFilteredProducts(result);
+      setLoading(false);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery, activeCategory, activeFilters, sortBy]);
 
   // Sort books based on selected sort option
-  const sortBooks = (booksToSort: Product[], sortOption: string) => {
-    const sorted = [...booksToSort];
+  const sortProducts = (productsToSort: Product[], sortOption: string) => {
+    const sorted = [...productsToSort];
     
     switch (sortOption) {
       case 'price-low':
@@ -312,159 +271,173 @@ const Books = () => {
       case 'rating':
         return sorted.sort((a, b) => parseFloat(b.average_rating) - parseFloat(a.average_rating));
       case 'newest':
-        // In a real app, we would sort by date added
-        return sorted.reverse();
-      case 'popularity':
-      default:
+        return sorted.sort((a, b) => (b.publication_year || 0) - (a.publication_year || 0));
+      case 'bestselling':
         return sorted.sort((a, b) => b.rating_count - a.rating_count);
+      case 'relevance':
+      default:
+        return sorted;
     }
+  };
+
+  // Handle search
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    setSearchParams(prev => {
+      if (query) {
+        prev.set('search', query);
+      } else {
+        prev.delete('search');
+      }
+      return prev;
+    });
+  };
+
+  // Handle category selection
+  const handleCategorySelect = (categorySlug: string) => {
+    setActiveCategory(categorySlug === activeCategory ? '' : categorySlug);
+    setSearchParams(prev => {
+      if (categorySlug && categorySlug !== activeCategory) {
+        prev.set('category', categorySlug);
+      } else {
+        prev.delete('category');
+      }
+      return prev;
+    });
+  };
+
+  // Handle filter changes
+  const handleFilterChange = (filterType: string, value: any) => {
+    setActiveFilters(prev => ({
+      ...prev,
+      [filterType]: value
+    }));
+  };
+
+  // Clear all filters
+  const handleClearFilters = () => {
+    setActiveFilters({});
+    setSearchQuery('');
+    setActiveCategory('');
+    setSearchParams({});
   };
 
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-grow">
-        {/* Hero Banner */}
-        <motion.div 
-          className="relative h-64 overflow-hidden"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1 }}
-        >
-          {/* Background Image and Gradient */}
-          <div 
-            className="absolute inset-0"
-            style={{
-              backgroundImage: "url('/lovable-uploads/books-bg.png')",
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              filter: 'brightness(0.7)'
-            }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-naaz-green/80 to-transparent" />
-          <motion.div 
-            className="relative container mx-auto h-full flex flex-col justify-center px-4"
-            initial={{ x: -50, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-          >
-            <h1 className="text-4xl md:text-5xl font-playfair font-bold text-white mb-4">Islamic Books</h1>
-            <p className="text-white/90 max-w-xl text-lg mb-6">
-              Discover our extensive collection of authentic Islamic literature curated for spiritual growth and enlightenment.
+      <main className="flex-grow py-8">
+        <div className="container mx-auto px-4">
+          {/* Page Header */}
+          <div className="mb-8">
+            <h1 className="text-3xl md:text-4xl font-playfair font-bold text-naaz-green mb-4">
+              Islamic Book Catalog
+            </h1>
+            <p className="text-gray-600">
+              Discover our extensive collection of authentic Islamic literature
             </p>
-          </motion.div>
-        </motion.div>
-
-        {/* Main Content */}
-        <div className="container mx-auto py-12 px-4">
-          {/* Search and Filter */}
-          <motion.div 
-            className="flex flex-col md:flex-row justify-between items-center mb-10"
-            initial={{ y: -20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.5 }}
-          >
-            <div className="relative w-full md:w-1/3 mb-4 md:mb-0">
-              <input 
-                type="text" 
-                placeholder="Search books..." 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full py-2 pl-4 pr-10 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-naaz-green"
+          </div>
+          {/* Search Bar */}
+          <div className="mb-6">
+            <SearchBar onSearch={handleSearch} initialValue={searchQuery} />
+          </div>
+          <div className="flex flex-col lg:flex-row gap-8">
+            {/* Sidebar */}
+            <div className="lg:w-64 space-y-6">
+              <CategorySidebar
+                categories={categories}
+                activeCategory={activeCategory}
+                onCategorySelect={handleCategorySelect}
               />
-              <Search size={18} className="absolute top-1/2 transform -translate-y-1/2 right-4 text-gray-500" />
-              {searchQuery && (
-                <button 
-                  className="absolute top-1/2 transform -translate-y-1/2 right-12 text-gray-400 hover:text-gray-600"
-                  onClick={() => setSearchQuery('')}
-                >
-                  <X size={16} />
-                </button>
-              )}
+              <AdvancedFilters
+                filters={filterOptions}
+                activeFilters={activeFilters}
+                onFilterChange={handleFilterChange}
+                onClearFilters={handleClearFilters}
+                isOpen={isFiltersOpen}
+                onToggle={() => setIsFiltersOpen(!isFiltersOpen)}
+              />
             </div>
-            <div className="flex gap-4">
-              <Button
-                variant="outline" 
-                className="flex items-center border-naaz-green text-naaz-green hover:bg-naaz-green/10 transition-colors md:hidden"
-                onClick={() => setIsFilterOpen(!isFilterOpen)}
-              >
-                <Filter size={18} className="mr-2" />
-                {isFilterOpen ? 'Hide Filters' : 'Show Filters'}
-              </Button>
-              <div className="hidden md:block">
-                <ProductSort 
-                  options={sortOptions} 
-                  currentSort={currentSort} 
-                  onSortChange={handleSortChange}
-                />
-              </div>
-            </div>
-          </motion.div>
-
-          <div className="flex flex-col md:flex-row gap-8">
-            {/* Filters Sidebar - Mobile */}
-            <AnimatePresence>
-              {isFilterOpen && (
-                <motion.div 
-                  className="md:hidden bg-white p-4 rounded-lg shadow-md"
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <ProductFilters 
-                    filters={filterOptions} 
-                    activeFilters={activeFilters} 
-                    onFilterChange={handleFilterChange}
-                    onClearFilters={handleClearFilters}
+            {/* Main Content */}
+            <div className="flex-1">
+              {/* Toolbar */}
+              <div className="flex flex-col md:flex-row justify-between items-center mb-6 bg-white p-4 rounded-lg shadow-sm">
+                <div className="flex items-center gap-4 mb-4 md:mb-0">
+                  <span className="text-gray-600">
+                    {filteredProducts.length} books found
+                  </span>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setViewMode('grid')}
+                      className={`p-2 rounded ${viewMode === 'grid' ? 'bg-naaz-green text-white' : 'text-gray-600'}`}
+                    >
+                      <Grid size={16} />
+                    </button>
+                    <button
+                      onClick={() => setViewMode('list')}
+                      className={`p-2 rounded ${viewMode === 'list' ? 'bg-naaz-green text-white' : 'text-gray-600'}`}
+                    >
+                      <List size={16} />
+                    </button>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <button
+                    className="lg:hidden flex items-center gap-2 px-4 py-2 bg-naaz-green text-white rounded"
+                    onClick={() => setIsFiltersOpen(!isFiltersOpen)}
+                  >
+                    <Filter size={16} />
+                    Filters
+                  </button>
+                  <ProductSort
+                    options={sortOptions}
+                    currentSort={sortBy}
+                    onSortChange={setSortBy}
                   />
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Filters Sidebar - Desktop */}
-            <motion.div 
-              className="hidden md:block w-64 flex-shrink-0"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
-              <div className="bg-white p-4 rounded-lg shadow-md sticky top-24">
-                <ProductFilters 
-                  filters={filterOptions} 
-                  activeFilters={activeFilters} 
-                  onFilterChange={handleFilterChange}
-                  onClearFilters={handleClearFilters}
-                />
+                </div>
               </div>
-            </motion.div>
-            
-            {/* Products Content */}
-            <motion.div 
-              className="flex-1"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-            >
-              {/* Mobile Sort */}
-              <div className="mb-6 md:hidden">
-                <ProductSort 
-                  options={sortOptions} 
-                  currentSort={currentSort} 
-                  onSortChange={handleSortChange}
-                />
-              </div>
-              
-              {/* Products Count */}
-              <div className="mb-6 flex justify-between items-center">
-                <h2 className="text-lg font-medium text-naaz-green">
-                  {filteredBooks.length} {filteredBooks.length === 1 ? 'Book' : 'Books'} found
-                </h2>
-              </div>
-              
               {/* Products Grid */}
-              <ProductGrid products={filteredBooks} loading={loading} />
-            </motion.div>
+              {loading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[...Array(6)].map((_, i) => (
+                    <div key={i} className="bg-white rounded-lg shadow-md p-4 animate-pulse">
+                      <div className="h-64 bg-gray-200 rounded mb-4"></div>
+                      <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                      <div className="h-3 bg-gray-200 rounded mb-2"></div>
+                      <div className="h-6 bg-gray-200 rounded"></div>
+                    </div>
+                  ))}
+                </div>
+              ) : filteredProducts.length > 0 ? (
+                <div className={viewMode === 'grid' 
+                  ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' 
+                  : 'space-y-4'
+                }>
+                  {filteredProducts.map(product => (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      onQuickView={(product) => console.log('Quick view:', product)}
+                      onAddToWishlist={(id) => console.log('Add to wishlist:', id)}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <h3 className="text-xl font-playfair font-semibold text-naaz-green mb-4">
+                    No books found
+                  </h3>
+                  <p className="text-gray-600 mb-6">
+                    Try adjusting your search or filters to find what you're looking for.
+                  </p>
+                  <button
+                    onClick={handleClearFilters}
+                    className="bg-naaz-green text-white px-6 py-2 rounded hover:bg-naaz-green/90"
+                  >
+                    Clear All Filters
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </main>

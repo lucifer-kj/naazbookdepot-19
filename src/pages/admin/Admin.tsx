@@ -7,6 +7,14 @@ import Products from './pages/Products';
 import Orders from './pages/Orders';
 import Customers from './pages/Customers';
 import Settings from './pages/Settings';
+import AdminLoginUI from './components/AdminLoginUI';
+import OTPPage from './components/OTPPage';
+import DashboardOverview from './components/DashboardOverview';
+import ProductList from './components/ProductList';
+import AddEditProduct from './components/AddEditProduct';
+import CategoriesTags from './components/CategoriesTags';
+import OrdersList from './components/OrdersList';
+import OrderDetails from './components/OrderDetails';
 
 const Admin: React.FC = () => {
   return (
@@ -16,12 +24,15 @@ const Admin: React.FC = () => {
         <AdminHeader />
         <main className="flex-1 p-6">
           <Routes>
+            <Route path="/login" element={<AdminLoginUI />} />
+            <Route path="/2fa" element={<OTPPage />} />
+            <Route path="/overview" element={<DashboardOverview />} />
+            <Route path="/products" element={<ProductList />} />
+            <Route path="/products/add" element={<AddEditProduct />} />
+            <Route path="/categories" element={<CategoriesTags />} />
+            <Route path="/orders" element={<OrdersList />} />
+            <Route path="/orders/:orderId" element={<OrderDetails />} />
             <Route path="/" element={<Navigate to="overview" replace />} />
-            <Route path="overview" element={<Overview />} />
-            <Route path="products/*" element={<Products />} />
-            <Route path="orders/*" element={<Orders />} />
-            <Route path="customers/*" element={<Customers />} />
-            <Route path="settings/*" element={<Settings />} />
             {/* Add more admin routes as needed */}
           </Routes>
         </main>

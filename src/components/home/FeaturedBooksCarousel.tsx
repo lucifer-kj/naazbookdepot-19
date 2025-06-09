@@ -51,38 +51,34 @@ const FeaturedBooksCarousel: React.FC<FeaturedBooksCarouselProps> = ({ books }) 
         </div>
         
         <div className="relative max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 px-4 md:px-12">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-6 px-2 md:px-12">
             {safeBooks.map((book) => (
               <motion.div
                 key={book.id}
                 whileHover={{ y: -5 }}
-                className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer"
+                className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer flex flex-col h-full"
                 onClick={() => handleBookClick(book.id)}
               >
-                <div className="relative aspect-[3/4]">
+                <div className="relative aspect-[3/4] w-full">
                   <img
                     src={book.image}
                     alt={book.name}
                     className="w-full h-full object-cover"
                   />
                 </div>
-                
-                <div className="p-4">
+                <div className="flex flex-col flex-1 p-4">
                   <h3 className="font-playfair font-semibold text-naaz-green hover:text-naaz-gold transition-colors">
                     {book.name}
                   </h3>
                   <p className="text-gray-600 text-sm mb-2">{book.author}</p>
                   <p className="text-gray-500 text-xs mb-3">{book.description}</p>
-                  
                   <div className="flex justify-center mb-3">
                     {[...Array(book.rating)].map((_, i) => (
                       <Star key={i} size={16} className="text-naaz-gold" fill="currentColor" />
                     ))}
                   </div>
-                  
                   <p className="text-naaz-green font-bold text-xl mb-4">{book.price}</p>
-                  
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 mt-auto">
                     <button 
                       type="button"
                       className="flex-1 bg-naaz-green text-white px-4 py-2 rounded-lg hover:bg-naaz-green/90 transition-all duration-300 transform hover:scale-105"

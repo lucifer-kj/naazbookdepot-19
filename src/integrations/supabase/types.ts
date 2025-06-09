@@ -1,3 +1,8 @@
+// ----------------------------------------------------------------------------------
+// This file contains TypeScript types for Supabase integration.
+// If you update your Supabase schema, regenerate this file accordingly.
+// ----------------------------------------------------------------------------------
+
 export type Json =
   | string
   | number
@@ -1004,7 +1009,7 @@ export type Tables<
   }
     ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never,
 > = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
   ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
       Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
@@ -1103,3 +1108,15 @@ export const Constants = {
     Enums: {},
   },
 } as const
+
+// Export Database type for use in Supabase client initialization
+export type SupabaseDatabase = Database;
+
+// If you use @supabase/supabase-js, you can use this type for your client:
+// import { createClient, SupabaseClient } from '@supabase/supabase-js';
+// export type TypedSupabaseClient = SupabaseClient<Database>;
+//
+// Example usage:
+// const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY);
+//
+// This ensures full type safety for all queries.

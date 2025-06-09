@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -8,11 +7,14 @@ import FeaturedBooksCarousel from '../components/home/FeaturedBooksCarousel';
 import ThreeDivisionsShowcase from '../components/home/ThreeDivisionsShowcase';
 import AboutPreviewSection from '../components/home/AboutPreviewSection';
 import TestimonialsSection from '../components/home/TestimonialsSection';
-import NewsletterSection from '../components/home/NewsletterSection';
 import FloatingButtons from '../components/home/FloatingButtons';
+import AccountSlideIn from '../components/home/AccountSlideIn';
+import { useAuth } from '@/lib/context/AuthContext';
 
 const Home = () => {
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const [showAccount, setShowAccount] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   // Scroll effects
   useEffect(() => {
@@ -42,7 +44,7 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-naaz-cream">
-      <Navbar />
+      <Navbar onAccountClick={() => setShowAccount(true)} />
       <ContactInfoStrip />
       <HeroSection />
       <FeaturedBooksCarousel />
@@ -51,6 +53,10 @@ const Home = () => {
       <TestimonialsSection />
       <FloatingButtons showBackToTop={showBackToTop} scrollToTop={scrollToTop} />
       <Footer />
+      {/* Account Slide In */}
+      {isAuthenticated && (
+        <AccountSlideIn open={showAccount} onClose={() => setShowAccount(false)} />
+      )}
     </div>
   );
 };

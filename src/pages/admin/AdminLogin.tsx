@@ -1,24 +1,26 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-
-const TEST_ADMIN = {
-  username: 'admin',
-  password: 'admin123'
-};
+import { supabase } from '@/integrations/supabase/client';
 
 const AdminLogin: React.FC = () => {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (username === TEST_ADMIN.username && password === TEST_ADMIN.password) {
-      localStorage.setItem('isAdmin', 'true');
-      navigate('/admin');
-    } else {
-      setError('Invalid credentials');
+    setError(''); // Clear previous errors
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        setError(error.message);
+      } else {
+        navigate('/admin/overview');
+      }
+    } catch (err) {
+      setError('An unexpected error occurred.');
+      console.error(err);
     }
   };
 
@@ -28,13 +30,14 @@ const AdminLogin: React.FC = () => {
         <h2 className="text-2xl font-bold text-naaz-green mb-6 text-center">Admin Login</h2>
         {error && <div className="mb-4 text-red-600 text-center">{error}</div>}
         <div className="mb-4">
-          <label className="block text-gray-700 mb-1">Username</label>
+          <label className="block text-gray-700 mb-1">Email</label>
           <input
-            type="text"
+            type="email"
             className="w-full border border-gray-300 rounded px-3 py-2"
-            value={username}
-            onChange={e => setUsername(e.target.value)}
+            value={email}
+            onChange={e => setEmail(e.target.value)}
             autoFocus
+            required
           />
         </div>
         <div className="mb-6">
@@ -44,6 +47,7 @@ const AdminLogin: React.FC = () => {
             className="w-full border border-gray-300 rounded px-3 py-2"
             value={password}
             onChange={e => setPassword(e.target.value)}
+            required
           />
         </div>
         <button
@@ -52,10 +56,6 @@ const AdminLogin: React.FC = () => {
         >
           Login
         </button>
-        <div className="mt-4 text-xs text-gray-500 text-center">
-          Test credentials: <br />
-          <span className="font-mono">admin / admin123</span>
-        </div>
       </form>
     </div>
   );

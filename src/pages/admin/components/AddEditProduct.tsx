@@ -9,9 +9,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { Loader2, UploadCloud, XCircle } from 'lucide-react';
+import { Loader2, UploadCloud, XCircle } from 'lucide-react'; // XCircle and UploadCloud might be unused here now
 import type { TablesInsert, TablesUpdate, Tables } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
+import BookDetailsFormSection from './formSections/BookDetailsFormSection';
+import ProductImageManagement from './formSections/ProductImageManagement';
 
 // Helper to generate slug
 const generateSlug = (name: string) => {
@@ -352,46 +354,11 @@ const AddEditProduct: React.FC = () => {
           </div>
         </div>
 
-        {/* Book Specific Fields - Assuming shop_type is 'islamic-books' */}
-        <fieldset className="border p-4 rounded-lg">
-            <legend className="text-lg font-medium text-naaz-green px-2">Book Details</legend>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                 <div>
-                    <Label htmlFor="author" className="block text-sm font-medium mb-1">Author</Label>
-                    <Input id="author" name="author" value={productData.author || ''} onChange={handleInputChange} placeholder="Author Name" className="w-full border rounded-lg px-3 py-2"/>
-                </div>
-                <div>
-                    <Label htmlFor="isbn" className="block text-sm font-medium mb-1">ISBN</Label>
-                    <Input id="isbn" name="isbn" value={productData.isbn || ''} onChange={handleInputChange} placeholder="978-xxxxxxxxxx" className="w-full border rounded-lg px-3 py-2"/>
-                    {errors.isbn && <p className="text-sm text-red-500 mt-1">{errors.isbn}</p>}
-                </div>
-                <div>
-                    <Label htmlFor="publisher" className="block text-sm font-medium mb-1">Publisher</Label>
-                    <Input id="publisher" name="publisher" value={productData.publisher || ''} onChange={handleInputChange} placeholder="Publisher Name" className="w-full border rounded-lg px-3 py-2"/>
-                </div>
-                <div>
-                    <Label htmlFor="publication_year" className="block text-sm font-medium mb-1">Publication Year</Label>
-                    <Input id="publication_year" name="publication_year" type="number" value={productData.publication_year || ''} onChange={handleInputChange} placeholder="YYYY" min="1000" max={new Date().getFullYear() + 5} className="w-full border rounded-lg px-3 py-2"/>
-                    {errors.publication_year && <p className="text-sm text-red-500 mt-1">{errors.publication_year}</p>}
-                </div>
-                 <div>
-                    <Label htmlFor="language" className="block text-sm font-medium mb-1">Language</Label>
-                    <Input id="language" name="language" value={productData.language || ''} onChange={handleInputChange} placeholder="e.g., English, Arabic" className="w-full border rounded-lg px-3 py-2"/>
-                </div>
-                <div>
-                    <Label htmlFor="page_count" className="block text-sm font-medium mb-1">Page Count</Label>
-                    <Input id="page_count" name="page_count" type="number" value={productData.page_count || ''} onChange={handleInputChange} placeholder="Number of pages" min="1" className="w-full border rounded-lg px-3 py-2"/>
-                </div>
-                <div>
-                    <Label htmlFor="dimensions" className="block text-sm font-medium mb-1">Dimensions (cm)</Label>
-                    <Input id="dimensions" name="dimensions" value={productData.dimensions || ''} onChange={handleInputChange} placeholder="e.g., 15 x 22 x 3" className="w-full border rounded-lg px-3 py-2"/>
-                </div>
-                 <div>
-                    <Label htmlFor="weight" className="block text-sm font-medium mb-1">Weight (grams)</Label>
-                    <Input id="weight" name="weight" type="number" value={productData.weight || ''} onChange={handleInputChange} placeholder="e.g., 500" min="1" className="w-full border rounded-lg px-3 py-2"/>
-                </div>
-            </div>
-        </fieldset>
+        <BookDetailsFormSection
+          productData={productData}
+          handleInputChange={handleInputChange}
+          errors={errors}
+        />
 
         {/* Tags & Status */}
         <div>
@@ -405,70 +372,14 @@ const AddEditProduct: React.FC = () => {
           <Label htmlFor="is_active" className="text-sm font-medium">Product is Active</Label>
         </div>
 
-        {/* Image Upload */}
-        <div>
-          <Label className="block text-sm font-medium mb-2">Product Images</Label>
-          {/* Existing Images */}
-          {existingImages.length > 0 && (
-            <div className="mb-4">
-              <h4 className="text-xs font-semibold text-gray-600 mb-2">Current Images:</h4>
-              <div className="flex flex-wrap gap-3">
-                {existingImages.map((img) => (
-                  <div key={img.id} className="relative group">
-                    <img src={img.image_url} alt="Existing product" className="w-24 h-24 object-cover rounded-md border border-gray-300" />
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="icon"
-                      className="absolute -top-2 -right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() => removeExistingImage(img.id, img.image_url)}
-                    >
-                      <XCircle className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* New Image Upload */}
-          <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
-            <div className="space-y-1 text-center">
-              <UploadCloud className="mx-auto h-12 w-12 text-gray-400" />
-              <div className="flex text-sm text-gray-600">
-                <Label htmlFor="file-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-naaz-green hover:text-naaz-green-dark focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-naaz-green-light">
-                  <span>Upload files</span>
-                  <Input id="file-upload" name="file-upload" type="file" multiple onChange={handleImageChange} className="sr-only" accept="image/*" />
-                </Label>
-                <p className="pl-1">or drag and drop</p>
-              </div>
-              <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
-            </div>
-          </div>
-
-          {/* New Image Previews */}
-          {imagePreviews.length > 0 && (
-            <div className="mt-4">
-              <h4 className="text-xs font-semibold text-gray-600 mb-2">New Images Preview:</h4>
-              <div className="flex flex-wrap gap-3">
-                {imagePreviews.map((previewUrl, index) => (
-                  <div key={index} className="relative group">
-                    <img src={previewUrl} alt={`New preview ${index + 1}`} className="w-24 h-24 object-cover rounded-md border border-gray-300" />
-                     <Button
-                      type="button"
-                      variant="destructive"
-                      size="icon"
-                      className="absolute -top-2 -right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() => removeNewImage(index)}
-                    >
-                      <XCircle className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+        <ProductImageManagement
+          existingImages={existingImages}
+          newImages={newImages} // Pass newImages if ProductImageManagement needs to know about them (e.g. for conditional rendering)
+          imagePreviews={imagePreviews}
+          onImageChange={handleImageChange}
+          onRemoveNewImage={removeNewImage}
+          onRemoveExistingImage={removeExistingImage}
+        />
 
         {/* Actions */}
         <div className="flex items-center justify-end space-x-4 pt-4">

@@ -1,10 +1,11 @@
 
-import React, { useState, useMemo } from 'react';
+import React from 'react'; // Removed useState, useMemo as they are moved to the hook
 import { useNavigate } from 'react-router-dom';
-import { MapPin, CreditCard, Shield, Loader2 } from 'lucide-react';
-import { useCartContext, CartItem } from '@/lib/context/CartContext';
+import { MapPin, CreditCard, Shield } from 'lucide-react'; // Loader2 might be handled within OrderReview if needed
+import { useCartContext } from '@/lib/context/CartContext';
 import { useAuth } from '@/lib/context/AuthContext';
-import { useCreateOrder } from '@/lib/hooks/useOrders';
+// useCreateOrder is now used within useCheckoutProcess
+import { useCheckoutProcess } from '@/lib/hooks/useCheckoutProcess';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import CheckoutSteps from '@/components/checkout/CheckoutSteps';
@@ -16,103 +17,28 @@ import OrderReview from '@/components/checkout/OrderReview';
 import EmptyCartMessage from '@/components/checkout/EmptyCartMessage';
 
 const Checkout = () => {
-  const { cart, clearCart } = useCartContext();
+  const { cart } = useCartContext(); // clearCart is now handled by the hook
   const { user } = useAuth();
-  const navigate = useNavigate();
-  const [currentStep, setCurrentStep] = useState(1);
-  const [shippingData, setShippingData] = useState<any>(null); // Consider defining a specific type
-  const [paymentData, setPaymentData] = useState<any>(null); // Consider defining a specific type
-  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
-  const createOrderMutation = useCreateOrder();
+  const navigate = useNavigate(); // Still needed for EmptyCartMessage navigation
 
-  // Shipping options - should ideally come from a config or API
-  const shippingOptions = [
-    { id: 'standard', name: 'Standard Shipping (5-7 days)', price: 100 },
-    { id: 'express', name: 'Express Shipping (2-3 days)', price: 250 },
-  ];
+  const {
+    currentStep,
+    shippingData,
+    paymentData,
+    isPlacingOrder,
+    submitCheckoutStep,
+    setCurrentStep,
+    shippingOptions
+  } = useCheckoutProcess();
 
+  // Steps definition can remain here or be moved to the hook if it influences logic there
   const steps = [
     { id: 1, title: 'Shipping', icon: MapPin },
     { id: 2, title: 'Payment', icon: CreditCard },
     { id: 3, title: 'Review', icon: Shield }
   ];
 
-  const handleStepComplete = async (stepData: any) => {
-    if (currentStep === 1) {
-      setShippingData(stepData);
-      setCurrentStep(2);
-    } else if (currentStep === 2) {
-      setPaymentData(stepData);
-      setCurrentStep(3);
-    } else if (currentStep === 3) {
-      if (!shippingData || !paymentData) {
-        alert("Shipping or Payment data is missing.");
-        return;
-      }
-      setIsPlacingOrder(true);
-
-      const mappedCartItems = cart.items.map(item => ({
-        product_id: item.productId.toString(), // Ensure string
-        variant_id: item.variationId || undefined, // Ensure undefined if null/empty
-        quantity: item.quantity,
-        unit_price: parseFloat(item.price), // Ensure number
-        product_name: item.name,
-        product_sku: item.sku || undefined, // Ensure undefined if null/empty
-        // variant_name: item.variantName || undefined, // Add if CartItem has variantName
-      }));
-
-      const selectedShippingOption = shippingOptions.find(opt => opt.id === shippingData.shippingOption) || shippingOptions[0];
-      const shippingAmount = selectedShippingOption.price;
-      const taxAmount = Math.round(cart.subtotal * 0.02); // 2% tax, as in OrderSummary
-
-      // Discount: For now, assume 0 as it's complex to get from OrderSummary without major refactor.
-      // If discountCode state was lifted to Checkout.tsx, it could be calculated here.
-      const discountAmount = 0;
-
-      const totalAmount = cart.subtotal + shippingAmount + taxAmount - discountAmount;
-
-      const orderInfo = {
-        subtotal: cart.subtotal,
-        shipping_address: { ...shippingData }, // Clone to avoid potential issues
-        billing_address: paymentData?.billingAddress
-          ? { ...paymentData.billingAddress }
-          : { ...shippingData }, // Use shipping if billing not separate
-        customer_email: shippingData.email,
-        customer_phone: shippingData.phone,
-        shipping_amount: shippingAmount,
-        tax_amount: taxAmount,
-        discount_amount: discountAmount,
-        total_amount: totalAmount,
-        // payment_method: paymentData?.method, // Optional: if you store this on the order
-        // payment_transaction_id: paymentData?.transactionId, // Optional
-      };
-
-      try {
-        const order = await createOrderMutation.mutateAsync({
-          items: mappedCartItems,
-          ...orderInfo,
-        });
-
-        if (order && order.order_number) {
-          clearCart();
-          navigate(`/order-confirmation?orderNumber=${order.order_number}`);
-        } else {
-          // This case might happen if the mutation doesn't return the order_number as expected
-           console.error("Order created but order_number is missing in response:", order);
-           alert("Order placed, but there was an issue retrieving your order number. Please check your email or order history.");
-           clearCart(); // Still clear cart and navigate to a generic success or home
-           navigate('/');
-        }
-      } catch (error: any) {
-        console.error("Error placing order:", error);
-        alert(`Failed to place order: ${error.message || 'An unexpected error occurred.'}`);
-      } finally {
-        setIsPlacingOrder(false);
-      }
-    }
-  };
-
-  if (cart.items.length === 0) {
+  if (cart.items.length === 0 && !isPlacingOrder) { // Check !isPlacingOrder to prevent flicker after order placement
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />
@@ -136,14 +62,14 @@ const Checkout = () => {
             <div className="lg:col-span-2">
               {currentStep === 1 && (
                 <ShippingForm
-                  user={user}
-                  onComplete={handleStepComplete}
+                  user={user} // ShippingForm might need user details for pre-filling
+                  onComplete={submitCheckoutStep}
                 />
               )}
               {currentStep === 2 && (
                 <PaymentForm
-                  shippingData={shippingData}
-                  onComplete={handleStepComplete}
+                  shippingData={shippingData} // Pass shippingData to PaymentForm if needed
+                  onComplete={submitCheckoutStep}
                   onBack={() => setCurrentStep(1)}
                 />
               )}
@@ -152,14 +78,19 @@ const Checkout = () => {
                   shippingData={shippingData}
                   paymentData={paymentData}
                   onBack={() => setCurrentStep(2)}
-                  onPlaceOrder={() => handleStepComplete({})} // Data for step 3 is already collected
+                  onPlaceOrder={() => submitCheckoutStep({})} // stepData for review might be empty or specific review confirmation
                   isPlacingOrder={isPlacingOrder}
                 />
               )}
             </div>
             
-            {/* OrderSummary can take shippingData to display selected shipping option cost */}
-            <OrderSummary cart={cart} shippingCost={shippingData?.shippingOption ? (shippingOptions.find(opt => opt.id === shippingData.shippingOption)?.price || 0) : 0} />
+            <OrderSummary
+              cart={cart}
+              shippingCost={shippingData?.shippingOption
+                ? (shippingOptions.find(opt => opt.id === shippingData.shippingOption)?.price || 0)
+                : 0
+              }
+            />
           </div>
         </div>
       </main>

@@ -6,26 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useAdminOrders, OrderWithItems } from '@/lib/hooks/useOrders';
 import { Loader2, AlertTriangle, Eye } from 'lucide-react';
 import { format } from 'date-fns';
-
-// Helper function to determine badge variant based on status
-const getStatusBadgeVariant = (status: string | null): "default" | "secondary" | "destructive" | "outline" | "success" | "warning" => {
-  switch (status?.toLowerCase()) {
-    case 'pending':
-      return 'warning';
-    case 'processing':
-      return 'secondary';
-    case 'shipped':
-      return 'default'; // or another color like 'info' if you add custom variants
-    case 'delivered':
-      return 'success';
-    case 'cancelled':
-      return 'destructive';
-    case 'refunded':
-      return 'outline';
-    default:
-      return 'secondary';
-  }
-};
+import { getStatusBadgeVariant, formatCurrency } from '@/lib/utils'; // Import helpers
 
 
 const OrdersList: React.FC = () => {
@@ -108,7 +89,7 @@ const OrdersList: React.FC = () => {
                     {order.status || 'Unknown'}
                   </Badge>
                 </TableCell>
-                <TableCell className="py-3 px-4 text-sm text-gray-700 text-right">₹{order.total_amount?.toLocaleString() || '0.00'}</TableCell>
+                <TableCell className="py-3 px-4 text-sm text-gray-700 text-right">{formatCurrency(order.total_amount)}</TableCell>
                 <TableCell className="py-3 px-4 text-center">
                   <Button
                     size="sm"

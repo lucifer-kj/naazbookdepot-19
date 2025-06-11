@@ -1,9 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapPin, CreditCard, Shield } from 'lucide-react';
-import { useCartContext } from '@/lib/context/CartContext';
+import { MapPin, CreditCard, Shield, Loader2 } from 'lucide-react';
+import { useCartContext, CartItem } from '@/lib/context/CartContext';
 import { useAuth } from '@/lib/context/AuthContext';
+import { useCreateOrder } from '@/lib/hooks/useOrders';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import CheckoutSteps from '@/components/checkout/CheckoutSteps';
@@ -19,8 +20,16 @@ const Checkout = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
-  const [shippingData, setShippingData] = useState(null);
-  const [paymentData, setPaymentData] = useState(null);
+  const [shippingData, setShippingData] = useState<any>(null); // Consider defining a specific type
+  const [paymentData, setPaymentData] = useState<any>(null); // Consider defining a specific type
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const createOrderMutation = useCreateOrder();
+
+  // Shipping options - should ideally come from a config or API
+  const shippingOptions = [
+    { id: 'standard', name: 'Standard Shipping (5-7 days)', price: 100 },
+    { id: 'express', name: 'Express Shipping (2-3 days)', price: 250 },
+  ];
 
   const steps = [
     { id: 1, title: 'Shipping', icon: MapPin },
@@ -28,7 +37,7 @@ const Checkout = () => {
     { id: 3, title: 'Review', icon: Shield }
   ];
 
-  const handleStepComplete = (stepData: any) => {
+  const handleStepComplete = async (stepData: any) => {
     if (currentStep === 1) {
       setShippingData(stepData);
       setCurrentStep(2);
@@ -36,10 +45,70 @@ const Checkout = () => {
       setPaymentData(stepData);
       setCurrentStep(3);
     } else if (currentStep === 3) {
-      // Process order
-      const orderNumber = `NBD-${Date.now()}`;
-      clearCart();
-      navigate(`/order-confirmation?orderNumber=${orderNumber}`);
+      if (!shippingData || !paymentData) {
+        alert("Shipping or Payment data is missing.");
+        return;
+      }
+      setIsPlacingOrder(true);
+
+      const mappedCartItems = cart.items.map(item => ({
+        product_id: item.productId.toString(), // Ensure string
+        variant_id: item.variationId || undefined, // Ensure undefined if null/empty
+        quantity: item.quantity,
+        unit_price: parseFloat(item.price), // Ensure number
+        product_name: item.name,
+        product_sku: item.sku || undefined, // Ensure undefined if null/empty
+        // variant_name: item.variantName || undefined, // Add if CartItem has variantName
+      }));
+
+      const selectedShippingOption = shippingOptions.find(opt => opt.id === shippingData.shippingOption) || shippingOptions[0];
+      const shippingAmount = selectedShippingOption.price;
+      const taxAmount = Math.round(cart.subtotal * 0.02); // 2% tax, as in OrderSummary
+
+      // Discount: For now, assume 0 as it's complex to get from OrderSummary without major refactor.
+      // If discountCode state was lifted to Checkout.tsx, it could be calculated here.
+      const discountAmount = 0;
+
+      const totalAmount = cart.subtotal + shippingAmount + taxAmount - discountAmount;
+
+      const orderInfo = {
+        subtotal: cart.subtotal,
+        shipping_address: { ...shippingData }, // Clone to avoid potential issues
+        billing_address: paymentData?.billingAddress
+          ? { ...paymentData.billingAddress }
+          : { ...shippingData }, // Use shipping if billing not separate
+        customer_email: shippingData.email,
+        customer_phone: shippingData.phone,
+        shipping_amount: shippingAmount,
+        tax_amount: taxAmount,
+        discount_amount: discountAmount,
+        total_amount: totalAmount,
+        // payment_method: paymentData?.method, // Optional: if you store this on the order
+        // payment_transaction_id: paymentData?.transactionId, // Optional
+      };
+
+      try {
+        const order = await createOrderMutation.mutateAsync({
+          items: mappedCartItems,
+          ...orderInfo,
+        });
+
+        if (order && order.order_number) {
+          clearCart();
+          navigate(`/order-confirmation?orderNumber=${order.order_number}`);
+        } else {
+          // This case might happen if the mutation doesn't return the order_number as expected
+           console.error("Order created but order_number is missing in response:", order);
+           alert("Order placed, but there was an issue retrieving your order number. Please check your email or order history.");
+           clearCart(); // Still clear cart and navigate to a generic success or home
+           navigate('/');
+        }
+      } catch (error: any) {
+        console.error("Error placing order:", error);
+        alert(`Failed to place order: ${error.message || 'An unexpected error occurred.'}`);
+      } finally {
+        setIsPlacingOrder(false);
+      }
     }
   };
 
@@ -83,12 +152,14 @@ const Checkout = () => {
                   shippingData={shippingData}
                   paymentData={paymentData}
                   onBack={() => setCurrentStep(2)}
-                  onPlaceOrder={() => handleStepComplete({})}
+                  onPlaceOrder={() => handleStepComplete({})} // Data for step 3 is already collected
+                  isPlacingOrder={isPlacingOrder}
                 />
               )}
             </div>
             
-            <OrderSummary cart={cart} />
+            {/* OrderSummary can take shippingData to display selected shipping option cost */}
+            <OrderSummary cart={cart} shippingCost={shippingData?.shippingOption ? (shippingOptions.find(opt => opt.id === shippingData.shippingOption)?.price || 0) : 0} />
           </div>
         </div>
       </main>

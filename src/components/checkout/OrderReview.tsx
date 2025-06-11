@@ -1,18 +1,21 @@
 
 import React from 'react';
+import { Loader2 } from 'lucide-react';
 
 interface OrderReviewProps {
   shippingData: any;
   paymentData: any;
   onBack: () => void;
   onPlaceOrder: () => void;
+  isPlacingOrder?: boolean;
 }
 
 const OrderReview: React.FC<OrderReviewProps> = ({ 
   shippingData, 
   paymentData, 
   onBack, 
-  onPlaceOrder 
+  onPlaceOrder,
+  isPlacingOrder = false,
 }) => {
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
@@ -49,15 +52,24 @@ const OrderReview: React.FC<OrderReviewProps> = ({
       <div className="flex gap-4 mt-8">
         <button
           onClick={onBack}
-          className="flex-1 border border-naaz-green text-naaz-green py-3 rounded-lg hover:bg-naaz-green/5 transition-colors"
+          className="flex-1 border border-naaz-green text-naaz-green py-3 rounded-lg hover:bg-naaz-green/5 transition-colors disabled:opacity-50"
+          disabled={isPlacingOrder}
         >
           Back to Payment
         </button>
         <button
           onClick={onPlaceOrder}
-          className="flex-1 bg-naaz-green text-white py-3 rounded-lg hover:bg-naaz-green/90 transition-colors"
+          className="flex-1 bg-naaz-green text-white py-3 rounded-lg hover:bg-naaz-green/90 transition-colors disabled:opacity-50 flex items-center justify-center"
+          disabled={isPlacingOrder}
         >
-          Place Order
+          {isPlacingOrder ? (
+            <>
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+              Placing Order...
+            </>
+          ) : (
+            'Place Order'
+          )}
         </button>
       </div>
     </div>

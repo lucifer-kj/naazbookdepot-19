@@ -1,5 +1,6 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'sonner';
 import AdminSidebar from './components/AdminSidebar';
 import AdminHeader from './components/AdminHeader';
 import Overview from './pages/Overview';
@@ -23,6 +24,7 @@ const Admin: React.FC = () => {
       <div className="flex-1 flex flex-col">
         <AdminHeader />
         <main className="flex-1 p-6">
+          <Toaster richColors position="top-right" />
           <Routes>
             <Route path="/login" element={<AdminLoginUI />} />
             <Route path="/2fa" element={<OTPPage />} />

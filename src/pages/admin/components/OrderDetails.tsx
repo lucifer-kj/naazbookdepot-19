@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, AlertTriangle, ArrowLeft, ShoppingCart, User, Truck, CreditCardIcon } from 'lucide-react';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 
 const ORDER_STATUSES = [
   'pending',
@@ -65,10 +66,10 @@ const OrderDetails: React.FC = () => {
     if (!orderId || !selectedStatus) return;
     try {
       await updateStatusMutation.mutateAsync({ orderId, status: selectedStatus });
-      alert('Order status updated successfully!');
+      toast.success('Order status updated successfully!');
       // Data will be refetched by query invalidation in the hook
     } catch (err: any) {
-      alert(`Failed to update order status: ${err.message}`);
+      toast.error(`Failed to update order status: ${err.message}`);
       console.error("Error updating status:", err);
     }
   };

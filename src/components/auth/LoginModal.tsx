@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { X, Eye, EyeOff, Mail, Lock, User, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/context/AuthContext';
+import { toast } from 'sonner';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -73,30 +74,50 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
     if (!validateForm()) return;
 
     setIsLoading(true);
-    try {
-      let success = false;
-      if (isLogin) {
-        success = await login(formData.email, formData.password);
-      } else {
-        success = await register(formData);
-      }
+    setErrors({}); // Clear previous errors
 
-      if (success) {
-        onClose();
-        setFormData({
-          name: '',
-          email: '',
-          phone: '',
-          password: '',
-          confirmPassword: '',
-          newsletter: true,
-          rememberMe: false
-        });
+    try {
+      if (isLogin) {
+        const result = await login(formData.email, formData.password);
+        if (result.success) {
+          toast.success('Logged in successfully!');
+          onClose();
+          // Reset form fields
+          setFormData({ name: '', email: '', phone: '', password: '', confirmPassword: '', newsletter: true, rememberMe: false });
+        } else {
+          setErrors({ general: result.error?.message || 'Invalid credentials. Please try again.' });
+        }
       } else {
-        setErrors({ general: 'Invalid credentials. Please try again.' });
+        // Register
+        const result = await register({
+          email: formData.email,
+          password: formData.password,
+          name: formData.name,
+          phone: formData.phone, // Ensure AuthContext's register handles this
+          // newsletter: formData.newsletter, // Ensure AuthContext's register handles this
+        });
+
+        if (result.success) {
+          if (result.requiresConfirmation) {
+            // Don't close modal, show confirmation message
+            setErrors({ general: 'Registration successful! Please check your email to confirm your account.' });
+            // Optionally, you could clear password fields here for security
+            setFormData(prev => ({ ...prev, password: '', confirmPassword: ''}));
+             toast.info('Registration successful! Please check your email to confirm your account.');
+          } else {
+            // Auto-login or simple success message
+            toast.success('Registration successful! You are now logged in.'); // Or "Please log in." if no auto-login
+            onClose();
+             // Reset form fields
+            setFormData({ name: '', email: '', phone: '', password: '', confirmPassword: '', newsletter: true, rememberMe: false });
+          }
+        } else {
+          setErrors({ general: result.error?.message || 'Registration failed. Please try again.' });
+        }
       }
-    } catch (error) {
-      setErrors({ general: 'An error occurred. Please try again.' });
+    } catch (error: any) {
+      console.error("Submit error:", error);
+      setErrors({ general: error.message || 'An unexpected error occurred. Please try again.' });
     } finally {
       setIsLoading(false);
     }

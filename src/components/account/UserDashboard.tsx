@@ -1,17 +1,70 @@
 
-import React from 'react';
-import { Package, Heart, MapPin, Settings, ShoppingBag, User, Star, TrendingUp } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Package, Heart, MapPin, Settings, ShoppingBag, User, Star, TrendingUp, LogOut, Edit3, Loader2, AlertTriangle } from 'lucide-react';
 import { useAuth } from '@/lib/context/AuthContext';
 import { Button } from '@/components/ui/button';
+import { useUserOrders } from '@/lib/hooks/useOrders';
+import { format } from 'date-fns';
+import { toast } from 'sonner';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 const UserDashboard: React.FC = () => {
-  const { user, orders } = useAuth();
+  const { user, logout, updateProfile, isLoading: isAuthLoading } = useAuth();
+  const { data: userOrders, isLoading: isLoadingOrders, error: ordersError } = useUserOrders();
 
-  if (!user) return null;
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [profileFormData, setProfileFormData] = useState({ full_name: '', phone: '' });
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
 
-  const recentOrders = orders.slice(0, 3);
-  const totalSpent = orders.reduce((sum, order) => sum + order.total, 0);
-  const completedOrders = orders.filter(order => order.status === 'delivered').length;
+
+  useEffect(() => {
+    if (user) {
+      setProfileFormData({
+        full_name: user.profile?.full_name || user.user_metadata?.full_name || '',
+        phone: user.phone || user.user_metadata?.phone || '',
+      });
+    }
+  }, [user, isEditingProfile]);
+
+
+  if (!user) return null; // Should be handled by parent Account page redirecting if not authenticated
+
+  const recentOrders = userOrders?.slice(0, 3) || [];
+  const totalSpent = userOrders?.reduce((sum, order) => sum + (order.total_amount || 0), 0) || 0;
+  const completedOrders = userOrders?.filter(order => order.status === 'delivered').length || 0;
+
+  const handleLogout = async () => {
+    toast.promise(logout(), {
+      loading: 'Logging out...',
+      success: 'Logged out successfully!',
+      error: 'Failed to log out. Please try again.',
+    });
+    // Navigation will be handled by Account.tsx due to isAuthenticated becoming false
+  };
+
+  const handleProfileFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setProfileFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleProfileUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsUpdatingProfile(true);
+    const result = await updateProfile({
+      full_name: profileFormData.full_name,
+      // phone: profileFormData.phone, // Assuming phone can be updated via profile table
+    });
+
+    if (result.success) {
+      toast.success('Profile updated successfully!');
+      setIsEditingProfile(false);
+    } else {
+      toast.error(`Error updating profile: ${result.error?.message || 'Unknown error'}`);
+    }
+    setIsUpdatingProfile(false);
+  };
+
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-8">
@@ -20,22 +73,19 @@ const UserDashboard: React.FC = () => {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="text-2xl md:text-3xl font-playfair font-bold mb-2">
-              Welcome back, {user.name}!
+              Welcome back, {user.profile?.full_name || user.user_metadata?.full_name || user.email}!
             </h1>
             <p className="text-white/90 font-arabic text-lg mb-1">
               السلام عليكم ورحمة الله وبركاته
             </p>
             <p className="text-white/80 text-sm">
-              Member since {new Date(user.joinDate).toLocaleDateString('en-US', { 
-                year: 'numeric', 
-                month: 'long' 
-              })}
+              Member since {format(new Date(user.created_at), "MMMM yyyy")}
             </p>
           </div>
           <div className="mt-4 md:mt-0 text-center">
             <div className="bg-white/10 rounded-lg p-4 backdrop-blur-sm">
               <div className="text-2xl font-bold">₹{totalSpent.toLocaleString()}</div>
-              <div className="text-sm text-white/80">Total Spent</div>
+              <div className="text-sm text-white/80">Total Spent (Real)
             </div>
           </div>
         </div>

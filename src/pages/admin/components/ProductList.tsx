@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { useProducts, useDeleteProduct, ProductWithImages } from '@/lib/hooks/useProducts';
 import { useNavigate } from 'react-router-dom';
 import { AlertTriangle, Loader2, PlusCircle, Edit, Trash2, Eye } from 'lucide-react';
+import { toast } from 'sonner';
 
 const ProductList: React.FC = () => {
   const navigate = useNavigate();
@@ -13,12 +14,10 @@ const ProductList: React.FC = () => {
     if (window.confirm(`Are you sure you want to delete "${productName}"? This action cannot be undone.`)) {
       deleteProductMutation.mutate(productId, {
         onSuccess: () => {
-          // Optionally show a success notification
-          alert(`Product "${productName}" deleted successfully.`);
+          toast.success(`Product "${productName}" deleted successfully.`);
         },
-        onError: (err) => {
-          // Optionally show an error notification
-          alert(`Error deleting product: ${err.message}`);
+        onError: (err: Error) => {
+          toast.error(`Error deleting product: ${err.message}`);
         }
       });
     }

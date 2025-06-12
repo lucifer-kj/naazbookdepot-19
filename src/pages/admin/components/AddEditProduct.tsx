@@ -6,10 +6,8 @@ import { useCategories, Category } from '@/lib/hooks/useCategories';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import { Loader2, UploadCloud, XCircle } from 'lucide-react'; // XCircle and UploadCloud might be unused here now
+import { Label } from '@/components/ui/lable';
+import { Loader2, UploadCloud, XCircle } from 'lucide-react';
 import type { TablesInsert, TablesUpdate, Tables } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
 import BookDetailsFormSection from './formSections/BookDetailsFormSection';
@@ -28,12 +26,10 @@ const initialProductData: ProductFormState = {
   name: '',
   description: '',
   price: 0,
-  category_id: undefined,
+  category_id: null,
   sku: '',
   tags: [],
   tags_string: '',
-  stock_quantity: 0,
-  low_stock_threshold: 5,
   is_active: true,
   slug: '',
   author: '',
@@ -41,10 +37,9 @@ const initialProductData: ProductFormState = {
   publisher: '',
   publication_year: null,
   language: 'English',
-  page_count: null,
-  dimensions: '',
-  weight: null,
-  // shop_type: 'islamic-books', // Default or make it selectable
+  pages: null,
+  dimensions_json: null,
+  weight_grams: null,
 };
 
 
@@ -54,13 +49,13 @@ const AddEditProduct: React.FC = () => {
 
   const [productData, setProductData] = useState<ProductFormState>(initialProductData);
   const [newImages, setNewImages] = useState<File[]>([]);
-  const [existingImages, setExistingImages] = useState<Tables<'product_images'>[]>([]);
+  const [existingImages, setExistingImages] = useState<Tables<'product_images', 'Row'>[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Data fetching hooks
-  const { data: categories, isLoading: isLoadingCategories } = useCategories(); // Assuming 'islamic-books' or make it dynamic
+  const { data: categories, isLoading: isLoadingCategories } = useCategories();
   const { data: fetchedProduct, isLoading: isLoadingProduct, error: productError } = useProductById(productId);
 
   // Mutation hooks
@@ -73,12 +68,10 @@ const AddEditProduct: React.FC = () => {
         name: fetchedProduct.name || '',
         description: fetchedProduct.description || '',
         price: fetchedProduct.price || 0,
-        category_id: fetchedProduct.category_id || undefined,
+        category_id: fetchedProduct.category_id || null,
         sku: fetchedProduct.sku || '',
         tags: fetchedProduct.tags || [],
         tags_string: (fetchedProduct.tags || []).join(', '),
-        stock_quantity: fetchedProduct.stock_quantity || 0,
-        low_stock_threshold: fetchedProduct.low_stock_threshold || 5,
         is_active: fetchedProduct.is_active === null ? true : fetchedProduct.is_active,
         slug: fetchedProduct.slug || '',
         author: fetchedProduct.author || '',
@@ -86,9 +79,9 @@ const AddEditProduct: React.FC = () => {
         publisher: fetchedProduct.publisher || '',
         publication_year: fetchedProduct.publication_year || null,
         language: fetchedProduct.language || 'English',
-        page_count: fetchedProduct.page_count || null,
-        dimensions: fetchedProduct.dimensions || '',
-        weight: fetchedProduct.weight || null,
+        pages: fetchedProduct.pages || null,
+        dimensions_json: fetchedProduct.dimensions_json || null,
+        weight_grams: fetchedProduct.weight_grams || null,
       });
       setExistingImages(fetchedProduct.product_images || []);
     }
@@ -96,24 +89,21 @@ const AddEditProduct: React.FC = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
-
     if (type === 'checkbox') {
-        const checked = (e.target as HTMLInputElement).checked;
-        setProductData(prev => ({ ...prev, [name]: checked }));
+      const checked = (e.target as HTMLInputElement).checked;
+      setProductData(prev => ({ ...prev, [name]: checked }));
     } else if (type === 'number') {
-        setProductData(prev => ({ ...prev, [name]: value === '' ? null : parseFloat(value) }));
+      setProductData(prev => ({ ...prev, [name]: value === '' ? null : parseFloat(value) }));
+    } else {
+      setProductData(prev => ({ ...prev, [name]: value }));
     }
-    else {
-        setProductData(prev => ({ ...prev, [name]: value }));
-    }
-    // Clear error for this field
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
   };
 
-  const handleCategoryChange = (value: string) => {
-    setProductData(prev => ({ ...prev, category_id: parseInt(value, 10) }));
+  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setProductData(prev => ({ ...prev, category_id: e.target.value }));
     if (errors.category_id) {
       setErrors(prev => ({ ...prev, category_id: '' }));
     }
@@ -123,7 +113,6 @@ const AddEditProduct: React.FC = () => {
     if (e.target.files) {
       const filesArray = Array.from(e.target.files);
       setNewImages(prev => [...prev, ...filesArray]);
-
       const newPreviews = filesArray.map(file => URL.createObjectURL(file));
       setImagePreviews(prev => [...prev, ...newPreviews]);
     }
@@ -133,16 +122,14 @@ const AddEditProduct: React.FC = () => {
     setNewImages(prev => prev.filter((_, i) => i !== index));
     setImagePreviews(prev => {
       const updatedPreviews = prev.filter((_, i) => i !== index);
-      updatedPreviews.forEach(preview => URL.revokeObjectURL(preview)); // Clean up old preview
+      updatedPreviews.forEach(preview => URL.revokeObjectURL(preview));
       return updatedPreviews;
     });
   };
 
-  const removeExistingImage = async (imageId: number, imageUrl: string) => {
+  const removeExistingImage = async (imageId: string, imageUrl: string) => {
     if (!window.confirm("Are you sure you want to delete this image? This is permanent.")) return;
-
     try {
-      // 1. Extract path from URL for storage deletion
       let storagePath = '';
       try {
         const url = new URL(imageUrl);
@@ -156,37 +143,27 @@ const AddEditProduct: React.FC = () => {
       } catch (e: any) {
         console.error("Error parsing image URL for storage deletion:", imageUrl, e);
         toast.error(`Error parsing image URL: ${e.message}. Deletion from storage may fail.`);
-        // Proceed with DB deletion anyway or stop? For now, proceed.
       }
-
-      // 2. Delete from storage if path is valid
       if (storagePath) {
         const { error: storageError } = await supabase.storage.from('product_images').remove([storagePath]);
         if (storageError) {
           console.error('Error deleting image from storage:', storageError);
           toast.error(`Failed to delete image from storage: ${storageError.message}. It might still be listed.`);
-          // Optionally, you might decide to not proceed with DB deletion if storage deletion fails critically
         }
       }
-
-      // 3. Delete from product_images table
       const { error: dbError } = await supabase.from('product_images').delete().eq('id', imageId);
-      if (dbError) { // If DB deletion fails, this is a more critical error.
+      if (dbError) {
         throw dbError;
       }
-
       setExistingImages(prev => prev.filter(img => img.id !== imageId));
       toast.success("Image deleted successfully.");
-
     } catch (error: any) {
       console.error('Error deleting existing image:', error);
       toast.error(`Failed to delete image: ${error.message}`);
     }
   };
 
-
   useEffect(() => {
-    // Clean up image previews on component unmount
     return () => {
       imagePreviews.forEach(preview => URL.revokeObjectURL(preview));
     };
@@ -194,15 +171,11 @@ const AddEditProduct: React.FC = () => {
 
   const validateForm = (data: ProductFormState): Record<string, string> => {
     const newErrors: Record<string, string> = {};
-
     if (!data.name.trim()) {
       newErrors.name = 'Product name is required.';
     }
     if (data.price === null || data.price === undefined || data.price <= 0) {
       newErrors.price = 'Price must be a positive number.';
-    }
-    if (data.stock_quantity === null || data.stock_quantity === undefined || data.stock_quantity < 0 || !Number.isInteger(data.stock_quantity)) {
-      newErrors.stock_quantity = 'Stock quantity must be a non-negative integer.';
     }
     if (!data.category_id) {
       newErrors.category_id = 'Category is required.';
@@ -213,56 +186,44 @@ const AddEditProduct: React.FC = () => {
         newErrors.publication_year = `Enter a valid year (e.g., 1000 - ${new Date().getFullYear() + 5}).`;
       }
     }
-    // Basic ISBN check (very simplified) - allows empty or basic length check
     if (data.isbn && data.isbn.trim().length > 0 && (data.isbn.trim().length < 10 || data.isbn.trim().length > 13)) {
-        newErrors.isbn = 'ISBN should be 10 or 13 characters long if provided.';
+      newErrors.isbn = 'ISBN should be 10 or 13 characters long if provided.';
     }
-    // Basic slug check
     if (data.slug && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(data.slug)) {
-        newErrors.slug = 'Slug can only contain lowercase letters, numbers, and hyphens (e.g., my-product-slug).';
+      newErrors.slug = 'Slug can only contain lowercase letters, numbers, and hyphens (e.g., my-product-slug).';
     }
-
     return newErrors;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
-
     const formErrors = validateForm(productData);
     if (Object.keys(formErrors).length > 0) {
       setErrors(formErrors);
       setIsSaving(false);
       return;
     }
-    setErrors({}); // Clear previous errors
-
+    setErrors({});
     let currentSlug = productData.slug || generateSlug(productData.name);
-    if (!productData.slug && !productId) { // Only auto-generate slug for new products if not manually set
-        // Potentially check for slug uniqueness here if critical, or rely on DB constraints
-        productData.slug = currentSlug;
+    if (!productData.slug && !productId) {
+      productData.slug = currentSlug;
     }
-
     const payload: TablesInsert<'products'> | TablesUpdate<'products'> = {
       ...productData,
       price: Number(productData.price) || 0,
-      stock_quantity: Number(productData.stock_quantity) || 0,
-      low_stock_threshold: Number(productData.low_stock_threshold) || 0,
       tags: productData.tags_string ? productData.tags_string.split(',').map(tag => tag.trim()).filter(tag => tag) : [],
-      category_id: productData.category_id ? Number(productData.category_id) : null,
+      category_id: productData.category_id || null,
       publication_year: productData.publication_year ? Number(productData.publication_year) : null,
-      page_count: productData.page_count ? Number(productData.page_count) : null,
-      weight: productData.weight ? Number(productData.weight) : null,
-      shop_type: 'islamic-books', // Hardcoded for now, make dynamic if needed
+      pages: productData.pages ? Number(productData.pages) : null,
+      weight_grams: productData.weight_grams ? Number(productData.weight_grams) : null,
+      shop_type: 'islamic-books',
     };
-    // Remove fields not in DB or handled separately
     delete (payload as any).tags_string;
-
-
     try {
       if (productId) {
         await updateProductMutation.mutateAsync({
-          productId: parseInt(productId, 10),
+          productId: Number(productId),
           productData: payload as TablesUpdate<'products'>,
           images: newImages
         });
@@ -286,14 +247,12 @@ const AddEditProduct: React.FC = () => {
   if (isLoadingProduct && productId) return <div className="flex justify-center items-center h-64"><Loader2 className="h-8 w-8 animate-spin text-naaz-green" /> Loading product details...</div>;
   if (productError) return <div className="text-red-500 p-4">Error loading product: {productError.message}</div>;
 
-
   return (
     <div className="p-4 md:p-8 max-w-3xl mx-auto bg-white shadow-lg rounded-lg">
       <h1 className="text-2xl md:text-3xl font-bold text-naaz-green mb-8 text-center">
         {productId ? 'Edit Product' : 'Add New Product'}
       </h1>
       <form onSubmit={handleSubmit} className="space-y-6">
-
         {/* Basic Info */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
@@ -307,12 +266,10 @@ const AddEditProduct: React.FC = () => {
             {errors.slug && <p className="text-sm text-red-500 mt-1">{errors.slug}</p>}
           </div>
         </div>
-
         <div>
           <Label htmlFor="description" className="block text-sm font-medium mb-1">Description</Label>
           <Textarea id="description" name="description" value={productData.description || ''} onChange={handleInputChange} placeholder="Detailed product description" rows={4} className="w-full border rounded-lg px-3 py-2"/>
         </div>
-
         {/* Pricing & Stock */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
@@ -320,32 +277,18 @@ const AddEditProduct: React.FC = () => {
             <Input id="price" name="price" type="number" value={productData.price || ''} onChange={handleInputChange} placeholder="0.00" required min="0" step="0.01" className="w-full border rounded-lg px-3 py-2"/>
             {errors.price && <p className="text-sm text-red-500 mt-1">{errors.price}</p>}
           </div>
-          <div>
-            <Label htmlFor="stock_quantity" className="block text-sm font-medium mb-1">Stock Quantity <span className="text-red-500">*</span></Label>
-            <Input id="stock_quantity" name="stock_quantity" type="number" value={productData.stock_quantity || ''} onChange={handleInputChange} placeholder="0" required min="0" step="1" className="w-full border rounded-lg px-3 py-2"/>
-            {errors.stock_quantity && <p className="text-sm text-red-500 mt-1">{errors.stock_quantity}</p>}
-          </div>
-           <div>
-            <Label htmlFor="low_stock_threshold" className="block text-sm font-medium mb-1">Low Stock Alert</Label>
-            <Input id="low_stock_threshold" name="low_stock_threshold" type="number" value={productData.low_stock_threshold || ''} onChange={handleInputChange} placeholder="5" min="0" step="1" className="w-full border rounded-lg px-3 py-2"/>
-          </div>
         </div>
-
         {/* Category & SKU */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <Label htmlFor="category_id" className="block text-sm font-medium mb-1">Category <span className="text-red-500">*</span></Label>
-            <Select name="category_id" value={productData.category_id?.toString()} onValueChange={handleCategoryChange} required>
-              <SelectTrigger className="w-full border rounded-lg px-3 py-2">
-                <SelectValue placeholder="Select a category" />
-              </SelectTrigger>
-              <SelectContent>
-                {isLoadingCategories && <SelectItem value="loading" disabled>Loading categories...</SelectItem>}
-                {categories?.map((category: Category) => (
-                  <SelectItem key={category.id} value={category.id.toString()}>{category.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <select id="category_id" name="category_id" value={productData.category_id || ''} onChange={handleCategoryChange} required className="w-full border rounded-lg px-3 py-2">
+              <option value="">Select a category</option>
+              {isLoadingCategories && <option value="loading" disabled>Loading categories...</option>}
+              {categories?.map((category: Category) => (
+                <option key={category.id} value={category.id}>{category.name}</option>
+              ))}
+            </select>
             {errors.category_id && <p className="text-sm text-red-500 mt-1">{errors.category_id}</p>}
           </div>
           <div>
@@ -353,34 +296,29 @@ const AddEditProduct: React.FC = () => {
             <Input id="sku" name="sku" value={productData.sku || ''} onChange={handleInputChange} placeholder="Product SKU" className="w-full border rounded-lg px-3 py-2"/>
           </div>
         </div>
-
         <BookDetailsFormSection
           productData={productData}
           handleInputChange={handleInputChange}
           errors={errors}
         />
-
         {/* Tags & Status */}
         <div>
           <Label htmlFor="tags_string" className="block text-sm font-medium mb-1">Tags</Label>
           <Input id="tags_string" name="tags_string" value={productData.tags_string || ''} onChange={handleInputChange} placeholder="Comma, separated, tags" className="w-full border rounded-lg px-3 py-2"/>
           <p className="text-xs text-gray-500 mt-1">Use commas to separate tags.</p>
         </div>
-
         <div className="flex items-center space-x-2">
-          <Checkbox id="is_active" name="is_active" checked={productData.is_active === null ? true : productData.is_active} onCheckedChange={(checked) => setProductData(prev => ({...prev, is_active: Boolean(checked)}))} />
+          <input id="is_active" name="is_active" type="checkbox" checked={productData.is_active === null ? true : productData.is_active} onChange={handleInputChange} />
           <Label htmlFor="is_active" className="text-sm font-medium">Product is Active</Label>
         </div>
-
         <ProductImageManagement
           existingImages={existingImages}
-          newImages={newImages} // Pass newImages if ProductImageManagement needs to know about them (e.g. for conditional rendering)
+          newImages={newImages}
           imagePreviews={imagePreviews}
           onImageChange={handleImageChange}
           onRemoveNewImage={removeNewImage}
-          onRemoveExistingImage={removeExistingImage}
+          onRemoveExistingImage={(imageId, imageUrl) => removeExistingImage(String(imageId), imageUrl)}
         />
-
         {/* Actions */}
         <div className="flex items-center justify-end space-x-4 pt-4">
            <Button type="button" variant="outline" onClick={() => navigate('/admin/products')} disabled={isSaving}>

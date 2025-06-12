@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
@@ -7,7 +6,8 @@ import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 interface Profile {
   id?: string; // Supabase Auth User ID
   full_name?: string;
-  // Add other profile fields as needed, e.g., phone, avatar_url
+  phone?: string;
+  // Add other profile fields as needed, e.g., avatar_url
 }
 
 // Combine SupabaseUser with our Profile data for the app's user object
@@ -113,11 +113,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (!user) return { success: false, error: { message: "User not authenticated" } };
     setIsLoading(true);
 
-    // 1. Update public.profiles table
+    // 1. Update public.users table (replace 'users' with your actual table name if different)
     const { data: profileUpdateData, error: profileUpdateError } = await supabase
-      .from('profiles')
+      .from('users')
       .update({ full_name: profileData.full_name /* other fields */ })
-      .eq('id', user.id) // Assuming user.id is the foreign key to profiles.id
+      .eq('id', user.id) // Assuming user.id is the foreign key to users.id
       .select()
       .single();
 

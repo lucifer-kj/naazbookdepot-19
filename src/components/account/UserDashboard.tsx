@@ -1,8 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
-import { Package, Heart, MapPin, Settings, Star, TrendingUp, Loader2, AlertTriangle, ShoppingBag } from 'lucide-react'; // Removed unused icons like LogOut, Edit3
+import { Package, Heart, MapPin, Settings, Star, TrendingUp, Loader2, AlertTriangle, ShoppingBag } from 'lucide-react';
 import { useAuth } from '@/lib/context/AuthContext';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge'; // <-- Correct Badge import
 import { useUserOrders } from '@/lib/hooks/useOrders';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -56,7 +56,7 @@ const UserDashboard: React.FC = () => {
           <div className="mt-4 md:mt-0 text-center">
             <div className="bg-white/10 rounded-lg p-4 backdrop-blur-sm">
               <div className="text-2xl font-bold">₹{totalSpent.toLocaleString()}</div>
-              <div className="text-sm text-white/80">Total Spent (Real)
+              <div className="text-sm text-white/80">Total Spent (Real)</div>
             </div>
           </div>
         </div>
@@ -70,7 +70,7 @@ const UserDashboard: React.FC = () => {
               <Package className="text-naaz-green" size={24} />
             </div>
             <div className="ml-4">
-              <div className="text-2xl font-bold text-gray-900">{orders.length}</div>
+              <div className="text-2xl font-bold text-gray-900">{userOrders?.length || 0}</div>
               <div className="text-sm text-gray-600">Total Orders</div>
             </div>
           </div>
@@ -94,7 +94,7 @@ const UserDashboard: React.FC = () => {
               <Heart className="text-naaz-gold" size={24} />
             </div>
             <div className="ml-4">
-                <div className="text-2xl font-bold text-gray-900">{userOrders?.length || 0}</div> {/* Corrected this line */}
+              <div className="text-2xl font-bold text-gray-900">{userOrders?.length || 0}</div>
               <div className="text-sm text-gray-600">Wishlist Items</div>
             </div>
           </div>
@@ -164,8 +164,8 @@ const UserDashboard: React.FC = () => {
             recentOrders={recentOrders}
             isLoading={isLoadingOrders}
             error={ordersError}
-            onViewOrder={(orderId) => navigate(`/account/orders/${orderId}`)} // Example navigation
-            onViewAllOrders={() => navigate('/account/orders')} // Example navigation
+            onViewOrder={(orderId) => navigate(`/account/orders/${orderId}`)}
+            onViewAllOrders={() => navigate('/account/orders')}
           />
         </div>
       </div>
@@ -178,7 +178,6 @@ const UserDashboard: React.FC = () => {
         updateProfile={updateProfile}
         isAuthLoading={isAuthLoading}
       />
-
     </div>
   );
 };

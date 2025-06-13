@@ -17,6 +17,7 @@ const AdminPromoCodes = () => {
     discount_value: '',
     minimum_order_value: '',
     max_uses: '',
+    valid_from: '',
     valid_until: '',
   });
 
@@ -29,6 +30,7 @@ const AdminPromoCodes = () => {
       discount_value: parseFloat(formData.discount_value),
       minimum_order_value: formData.minimum_order_value ? parseFloat(formData.minimum_order_value) : 0,
       max_uses: formData.max_uses ? parseInt(formData.max_uses) : null,
+      valid_from: formData.valid_from ? new Date(formData.valid_from).toISOString() : new Date().toISOString(),
       valid_until: formData.valid_until ? new Date(formData.valid_until).toISOString() : null,
       is_active: true,
     };
@@ -42,6 +44,7 @@ const AdminPromoCodes = () => {
         discount_value: '',
         minimum_order_value: '',
         max_uses: '',
+        valid_from: '',
         valid_until: '',
       });
     } catch (error) {
@@ -141,6 +144,16 @@ const AdminPromoCodes = () => {
                     value={formData.max_uses}
                     onChange={(e) => setFormData(prev => ({ ...prev, max_uses: e.target.value }))}
                     placeholder="100"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Valid From
+                  </label>
+                  <Input
+                    type="datetime-local"
+                    value={formData.valid_from}
+                    onChange={(e) => setFormData(prev => ({ ...prev, valid_from: e.target.value }))}
                   />
                 </div>
                 <div>

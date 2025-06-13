@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { X, Eye, EyeOff, Mail, Lock, User, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -74,14 +73,14 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
 
     setIsLoading(true);
     try {
-      let success = false;
+      let result;
       if (isLogin) {
-        success = await login(formData.email, formData.password);
+        result = await login(formData.email, formData.password);
       } else {
-        success = await register(formData);
+        result = await register(formData);
       }
 
-      if (success) {
+      if (!result.error) {
         onClose();
         setFormData({
           name: '',
@@ -93,7 +92,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
           rememberMe: false
         });
       } else {
-        setErrors({ general: 'Invalid credentials. Please try again.' });
+        setErrors({ general: result.error?.message || 'An error occurred. Please try again.' });
       }
     } catch (error) {
       setErrors({ general: 'An error occurred. Please try again.' });

@@ -11,6 +11,8 @@ interface UserRole {
 
 interface AuthUser extends User {
   roles?: UserRole[];
+  name?: string;
+  joinDate?: string;
 }
 
 interface Address {
@@ -70,7 +72,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [orders] = useState<Order[]>([]);
   const [addresses, setAddresses] = useState<Address[]>([]);
 
-  const fetchUserRoles = async (userId: string) => {
+  const fetchUserRoles = async (userId: string): Promise<UserRole[]> => {
     const { data: roles, error } = await supabase
       .from('user_roles')
       .select('*')
@@ -81,7 +83,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return [];
     }
 
-    return roles || [];
+    return (roles || []).map(role => ({
+      ...role,
+      role: role.role as 'super_admin' | 'admin' | 'inventory_manager' | 'customer'
+    }));
   };
 
   const login = async (email: string, password: string) => {
@@ -161,9 +166,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         
         if (session?.user) {
           const roles = await fetchUserRoles(session.user.id);
-          const userWithRoles = {
+          const userWithRoles: AuthUser = {
             ...session.user,
-            roles: roles
+            roles: roles,
+            name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
+            joinDate: session.user.created_at
           };
           setUser(userWithRoles);
         } else {
@@ -180,9 +187,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       if (session?.user) {
         const roles = await fetchUserRoles(session.user.id);
-        const userWithRoles = {
+        const userWithRoles: AuthUser = {
           ...session.user,
-          roles: roles
+          roles: roles,
+          name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
+          joinDate: session.user.created_at
         };
         setUser(userWithRoles);
       }

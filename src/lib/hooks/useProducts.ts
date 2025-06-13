@@ -1,31 +1,24 @@
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import type { Tables, TablesInsert } from '@/integrations/supabase/types';
+import type { Tables } from '@/integrations/supabase/types';
 
 export type Product = Tables<'products'>;
-export type ProductWithImages = Product & {
-  product_images?: Tables<'product_images'>[];
+export type ProductWithCategory = Product & {
   categories?: Tables<'categories'>;
 };
 
-export const useProducts = (shopType?: string, categoryId?: string) => {
+export const useProducts = (categoryId?: string) => {
   return useQuery({
-    queryKey: ['products', shopType, categoryId],
+    queryKey: ['products', categoryId],
     queryFn: async () => {
       let query = supabase
         .from('products')
         .select(`
           *,
-          product_images(*),
           categories(*)
         `)
-        .eq('is_active', true)
         .order('created_at', { ascending: false });
-
-      if (shopType) {
-        query = query.eq('shop_type', shopType);
-      }
 
       if (categoryId) {
         query = query.eq('category_id', categoryId);
@@ -34,53 +27,28 @@ export const useProducts = (shopType?: string, categoryId?: string) => {
       const { data, error } = await query;
       
       if (error) throw error;
-      return data as ProductWithImages[];
+      return data as ProductWithCategory[];
     },
   });
 };
 
-export const useProduct = (slug: string) => {
+export const useProduct = (id: string) => {
   return useQuery({
-    queryKey: ['product', slug],
+    queryKey: ['product', id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('products')
         .select(`
           *,
-          product_images(*),
-          categories(*),
-          product_variants(*),
-          product_reviews(*, users(full_name))
+          categories(*)
         `)
-        .eq('slug', slug)
-        .eq('is_active', true)
+        .eq('id', id)
         .single();
 
       if (error) throw error;
-      return data;
+      return data as ProductWithCategory;
     },
-  });
-};
-
-export const useFeaturedProducts = (limit = 8) => {
-  return useQuery({
-    queryKey: ['featured-products', limit],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('products')
-        .select(`
-          *,
-          product_images(*),
-          categories(*)
-        `)
-        .eq('is_active', true)
-        .eq('is_featured', true)
-        .order('created_at', { ascending: false })
-        .limit(limit);
-
-      if (error) throw error;
-      return data as ProductWithImages[];
-    },
+    enabled: !!id,
   });
 };
 
@@ -94,15 +62,13 @@ export const useSearchProducts = (query: string) => {
         .from('products')
         .select(`
           *,
-          product_images(*),
           categories(*)
         `)
-        .eq('is_active', true)
-        .or(`name.ilike.%${query}%,author.ilike.%${query}%,isbn.ilike.%${query}%,tags.cs.{${query}}`)
+        .or(`name.ilike.%${query}%,description.ilike.%${query}%`)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as ProductWithImages[];
+      return data as ProductWithCategory[];
     },
     enabled: !!query,
   });

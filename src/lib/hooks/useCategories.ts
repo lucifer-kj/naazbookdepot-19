@@ -5,22 +5,15 @@ import type { Tables } from '@/integrations/supabase/types';
 
 export type Category = Tables<'categories'>;
 
-export const useCategories = (shopType?: string) => {
+export const useCategories = () => {
   return useQuery({
-    queryKey: ['categories', shopType],
+    queryKey: ['categories'],
     queryFn: async () => {
-      let query = supabase
+      const { data, error } = await supabase
         .from('categories')
         .select('*')
-        .eq('is_active', true)
-        .order('sort_order', { ascending: true });
+        .order('name', { ascending: true });
 
-      if (shopType) {
-        query = query.eq('shop_type', shopType);
-      }
-
-      const { data, error } = await query;
-      
       if (error) throw error;
       return data as Category[];
     },
@@ -35,11 +28,11 @@ export const useCategory = (slug: string) => {
         .from('categories')
         .select('*')
         .eq('slug', slug)
-        .eq('is_active', true)
         .single();
 
       if (error) throw error;
       return data as Category;
     },
+    enabled: !!slug,
   });
 };

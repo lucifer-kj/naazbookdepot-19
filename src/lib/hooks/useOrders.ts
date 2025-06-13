@@ -2,7 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/context/AuthContext';
-import type { Tables, TablesInsert } from '@/integrations/supabase/types';
+import type { Tables } from '@/integrations/supabase/types';
 
 export type Order = Tables<'orders'>;
 export type OrderItem = Tables<'order_items'>;
@@ -67,40 +67,22 @@ export const useCreateOrder = () => {
     mutationFn: async (orderData: {
       items: Array<{
         product_id: string;
-        variant_id?: string;
         quantity: number;
-        unit_price: number;
-        product_name: string;
-        product_sku?: string;
-        variant_name?: string;
+        price: number;
       }>;
-      subtotal: number;
-      total_amount: number;
-      shipping_address: any;
-      billing_address: any;
-      customer_email?: string;
-      customer_phone?: string;
-      shipping_amount?: number;
-      tax_amount?: number;
-      discount_amount?: number;
+      total: number;
     }) => {
-      const { items, ...orderInfo } = orderData;
+      if (!user) throw new Error('User not authenticated');
 
-      // Create the order with a temporary order_number that will be replaced by trigger
+      const { items, total } = orderData;
+
+      // Create the order
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
-          order_number: `TEMP-${Date.now()}`, // Temporary value, will be replaced by trigger
-          user_id: user?.id || null,
-          subtotal: orderInfo.subtotal,
-          total_amount: orderInfo.total_amount,
-          shipping_address: orderInfo.shipping_address,
-          billing_address: orderInfo.billing_address,
-          customer_email: orderInfo.customer_email,
-          customer_phone: orderInfo.customer_phone,
-          shipping_amount: orderInfo.shipping_amount || 0,
-          tax_amount: orderInfo.tax_amount || 0,
-          discount_amount: orderInfo.discount_amount || 0,
+          user_id: user.id,
+          total,
+          status: 'pending',
         })
         .select()
         .single();
@@ -111,13 +93,8 @@ export const useCreateOrder = () => {
       const orderItems = items.map(item => ({
         order_id: order.id,
         product_id: item.product_id,
-        variant_id: item.variant_id,
-        product_name: item.product_name,
-        product_sku: item.product_sku,
-        variant_name: item.variant_name,
-        unit_price: item.unit_price,
         quantity: item.quantity,
-        total_price: item.unit_price * item.quantity,
+        price: item.price,
       }));
 
       const { error: itemsError } = await supabase

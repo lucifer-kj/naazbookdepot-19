@@ -1,171 +1,215 @@
 
-import React from 'react';
-import { useParams } from 'react-router-dom';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
-import ProductDisplay from '../components/product/ProductDisplay';
-import { Product } from '../components/product/ProductDisplay';
+import React, { useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Star, ShoppingCart, Heart, ArrowLeft, Plus, Minus } from 'lucide-react';
+import { useProduct } from '@/lib/hooks/useProducts';
+import { useCartContext } from '@/lib/context/CartContext';
+import { useAddToWishlist } from '@/lib/hooks/useWishlist';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 
-// Mock product data for demonstration
-const mockProduct: Product = {
-  id: 1,
-  name: 'The Noble Quran - Arabic with English Translation',
-  description: '<p>This beautifully presented edition of the Noble Quran features the original Arabic text alongside a precise English translation. It includes comprehensive tafsir (commentary) to aid in understanding the deeper meanings of the verses.</p><p>The book is printed on high-quality paper with a luxurious leather-bound cover, making it both functional for daily reading and a beautiful addition to your Islamic book collection.</p><h3>Features:</h3><ul><li>Original Arabic text with English translation</li><li>Comprehensive commentary and tafsir</li><li>Premium leather binding</li><li>Gold-gilded page edges</li><li>Bookmark ribbon</li><li>Index of topics</li></ul>',
-  short_description: 'Elegant edition with Arabic text and English translation, featuring comprehensive commentary.',
-  price: '1500',
-  regular_price: '1800',
-  sale_price: '1500',
-  stock_status: 'instock',
-  average_rating: '4.8',
-  rating_count: 24,
-  quantity_in_stock: 20, // Added missing property
-  categories: [
-    { id: 1, name: 'Books', slug: 'books' },
-    { id: 2, name: 'Quran & Tafsir', slug: 'quran-tafsir' }
-  ],
-  images: [
-    { id: 1, src: '/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png', alt: 'The Noble Quran front cover' },
-    { id: 2, src: '/lovable-uploads/35ff87ed-b986-45b1-9c00-555f9d78c627.png', alt: 'The Noble Quran open pages' },
-    { id: 3, src: '/lovable-uploads/61ad7a88-c8e2-42f6-b3b1-567415b3c17e.png', alt: 'The Noble Quran back cover' }
-  ],
-  attributes: [
-    {
-      name: 'Language',
-      options: ['Arabic-English', 'Arabic-Urdu', 'Arabic-Hindi']
-    },
-    {
-      name: 'Binding',
-      options: ['Leather', 'Hardcover', 'Paperback']
-    }
-  ],
-  variations: [
-    {
-      id: 101,
-      name: 'The Noble Quran - Arabic with English Translation - Leather',
-      price: '1500',
-      stock_status: 'instock',
-      attributes: [
-        { name: 'Language', value: 'Arabic-English' },
-        { name: 'Binding', value: 'Leather' }
-      ]
-    },
-    {
-      id: 102,
-      name: 'The Noble Quran - Arabic with Urdu Translation - Leather',
-      price: '1450',
-      stock_status: 'instock',
-      attributes: [
-        { name: 'Language', value: 'Arabic-Urdu' },
-        { name: 'Binding', value: 'Leather' }
-      ]
-    },
-    {
-      id: 103,
-      name: 'The Noble Quran - Arabic with Hindi Translation - Leather',
-      price: '1450',
-      stock_status: 'outofstock',
-      attributes: [
-        { name: 'Language', value: 'Arabic-Hindi' },
-        { name: 'Binding', value: 'Leather' }
-      ]
-    }
-  ],
-  related_ids: [2, 3, 4]
-};
+const ProductPage = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { data: product, isLoading, error } = useProduct(id!);
+  const { addItem } = useCartContext();
+  const { mutate: addToWishlist } = useAddToWishlist();
+  const [quantity, setQuantity] = useState(1);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
-const mockRelatedProducts: Product[] = [
-  {
-    id: 2,
-    name: 'Tafsir Ibn Kathir',
-    description: 'Comprehensive tafsir of the Quran',
-    price: '2200',
-    stock_status: 'instock',
-    average_rating: '4.9',
-    rating_count: 18,
-    quantity_in_stock: 8, // Added missing property
-    categories: [{ id: 1, name: 'Books', slug: 'books' }],
-    images: [{ id: 1, src: '/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png', alt: 'Tafsir Ibn Kathir' }]
-  },
-  {
-    id: 3,
-    name: 'Quran with Wooden Display Stand',
-    description: 'Beautiful Quran with wooden stand',
-    price: '3500',
-    stock_status: 'instock',
-    average_rating: '4.7',
-    rating_count: 12,
-    quantity_in_stock: 5, // Added missing property
-    categories: [{ id: 1, name: 'Books', slug: 'books' }],
-    images: [{ id: 1, src: '/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png', alt: 'Quran with stand' }]
-  },
-  {
-    id: 4,
-    name: 'Pocket Quran - Travel Size',
-    description: 'Compact Quran for travel',
-    price: '600',
-    stock_status: 'instock',
-    average_rating: '4.5',
-    rating_count: 25,
-    quantity_in_stock: 30, // Added missing property
-    categories: [{ id: 1, name: 'Books', slug: 'books' }],
-    images: [{ id: 1, src: '/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png', alt: 'Travel Quran' }]
-  },
-  {
-    id: 5,
-    name: 'Arabic Calligraphy Quran',
-    description: 'Quran with beautiful calligraphy',
-    price: '1800',
-    stock_status: 'instock',
-    average_rating: '4.8',
-    rating_count: 15,
-    quantity_in_stock: 12, // Added missing property
-    categories: [{ id: 1, name: 'Books', slug: 'books' }],
-    images: [{ id: 1, src: '/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png', alt: 'Calligraphy Quran' }]
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <div className="flex-grow flex items-center justify-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-naaz-green"></div>
+        </div>
+        <Footer />
+      </div>
+    );
   }
-];
 
-const mockReviews = [
-  {
-    id: 1,
-    reviewer_name: 'Ahmed Khan',
-    review: 'Amazing quality and beautiful binding. The translation is accurate and easy to understand.',
-    rating: 5,
-    date_created: '2023-06-15T10:34:23',
-    verified: true
-  },
-  {
-    id: 2,
-    reviewer_name: 'Fatima Rahman',
-    review: 'I purchased this Quran as a gift for my father, and he absolutely loves it. The print quality is excellent, and the commentary is very helpful.',
-    rating: 5,
-    date_created: '2023-05-22T14:12:45',
-    verified: true
-  },
-  {
-    id: 3,
-    reviewer_name: 'Mohammed Ali',
-    review: 'Very good quality overall, but the paper is a bit thin. Otherwise, the translation and commentary are excellent.',
-    rating: 4,
-    date_created: '2023-04-18T09:45:12',
-    verified: true
+  if (error || !product) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <div className="flex-grow flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-naaz-green mb-4">Product Not Found</h2>
+            <button 
+              onClick={() => navigate('/catalog')}
+              className="bg-naaz-green text-white px-6 py-2 rounded-lg hover:bg-naaz-green/90"
+            >
+              Browse Products
+            </button>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
   }
-];
 
-const ProductPage: React.FC = () => {
-  const { productId } = useParams();
-  
-  // In a real app, you would fetch the product based on productId
-  // For demo purposes, we're using mock data
-  
+  const handleAddToCart = () => {
+    addItem({
+      productId: parseInt(product.id),
+      name: product.name,
+      price: product.price.toString(),
+      image: product.images?.[0] || '/placeholder.svg'
+    });
+  };
+
+  const handleBuyNow = () => {
+    handleAddToCart();
+    navigate('/checkout');
+  };
+
+  const handleAddToWishlist = () => {
+    addToWishlist({ productId: product.id });
+  };
+
+  const images = product.images?.length ? product.images : ['/placeholder.svg'];
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-grow">
-        <ProductDisplay 
-          product={mockProduct}
-          relatedProducts={mockRelatedProducts}
-          reviews={mockReviews}
-        />
+      <main className="flex-grow py-8 px-4">
+        <div className="container mx-auto max-w-6xl">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center text-naaz-green hover:text-naaz-gold mb-6"
+          >
+            <ArrowLeft size={20} className="mr-2" />
+            Back
+          </button>
+
+          <div className="grid lg:grid-cols-2 gap-12">
+            {/* Product Images */}
+            <div>
+              <div className="aspect-square mb-4 bg-gray-100 rounded-lg overflow-hidden">
+                <img
+                  src={images[selectedImageIndex]}
+                  alt={product.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              {images.length > 1 && (
+                <div className="flex gap-2">
+                  {images.map((image, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setSelectedImageIndex(index)}
+                      className={`w-16 h-16 rounded-lg overflow-hidden border-2 ${
+                        index === selectedImageIndex ? 'border-naaz-green' : 'border-gray-200'
+                      }`}
+                    >
+                      <img src={image} alt="" className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Product Information */}
+            <div>
+              <h1 className="text-3xl font-playfair font-bold text-naaz-green mb-4">
+                {product.name}
+              </h1>
+
+              <div className="flex items-center mb-4">
+                <div className="flex text-yellow-400 mr-2">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} size={20} className="fill-current" />
+                  ))}
+                </div>
+                <span className="text-gray-600">(4.8) • 124 reviews</span>
+              </div>
+
+              <div className="mb-6">
+                <span className="text-3xl font-bold text-naaz-gold">₹{product.price}</span>
+              </div>
+
+              <div className="mb-6">
+                <h3 className="font-semibold text-naaz-green mb-2">Description</h3>
+                <p className="text-gray-700 leading-relaxed">
+                  {product.description || 'No description available.'}
+                </p>
+              </div>
+
+              <div className="mb-6">
+                <span className={`inline-block px-3 py-1 rounded-full text-sm ${
+                  product.stock > 0 
+                    ? 'bg-green-100 text-green-800' 
+                    : 'bg-red-100 text-red-800'
+                }`}>
+                  {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
+                </span>
+              </div>
+
+              {product.stock > 0 && (
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-naaz-green mb-2">
+                    Quantity
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                      className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                    >
+                      <Minus size={16} />
+                    </button>
+                    <span className="px-4 py-2 border border-gray-300 rounded-lg min-w-[60px] text-center">
+                      {quantity}
+                    </span>
+                    <button
+                      onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
+                      className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                    >
+                      <Plus size={16} />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-4 mb-6">
+                <button
+                  onClick={handleAddToCart}
+                  disabled={product.stock === 0}
+                  className="flex-1 bg-naaz-green text-white py-3 px-6 rounded-lg hover:bg-naaz-green/90 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
+                >
+                  <ShoppingCart size={20} className="mr-2" />
+                  Add to Cart
+                </button>
+                <button
+                  onClick={handleBuyNow}
+                  disabled={product.stock === 0}
+                  className="flex-1 bg-naaz-gold text-white py-3 px-6 rounded-lg hover:bg-naaz-gold/90 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                >
+                  Buy Now
+                </button>
+              </div>
+
+              <button
+                onClick={handleAddToWishlist}
+                className="w-full border border-naaz-green text-naaz-green py-3 px-6 rounded-lg hover:bg-naaz-green/5 transition-colors flex items-center justify-center"
+              >
+                <Heart size={20} className="mr-2" />
+                Add to Wishlist
+              </button>
+            </div>
+          </div>
+
+          {/* Reviews Section */}
+          <div className="mt-16">
+            <h2 className="text-2xl font-playfair font-bold text-naaz-green mb-6">
+              Customer Reviews
+            </h2>
+            <div className="bg-white rounded-lg p-6 shadow-md">
+              <p className="text-gray-600 text-center py-8">
+                Reviews feature coming soon. Be the first to review this product!
+              </p>
+            </div>
+          </div>
+        </div>
       </main>
       <Footer />
     </div>

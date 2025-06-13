@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -9,14 +9,40 @@ import Footer from '../components/Footer';
 import CartEmpty from '@/components/cart/CartEmpty';
 import CartItem from '@/components/cart/CartItem';
 import CartSummary from '@/components/cart/CartSummary';
+import PromoCodeInput from '@/components/cart/PromoCodeInput';
 
 const Cart = () => {
   const { cart, updateQuantity, removeItem, clearCart } = useCartContext();
+  const [appliedPromo, setAppliedPromo] = useState<string>('');
+  const [promoDiscount, setPromoDiscount] = useState<number>(0);
 
   // Calculate cart totals
   const subtotal = cart.subtotal;
   const shipping = cart.items.length > 0 ? 100 : 0;
-  const total = subtotal + shipping;
+  const total = subtotal + shipping - promoDiscount;
+
+  const handleApplyPromo = async (code: string) => {
+    if (!code) {
+      setAppliedPromo('');
+      setPromoDiscount(0);
+      return;
+    }
+
+    // Mock promo code logic - in real app, this would be an API call
+    const validPromoCodes: Record<string, number> = {
+      'SAVE10': subtotal * 0.1,
+      'FIRSTORDER': 100,
+      'STUDENT20': subtotal * 0.2,
+    };
+
+    if (validPromoCodes[code.toUpperCase()]) {
+      setAppliedPromo(code.toUpperCase());
+      setPromoDiscount(validPromoCodes[code.toUpperCase()]);
+    } else {
+      // In real app, show error toast
+      alert('Invalid promo code');
+    }
+  };
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -81,12 +107,23 @@ const Cart = () => {
                     ))}
                   </div>
                 </div>
+
+                {/* Promo Code Section */}
+                <div className="mt-6">
+                  <PromoCodeInput
+                    onApplyPromo={handleApplyPromo}
+                    appliedPromo={appliedPromo}
+                    discount={promoDiscount}
+                  />
+                </div>
               </div>
               
               <CartSummary
                 subtotal={subtotal}
                 shipping={shipping}
                 total={total}
+                discount={promoDiscount}
+                promoCode={appliedPromo}
               />
             </motion.div>
           ) : (

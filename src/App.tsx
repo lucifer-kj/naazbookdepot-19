@@ -17,6 +17,8 @@ import Terms from './pages/Terms';
 import Shipping from './pages/Shipping';
 import Checkout from './pages/Checkout';
 import OrderConfirmation from './pages/OrderConfirmation';
+import ProductPage from './pages/ProductPage';
+import Wishlist from './pages/Wishlist';
 import ComingSoon from './pages/ComingSoon';
 import './index.css';
 
@@ -30,7 +32,9 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/books" element={<Books />} />
               <Route path="/catalog" element={<Catalog />} />
+              <Route path="/product/:id" element={<ProductPage />} />
               <Route path="/cart" element={<Cart />} />
+              <Route path="/wishlist" element={<Wishlist />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/order-confirmation" element={<OrderConfirmation />} />
               <Route path="/account" element={<Account />} />

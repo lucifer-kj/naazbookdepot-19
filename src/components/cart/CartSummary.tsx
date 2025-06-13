@@ -6,9 +6,17 @@ interface CartSummaryProps {
   subtotal: number;
   shipping: number;
   total: number;
+  discount?: number;
+  promoCode?: string;
 }
 
-const CartSummary: React.FC<CartSummaryProps> = ({ subtotal, shipping, total }) => {
+const CartSummary: React.FC<CartSummaryProps> = ({ 
+  subtotal, 
+  shipping, 
+  total, 
+  discount = 0, 
+  promoCode 
+}) => {
   return (
     <div className="bg-white rounded-lg shadow-md p-6 h-fit">
       <h2 className="text-xl font-playfair font-semibold text-naaz-green mb-6">
@@ -24,6 +32,12 @@ const CartSummary: React.FC<CartSummaryProps> = ({ subtotal, shipping, total }) 
           <span>Shipping</span>
           <span>₹{shipping.toFixed(2)}</span>
         </div>
+        {discount > 0 && (
+          <div className="flex justify-between text-green-600">
+            <span>Discount ({promoCode})</span>
+            <span>-₹{discount.toFixed(2)}</span>
+          </div>
+        )}
         <div className="border-t pt-3">
           <div className="flex justify-between font-semibold text-lg">
             <span>Total</span>

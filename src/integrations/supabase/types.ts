@@ -113,24 +113,39 @@ export type Database = {
       }
       orders: {
         Row: {
+          billing_address: Json | null
           created_at: string | null
           id: string
+          notes: string | null
+          order_number: string | null
+          shipping_address: Json | null
           status: string
           total: number
+          tracking_number: string | null
           user_id: string
         }
         Insert: {
+          billing_address?: Json | null
           created_at?: string | null
           id?: string
+          notes?: string | null
+          order_number?: string | null
+          shipping_address?: Json | null
           status: string
           total: number
+          tracking_number?: string | null
           user_id: string
         }
         Update: {
+          billing_address?: Json | null
           created_at?: string | null
           id?: string
+          notes?: string | null
+          order_number?: string | null
+          shipping_address?: Json | null
           status?: string
           total?: number
+          tracking_number?: string | null
           user_id?: string
         }
         Relationships: [
@@ -139,6 +154,44 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_variants: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          price: number | null
+          product_id: string
+          sku: string | null
+          stock: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          price?: number | null
+          product_id: string
+          sku?: string | null
+          stock?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          price?: number | null
+          product_id?: string
+          sku?: string | null
+          stock?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_variants_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
         ]
@@ -208,6 +261,51 @@ export type Database = {
         }
         Relationships: []
       }
+      promo_codes: {
+        Row: {
+          code: string
+          created_at: string | null
+          created_by: string | null
+          current_uses: number | null
+          discount_type: string
+          discount_value: number
+          id: string
+          is_active: boolean | null
+          max_uses: number | null
+          minimum_order_value: number | null
+          valid_from: string | null
+          valid_until: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          created_by?: string | null
+          current_uses?: number | null
+          discount_type: string
+          discount_value: number
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          minimum_order_value?: number | null
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          created_by?: string | null
+          current_uses?: number | null
+          discount_type?: string
+          discount_value?: number
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          minimum_order_value?: number | null
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
           comment: string | null
@@ -250,12 +348,90 @@ export type Database = {
           },
         ]
       }
+      stock_history: {
+        Row: {
+          change_type: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          new_stock: number
+          previous_stock: number
+          product_id: string
+          quantity_change: number
+          reason: string | null
+          variant_id: string | null
+        }
+        Insert: {
+          change_type: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          new_stock: number
+          previous_stock: number
+          product_id: string
+          quantity_change: number
+          reason?: string | null
+          variant_id?: string | null
+        }
+        Update: {
+          change_type?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          new_stock?: number
+          previous_stock?: number
+          product_id?: string
+          quantity_change?: number
+          reason?: string | null
+          variant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_history_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_history_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_order_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

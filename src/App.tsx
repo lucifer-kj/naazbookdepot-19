@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -21,6 +20,13 @@ import OrderConfirmation from './pages/OrderConfirmation';
 import ProductPage from './pages/ProductPage';
 import Wishlist from './pages/Wishlist';
 import ComingSoon from './pages/ComingSoon';
+import AdminRoute from './components/admin/AdminRoute';
+import AdminLogin from './pages/admin/AdminLogin';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminProducts from './pages/admin/AdminProducts';
+import AdminOrders from './pages/admin/AdminOrders';
+import AdminUsers from './pages/admin/AdminUsers';
+import AdminPromoCodes from './pages/admin/AdminPromoCodes';
 import './index.css';
 
 // Create a client
@@ -59,6 +65,34 @@ function App() {
                 <Route path="/shipping" element={<Shipping />} />
                 <Route path="/perfumes" element={<ComingSoon section="perfumes" />} />
                 <Route path="/essentials" element={<ComingSoon section="essentials" />} />
+                
+                {/* Admin Routes */}
+                <Route path="/admin/login" element={<AdminLogin />} />
+                <Route path="/admin/dashboard" element={
+                  <AdminRoute>
+                    <AdminDashboard />
+                  </AdminRoute>
+                } />
+                <Route path="/admin/products" element={
+                  <AdminRoute>
+                    <AdminProducts />
+                  </AdminRoute>
+                } />
+                <Route path="/admin/orders" element={
+                  <AdminRoute>
+                    <AdminOrders />
+                  </AdminRoute>
+                } />
+                <Route path="/admin/users" element={
+                  <AdminRoute>
+                    <AdminUsers />
+                  </AdminRoute>
+                } />
+                <Route path="/admin/promo-codes" element={
+                  <AdminRoute>
+                    <AdminPromoCodes />
+                  </AdminRoute>
+                } />
               </Routes>
             </div>
           </Router>

@@ -109,11 +109,11 @@ html {
 
 /* Enhanced button styles */
 .gold-button {
-  @apply bg-naaz-gold text-naaz-green px-8 py-3 rounded-xl font-bold hover:bg-naaz-gold/90 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl;
+  @apply bg-naaz-gold text-naaz-green px-6 py-3 sm:px-8 rounded-xl font-bold hover:bg-naaz-gold/90 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl text-sm sm:text-base;
 }
 
 .accent-button {
-  @apply border-2 border-white text-white px-8 py-3 rounded-xl font-bold hover:bg-white hover:text-naaz-green transition-all duration-300 transform hover:scale-105;
+  @apply border-2 border-white text-white px-6 py-3 sm:px-8 rounded-xl font-bold hover:bg-white hover:text-naaz-green transition-all duration-300 transform hover:scale-105 text-sm sm:text-base;
 }
 
 /* Glassmorphism enhanced */
@@ -212,16 +212,99 @@ input:focus, textarea:focus, select:focus {
   100% { background-position: 200% 0; }
 }
 
-/* Responsive typography */
-@media (max-width: 640px) {
+/* Mobile-first responsive typography */
+h1 { 
+  @apply text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-playfair font-bold;
+}
+
+h2 { 
+  @apply text-xl sm:text-2xl md:text-3xl lg:text-4xl font-playfair font-bold;
+}
+
+h3 { 
+  @apply text-lg sm:text-xl md:text-2xl font-playfair font-semibold;
+}
+
+/* Container responsive utilities */
+.container-responsive {
+  @apply container mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+/* Mobile navigation enhancements */
+.mobile-menu {
+  @apply fixed inset-0 z-50 bg-naaz-green transform transition-transform duration-300 ease-in-out;
+}
+
+.mobile-menu.closed {
+  @apply translate-x-full;
+}
+
+.mobile-menu.open {
+  @apply translate-x-0;
+}
+
+/* Button responsive adjustments */
+.btn-responsive {
+  @apply px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-base;
+}
+
+/* Grid responsive utilities */
+.grid-responsive {
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6;
+}
+
+/* Card responsive padding */
+.card-responsive {
+  @apply p-4 sm:p-6 lg:p-8;
+}
+
+/* Text responsive sizing */
+.text-responsive {
+  @apply text-sm sm:text-base lg:text-lg;
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 576px) {
   .container {
     padding-left: 1rem;
     padding-right: 1rem;
   }
   
-  h1 { font-size: 2rem; }
-  h2 { font-size: 1.75rem; }
-  h3 { font-size: 1.5rem; }
+  /* Ensure buttons are touch-friendly */
+  button, .btn, .gold-button, .accent-button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Adjust form inputs for mobile */
+  input, textarea, select {
+    font-size: 16px; /* Prevents zoom on iOS */
+    padding: 12px;
+  }
+  
+  /* Mobile typography adjustments */
+  h1 { font-size: 1.875rem; line-height: 2.25rem; }
+  h2 { font-size: 1.5rem; line-height: 2rem; }
+  h3 { font-size: 1.25rem; line-height: 1.75rem; }
+  
+  /* Mobile spacing */
+  .section-spacing {
+    @apply py-8 sm:py-12 lg:py-16;
+  }
+}
+
+/* Tablet adjustments */
+@media (min-width: 577px) and (max-width: 768px) {
+  .tablet-adjust {
+    @apply grid-cols-2;
+  }
+}
+
+/* Desktop enhancements */
+@media (min-width: 1024px) {
+  .desktop-enhance {
+    @apply hover:scale-105;
+  }
 }
 
 /* Accessibility improvements */
@@ -238,4 +321,42 @@ input:focus, textarea:focus, select:focus {
   .text-naaz-green { color: #000 !important; }
   .bg-naaz-cream { background-color: #fff !important; }
   .border-naaz-gold { border-color: #000 !important; }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  * {
+    background: transparent !important;
+    color: black !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+}
+
+/* Focus visible for better accessibility */
+.focus-visible:focus-visible {
+  outline: 2px solid #d3af37;
+  outline-offset: 2px;
+}
+
+/* Smooth scrolling for all browsers */
+@supports (scroll-behavior: smooth) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Safe area adjustments for mobile devices with notches */
+@supports (padding: max(0px)) {
+  .safe-area-top {
+    padding-top: max(1rem, env(safe-area-inset-top));
+  }
+  
+  .safe-area-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
 }

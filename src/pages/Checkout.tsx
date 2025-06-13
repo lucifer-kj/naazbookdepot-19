@@ -1,11 +1,9 @@
 
-import React from 'react'; // Removed useState, useMemo as they are moved to the hook
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapPin, CreditCard, Shield } from 'lucide-react'; // Loader2 might be handled within OrderReview if needed
+import { MapPin, CreditCard, Shield } from 'lucide-react';
 import { useCartContext } from '@/lib/context/CartContext';
 import { useAuth } from '@/lib/context/AuthContext';
-// useCreateOrder is now used within useCheckoutProcess
-import { useCheckoutProcess } from '@/lib/hooks/useCheckoutProcess';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import CheckoutSteps from '@/components/checkout/CheckoutSteps';
@@ -17,28 +15,35 @@ import OrderReview from '@/components/checkout/OrderReview';
 import EmptyCartMessage from '@/components/checkout/EmptyCartMessage';
 
 const Checkout = () => {
-  const { cart } = useCartContext(); // clearCart is now handled by the hook
+  const { cart, clearCart } = useCartContext();
   const { user } = useAuth();
-  const navigate = useNavigate(); // Still needed for EmptyCartMessage navigation
+  const navigate = useNavigate();
+  const [currentStep, setCurrentStep] = useState(1);
+  const [shippingData, setShippingData] = useState(null);
+  const [paymentData, setPaymentData] = useState(null);
 
-  const {
-    currentStep,
-    shippingData,
-    paymentData,
-    isPlacingOrder,
-    submitCheckoutStep,
-    setCurrentStep,
-    shippingOptions
-  } = useCheckoutProcess();
-
-  // Steps definition can remain here or be moved to the hook if it influences logic there
   const steps = [
     { id: 1, title: 'Shipping', icon: MapPin },
     { id: 2, title: 'Payment', icon: CreditCard },
     { id: 3, title: 'Review', icon: Shield }
   ];
 
-  if (cart.items.length === 0 && !isPlacingOrder) { // Check !isPlacingOrder to prevent flicker after order placement
+  const handleStepComplete = (stepData: any) => {
+    if (currentStep === 1) {
+      setShippingData(stepData);
+      setCurrentStep(2);
+    } else if (currentStep === 2) {
+      setPaymentData(stepData);
+      setCurrentStep(3);
+    } else if (currentStep === 3) {
+      // Process order
+      const orderNumber = `NBD-${Date.now()}`;
+      clearCart();
+      navigate(`/order-confirmation?orderNumber=${orderNumber}`);
+    }
+  };
+
+  if (cart.items.length === 0) {
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />
@@ -62,14 +67,14 @@ const Checkout = () => {
             <div className="lg:col-span-2">
               {currentStep === 1 && (
                 <ShippingForm
-                  user={user} // ShippingForm might need user details for pre-filling
-                  onComplete={submitCheckoutStep}
+                  user={user}
+                  onComplete={handleStepComplete}
                 />
               )}
               {currentStep === 2 && (
                 <PaymentForm
-                  shippingData={shippingData} // Pass shippingData to PaymentForm if needed
-                  onComplete={submitCheckoutStep}
+                  shippingData={shippingData}
+                  onComplete={handleStepComplete}
                   onBack={() => setCurrentStep(1)}
                 />
               )}
@@ -78,19 +83,12 @@ const Checkout = () => {
                   shippingData={shippingData}
                   paymentData={paymentData}
                   onBack={() => setCurrentStep(2)}
-                  onPlaceOrder={() => submitCheckoutStep({})} // stepData for review might be empty or specific review confirmation
-                  isPlacingOrder={isPlacingOrder}
+                  onPlaceOrder={() => handleStepComplete({})}
                 />
               )}
             </div>
             
-            <OrderSummary
-              cart={cart}
-              shippingCost={shippingData?.shippingOption
-                ? (shippingOptions.find(opt => opt.id === shippingData.shippingOption)?.price || 0)
-                : 0
-              }
-            />
+            <OrderSummary cart={cart} />
           </div>
         </div>
       </main>

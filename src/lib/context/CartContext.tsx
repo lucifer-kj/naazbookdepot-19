@@ -1,7 +1,5 @@
 
-import React, { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
-
-const NAAZ_CART_KEY = 'naazExquisiteCart';
+import React, { createContext, useContext, useReducer, ReactNode } from 'react';
 
 export interface CartItem {
   productId: number;
@@ -109,57 +107,11 @@ const cartReducer = (state: Cart, action: CartAction): Cart => {
 };
 
 export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const initialStateFunc = (): Cart => {
-    try {
-      const storedCart = typeof window !== 'undefined' ? localStorage.getItem(NAAZ_CART_KEY) : null;
-      if (storedCart) {
-        const parsedCart = JSON.parse(storedCart) as Cart;
-        // Basic validation to ensure essential fields exist
-        if (parsedCart && Array.isArray(parsedCart.items) &&
-            typeof parsedCart.totalItems === 'number' &&
-            typeof parsedCart.subtotal === 'number') {
-          // Further validation for each item can be added here if necessary
-          const validItems = parsedCart.items.filter(item =>
-            typeof item.productId === 'number' &&
-            typeof item.name === 'string' &&
-            typeof item.price === 'string' && // price is stored as string
-            typeof item.image === 'string' &&
-            typeof item.quantity === 'number' && item.quantity > 0
-          );
-          // If some items were invalid, recalculate totals, or return default
-          // For simplicity, if any item is invalid, we could return default, or filter them out.
-          // Here, we'll use the filtered valid items.
-          if (validItems.length !== parsedCart.items.length) {
-            // If items were filtered, this cart is potentially inconsistent.
-            // For robustness, one might recalculate totals here or log a warning.
-            // Or, decide to return the default state if critical fields are missing/invalid.
-            console.warn("Some items in stored cart were invalid and have been filtered.");
-            // For now, let's proceed with valid items but acknowledge totals might be off if not recalculated.
-            // A more robust solution would re-calculate totalItems and subtotal based on validItems.
-          }
-          return { ...parsedCart, items: validItems }; // Return potentially modified cart
-        }
-      }
-    } catch (error) {
-      console.error("Error loading cart from localStorage:", error);
-    }
-    // Default initial state if nothing in localStorage or if data is invalid
-    return { items: [], totalItems: 0, subtotal: 0 };
-  };
-
-  const [cart, dispatch] = useReducer(cartReducer, undefined, initialStateFunc);
-
-  useEffect(() => {
-    try {
-      // Ensure cart is not the initial undefined state from reducer when initialStateFunc runs
-      // and also ensure it's not the default empty state if we only want to save meaningful carts
-      if (cart !== undefined ) { // Check if cart has been initialized
-         localStorage.setItem(NAAZ_CART_KEY, JSON.stringify(cart));
-      }
-    } catch (error) {
-      console.error("Error saving cart to localStorage:", error);
-    }
-  }, [cart]);
+  const [cart, dispatch] = useReducer(cartReducer, {
+    items: [],
+    totalItems: 0,
+    subtotal: 0
+  });
 
   const addItem = (item: Omit<CartItem, 'quantity'>) => {
     dispatch({ type: 'ADD_ITEM', item });

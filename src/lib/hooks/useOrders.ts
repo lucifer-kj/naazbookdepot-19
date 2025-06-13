@@ -10,12 +10,11 @@ export type OrderWithItems = Order & {
   order_items: OrderItem[];
 };
 
-// Renamed from useOrders
-export const useUserOrders = () => {
+export const useOrders = () => {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ['userOrders', user?.id],
+    queryKey: ['orders', user?.id],
     queryFn: async () => {
       if (!user) throw new Error('User not authenticated');
 
@@ -35,33 +34,11 @@ export const useUserOrders = () => {
   });
 };
 
-// New hook for Admin to fetch all orders
-export const useAdminOrders = () => {
-  // No user context needed here directly, RLS should handle auth
-  return useQuery({
-    queryKey: ['adminOrders'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('orders')
-        .select(`
-          *,
-          order_items(*)
-        `)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data as OrderWithItems[];
-    },
-    // enabled: true, // Always enabled for admin context, or add specific admin role check if needed
-  });
-};
-
-// Renamed from useOrder
-export const useUserOrderDetails = (orderId: string) => {
+export const useOrder = (orderId: string) => {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ['userOrder', orderId],
+    queryKey: ['order', orderId],
     queryFn: async () => {
       if (!user) throw new Error('User not authenticated');
 
@@ -81,30 +58,6 @@ export const useUserOrderDetails = (orderId: string) => {
     enabled: !!user && !!orderId,
   });
 };
-
-// New hook for Admin to fetch specific order details
-export const useAdminOrderDetails = (orderId: string) => {
-  return useQuery({
-    queryKey: ['adminOrder', orderId],
-    queryFn: async () => {
-      if (!orderId) return null;
-      const { data, error } = await supabase
-        .from('orders')
-        .select(`
-          *,
-          order_items(*),
-          users(id, full_name, email)
-        `)
-        .eq('id', orderId)
-        .single();
-
-      if (error) throw error;
-      return data as OrderWithItems; // Consider a more specific type if users relation is consistently present
-    },
-    enabled: !!orderId,
-  });
-};
-
 
 export const useCreateOrder = () => {
   const queryClient = useQueryClient();
@@ -176,36 +129,7 @@ export const useCreateOrder = () => {
       return order;
     },
     onSuccess: () => {
-      // Invalidate user-specific orders query if a user created an order
-      queryClient.invalidateQueries({ queryKey: ['userOrders'] });
-      // Also invalidate admin orders list as a new order is added
-      queryClient.invalidateQueries({ queryKey: ['adminOrders'] });
-    },
-  });
-};
-
-// New Mutation for updating order status
-export const useUpdateOrderStatus = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ orderId, status }: { orderId: string; status: string }) => {
-      const { data, error } = await supabase
-        .from('orders')
-        .update({ status })
-        .eq('id', orderId)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['adminOrders'] });
-      if (data) {
-        queryClient.invalidateQueries({ queryKey: ['adminOrder', data.id] });
-        // If users can also see their order status changes, invalidate their specific order query too
-        queryClient.invalidateQueries({ queryKey: ['userOrder', data.id] });
-      }
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
     },
   });
 };

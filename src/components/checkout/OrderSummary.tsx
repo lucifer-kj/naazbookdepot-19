@@ -1,25 +1,19 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Tag, Gift } from 'lucide-react';
 import { Cart } from '@/lib/context/CartContext';
 
 interface OrderSummaryProps {
   cart: Cart;
-  shippingCost?: number; // Optional prop for dynamic shipping cost
 }
 
-const OrderSummary: React.FC<OrderSummaryProps> = ({ cart, shippingCost = 100 }) => {
+const OrderSummary: React.FC<OrderSummaryProps> = ({ cart }) => {
   const [discountCode, setDiscountCode] = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState(0);
-  const [currentShippingCost, setCurrentShippingCost] = useState(shippingCost);
 
-  useEffect(() => {
-    // Update shipping cost if cart is empty or prop changes
-    setCurrentShippingCost(cart.items.length > 0 ? shippingCost : 0);
-  }, [cart.items.length, shippingCost]);
-
+  const shipping = cart.items.length > 0 ? 100 : 0;
   const tax = Math.round(cart.subtotal * 0.02); // 2% tax
-  const total = cart.subtotal + currentShippingCost + tax - appliedDiscount;
+  const total = cart.subtotal + shipping + tax - appliedDiscount;
 
   const applyDiscount = () => {
     if (discountCode === 'FIRST10') {
@@ -88,7 +82,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ cart, shippingCost = 100 })
         </div>
         <div className="flex justify-between">
           <span>Shipping</span>
-          <span>₹{currentShippingCost.toFixed(2)}</span>
+          <span>₹{shipping.toFixed(2)}</span>
         </div>
         <div className="flex justify-between">
           <span>Tax</span>

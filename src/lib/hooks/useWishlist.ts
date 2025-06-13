@@ -4,9 +4,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/context/AuthContext';
 import type { Tables } from '@/integrations/supabase/types';
 
-export type WishlistItem = Tables<'wishlists'> & {
+// Since there's no wishlists table, we'll use cart_items as a wishlist for now
+// This is a temporary solution - you can create a proper wishlists table later
+export type WishlistItem = Tables<'cart_items'> & {
   products: Tables<'products'> & {
-    product_images?: Tables<'product_images'>[];
+    categories?: Tables<'categories'>;
   };
 };
 
@@ -18,16 +20,18 @@ export const useWishlist = () => {
     queryFn: async () => {
       if (!user) throw new Error('User not authenticated');
 
+      // Using cart_items with quantity 0 as wishlist items for now
       const { data, error } = await supabase
-        .from('wishlists')
+        .from('cart_items')
         .select(`
           *,
           products(
             *,
-            product_images(*)
+            categories(*)
           )
         `)
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .eq('quantity', 0); // Use quantity 0 to differentiate wishlist from cart
 
       if (error) throw error;
       return data as WishlistItem[];
@@ -41,15 +45,15 @@ export const useAddToWishlist = () => {
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async ({ productId, variantId }: { productId: string; variantId?: string }) => {
+    mutationFn: async ({ productId }: { productId: string }) => {
       if (!user) throw new Error('User not authenticated');
 
       const { data, error } = await supabase
-        .from('wishlists')
+        .from('cart_items')
         .insert({
           user_id: user.id,
           product_id: productId,
-          variant_id: variantId,
+          quantity: 0, // Use quantity 0 for wishlist items
         })
         .select()
         .single();
@@ -72,7 +76,7 @@ export const useRemoveFromWishlist = () => {
       if (!user) throw new Error('User not authenticated');
 
       const { error } = await supabase
-        .from('wishlists')
+        .from('cart_items')
         .delete()
         .eq('id', wishlistId)
         .eq('user_id', user.id);

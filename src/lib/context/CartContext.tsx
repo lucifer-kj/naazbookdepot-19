@@ -4,8 +4,7 @@ import { useAuth } from './AuthContext';
 import { useCart, useAddToCart, useUpdateCartItem, useRemoveFromCart, useClearCart } from '../hooks/useCart';
 
 export interface CartItem {
-  productId: number;
-  variationId?: string;
+  productId: string;
   name: string;
   price: string;
   image: string;
@@ -22,8 +21,8 @@ export interface Cart {
 interface CartContextType {
   cart: Cart;
   addItem: (item: Omit<CartItem, 'quantity'>) => void;
-  updateQuantity: (productId: number, variationId: string | undefined, quantity: number) => void;
-  removeItem: (productId: number, variationId?: string) => void;
+  updateQuantity: (productId: string, quantity: number) => void;
+  removeItem: (productId: string) => void;
   clearCart: () => void;
   isLoading: boolean;
 }
@@ -32,8 +31,8 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 type CartAction = 
   | { type: 'ADD_ITEM'; item: Omit<CartItem, 'quantity'> }
-  | { type: 'UPDATE_QUANTITY'; productId: number; variationId?: string; quantity: number }
-  | { type: 'REMOVE_ITEM'; productId: number; variationId?: string }
+  | { type: 'UPDATE_QUANTITY'; productId: string; quantity: number }
+  | { type: 'REMOVE_ITEM'; productId: string }
   | { type: 'CLEAR_CART' }
   | { type: 'SET_CART'; items: CartItem[] }
   | { type: 'TRIGGER_ANIMATION' };
@@ -57,7 +56,7 @@ const cartReducer = (state: Cart, action: CartAction): Cart => {
 
     case 'ADD_ITEM':
       const existingItemIndex = state.items.findIndex(
-        item => item.productId === action.item.productId && item.variationId === action.item.variationId
+        item => item.productId === action.item.productId
       );
       
       let updatedItems: CartItem[];
@@ -80,7 +79,7 @@ const cartReducer = (state: Cart, action: CartAction): Cart => {
 
     case 'UPDATE_QUANTITY':
       const itemIndex = state.items.findIndex(
-        item => item.productId === action.productId && item.variationId === action.variationId
+        item => item.productId === action.productId
       );
       
       if (itemIndex > -1) {
@@ -101,7 +100,7 @@ const cartReducer = (state: Cart, action: CartAction): Cart => {
 
     case 'REMOVE_ITEM':
       const filteredItems = state.items.filter(
-        item => !(item.productId === action.productId && item.variationId === action.variationId)
+        item => item.productId !== action.productId
       );
       
       const { totalItems: removeTotalItems, subtotal: removeSubtotal } = calculateTotals(filteredItems);
@@ -170,8 +169,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     if (isAuthenticated && supabaseCartItems) {
       const cartItems: CartItem[] = supabaseCartItems.map(item => ({
-        productId: parseInt(item.product_id),
-        variationId: (item.variation_id as string | undefined) || undefined,
+        productId: item.product_id,
         name: item.products.name,
         price: item.products.price.toString(),
         image: item.products.images?.[0] || '/placeholder.svg',
@@ -192,7 +190,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (isAuthenticated) {
       try {
         await addToCartMutation.mutateAsync({
-          productId: item.productId.toString(),
+          productId: item.productId,
           quantity: 1
         });
       } catch (error) {
@@ -203,10 +201,10 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const updateQuantity = async (productId: number, variationId: string | undefined, quantity: number) => {
+  const updateQuantity = async (productId: string, quantity: number) => {
     if (isAuthenticated) {
       const cartItem = supabaseCartItems?.find(
-        item => parseInt(item.product_id) === productId && ((item.variation_id as string | undefined) || undefined) === variationId
+        item => item.product_id === productId
       );
       
       if (cartItem) {
@@ -220,14 +218,14 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
       }
     } else {
-      dispatch({ type: 'UPDATE_QUANTITY', productId, variationId, quantity });
+      dispatch({ type: 'UPDATE_QUANTITY', productId, quantity });
     }
   };
 
-  const removeItem = async (productId: number, variationId?: string) => {
+  const removeItem = async (productId: string) => {
     if (isAuthenticated) {
       const cartItem = supabaseCartItems?.find(
-        item => parseInt(item.product_id) === productId && ((item.variation_id as string | undefined) || undefined) === variationId
+        item => item.product_id === productId
       );
       
       if (cartItem) {
@@ -238,7 +236,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
       }
     } else {
-      dispatch({ type: 'REMOVE_ITEM', productId, variationId });
+      dispatch({ type: 'REMOVE_ITEM', productId });
     }
   };
 

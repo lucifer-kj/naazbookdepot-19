@@ -5,14 +5,14 @@ import { CartItem as CartItemType } from '@/lib/context/CartContext';
 
 interface OptimizedCartItemProps {
   item: CartItemType;
-  onUpdateQuantity: (productId: number, variationId: string | undefined, quantity: number) => void;
-  onRemove: (productId: number, variationId?: string) => void;
+  onUpdateQuantity: (productId: string, quantity: number) => void;
+  onRemove: (productId: string) => void;
 }
 
 const OptimizedCartItem = React.memo<OptimizedCartItemProps>(({ item, onUpdateQuantity, onRemove }) => {
   const handleQuantityChange = (newQuantity: number) => {
     if (newQuantity > 0) {
-      onUpdateQuantity(item.productId, item.variationId, newQuantity);
+      onUpdateQuantity(item.productId, newQuantity);
     }
   };
 
@@ -47,7 +47,7 @@ const OptimizedCartItem = React.memo<OptimizedCartItemProps>(({ item, onUpdateQu
         </button>
       </div>
       <button 
-        onClick={() => onRemove(item.productId, item.variationId)}
+        onClick={() => onRemove(item.productId)}
         className="p-1 hover:bg-red-100 text-red-600 rounded transition-colors"
         aria-label="Remove item"
       >

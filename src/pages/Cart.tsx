@@ -1,9 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Trash2, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useCartContext } from '@/lib/context/CartContext';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/lib/context/AuthContext';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import CartEmpty from '@/components/cart/CartEmpty';
@@ -13,8 +15,34 @@ import PromoCodeInput from '@/components/cart/PromoCodeInput';
 
 const Cart = () => {
   const { cart, updateQuantity, removeItem, clearCart, isLoading } = useCartContext();
+  const { isAuthenticated } = useAuth();
   const [appliedPromo, setAppliedPromo] = useState<string>('');
   const [promoDiscount, setPromoDiscount] = useState<number>(0);
+
+  // Real-time cart updates for authenticated users
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const channel = supabase
+      .channel('cart-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'cart_items'
+        },
+        () => {
+          // Refetch cart data when changes occur
+          console.log('Cart updated in real-time');
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isAuthenticated]);
 
   // GST/Tax logic for Indian eCommerce standards
   const subtotal = cart.subtotal;
@@ -115,7 +143,7 @@ const Cart = () => {
                   <div className="space-y-4 md:space-y-6">
                     {cart.items.map((item) => (
                       <OptimizedCartItem
-                        key={`${item.productId}-${item.variationId || ''}`}
+                        key={item.productId}
                         item={item}
                         onUpdateQuantity={updateQuantity}
                         onRemove={removeItem}

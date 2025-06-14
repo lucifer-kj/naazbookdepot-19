@@ -2,6 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/context/AuthContext';
+import { useEffect } from 'react';
 import type { Tables } from '@/integrations/supabase/types';
 
 export type Order = Tables<'orders'> & {
@@ -12,8 +13,9 @@ export type Order = Tables<'orders'> & {
 
 export const useOrders = () => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
-  return useQuery({
+  const query = useQuery({
     queryKey: ['orders', user?.id],
     queryFn: async () => {
       if (!user) throw new Error('User not authenticated');
@@ -35,6 +37,33 @@ export const useOrders = () => {
     },
     enabled: !!user,
   });
+
+  // Real-time order updates
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('order-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'orders',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['orders', user.id] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, queryClient]);
+
+  return query;
 };
 
 export const useCreateOrder = () => {
@@ -87,9 +116,9 @@ export const useCreateOrder = () => {
       // Create order items
       const orderItems = cartItems.map(item => ({
         order_id: order.id,
-        product_id: item.product_id || item.products?.id,
+        product_id: item.productId || item.product_id || item.products?.id,
         quantity: item.quantity,
-        price: parseFloat(item.products?.price || item.price || '0'),
+        price: parseFloat(item.price || item.products?.price || '0'),
       }));
 
       const { error: itemsError } = await supabase
@@ -100,7 +129,7 @@ export const useCreateOrder = () => {
 
       // Update stock levels
       for (const item of cartItems) {
-        const productId = item.product_id || item.products?.id;
+        const productId = item.productId || item.product_id || item.products?.id;
         const quantity = item.quantity;
 
         // Get current stock

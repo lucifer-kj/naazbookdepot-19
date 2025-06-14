@@ -31,7 +31,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ cart }) => {
       
       <div className="space-y-4 mb-6">
         {cart.items.map((item) => (
-          <div key={`${item.productId}-${item.variationId}`} className="flex gap-3">
+          <div key={item.productId} className="flex gap-3">
             <img 
               src={item.image} 
               alt={item.name}

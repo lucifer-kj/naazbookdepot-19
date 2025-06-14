@@ -5,16 +5,13 @@ import { supabase } from '@/integrations/supabase/client';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Users, UserCheck, UserX, Mail, Calendar, Shield } from 'lucide-react';
+import { Search, Users, UserCheck, Shield, Calendar } from 'lucide-react';
 
 interface User {
   id: string;
-  email: string;
+  name?: string;
+  role?: string;
   created_at: string;
-  profiles?: {
-    name?: string;
-    role?: string;
-  };
 }
 
 const AdminUsers = () => {
@@ -55,18 +52,18 @@ const AdminUsers = () => {
 
   const filteredUsers = users?.filter(user => {
     const matchesSearch = !searchQuery || 
-      user.profiles?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.id.toLowerCase().includes(searchQuery.toLowerCase());
     
-    const matchesRole = roleFilter === 'all' || user.profiles?.role === roleFilter;
+    const matchesRole = roleFilter === 'all' || user.role === roleFilter;
     
     return matchesSearch && matchesRole;
   }) || [];
 
   const stats = {
     totalUsers: users?.length || 0,
-    adminUsers: users?.filter(u => u.profiles?.role === 'admin').length || 0,
-    customerUsers: users?.filter(u => u.profiles?.role === 'customer').length || 0,
+    adminUsers: users?.filter(u => u.role === 'admin').length || 0,
+    customerUsers: users?.filter(u => u.role === 'customer').length || 0,
   };
 
   if (isLoading) {
@@ -137,7 +134,7 @@ const AdminUsers = () => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
                   type="text"
-                  placeholder="Search users by name or email..."
+                  placeholder="Search users by name or ID..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
@@ -186,15 +183,14 @@ const AdminUsers = () => {
                         <div className="flex items-center">
                           <div className="w-10 h-10 bg-naaz-green rounded-full flex items-center justify-center">
                             <span className="text-white font-medium">
-                              {user.profiles?.name?.charAt(0).toUpperCase() || user.id.charAt(0).toUpperCase()}
+                              {user.name?.charAt(0).toUpperCase() || user.id.charAt(0).toUpperCase()}
                             </span>
                           </div>
                           <div className="ml-4">
                             <div className="text-sm font-medium text-gray-900">
-                              {user.profiles?.name || 'No name set'}
+                              {user.name || 'No name set'}
                             </div>
-                            <div className="text-sm text-gray-500 flex items-center">
-                              <Mail className="h-3 w-3 mr-1" />
+                            <div className="text-sm text-gray-500">
                               {user.id}
                             </div>
                           </div>
@@ -202,11 +198,11 @@ const AdminUsers = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          user.profiles?.role === 'admin' 
+                          user.role === 'admin' 
                             ? 'bg-red-100 text-red-800' 
                             : 'bg-green-100 text-green-800'
                         }`}>
-                          {user.profiles?.role?.charAt(0).toUpperCase() + (user.profiles?.role?.slice(1) || '')}
+                          {user.role?.charAt(0).toUpperCase() + (user.role?.slice(1) || '')}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -217,7 +213,7 @@ const AdminUsers = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex space-x-2">
-                          {user.profiles?.role !== 'admin' && (
+                          {user.role !== 'admin' && (
                             <Button
                               size="sm"
                               onClick={() => updateUserRole(user.id, 'admin')}
@@ -226,7 +222,7 @@ const AdminUsers = () => {
                               Make Admin
                             </Button>
                           )}
-                          {user.profiles?.role !== 'customer' && (
+                          {user.role !== 'customer' && (
                             <Button
                               size="sm"
                               variant="outline"

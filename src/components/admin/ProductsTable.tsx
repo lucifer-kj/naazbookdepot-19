@@ -1,0 +1,173 @@
+
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Edit, Trash2, Package } from 'lucide-react';
+
+interface Product {
+  id: string;
+  name: string;
+  description?: string;
+  price: number;
+  stock: number;
+  images?: string[];
+  categories?: { name: string };
+  average_rating?: number;
+  review_count?: number;
+}
+
+interface ProductsTableProps {
+  products: Product[];
+  onEdit: (product: Product) => void;
+  onDelete: (id: string) => void;
+  stockUpdateId: string | null;
+  newStock: number;
+  onStockUpdate: (productId: string) => void;
+  onStockEditStart: (productId: string, currentStock: number) => void;
+  onStockEditCancel: () => void;
+  onNewStockChange: (stock: number) => void;
+}
+
+const ProductsTable: React.FC<ProductsTableProps> = ({
+  products,
+  onEdit,
+  onDelete,
+  stockUpdateId,
+  newStock,
+  onStockUpdate,
+  onStockEditStart,
+  onStockEditCancel,
+  onNewStockChange,
+}) => {
+  return (
+    <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Product
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Category
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Price
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Stock
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Rating
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {products.map((product) => (
+              <tr key={product.id} className="hover:bg-gray-50">
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0 h-12 w-12">
+                      <img
+                        className="h-12 w-12 rounded object-cover"
+                        src={product.images?.[0] || '/placeholder.svg'}
+                        alt={product.name}
+                      />
+                    </div>
+                    <div className="ml-4">
+                      <div className="text-sm font-medium text-gray-900 line-clamp-1">{product.name}</div>
+                      <div className="text-sm text-gray-500 line-clamp-1">
+                        {product.description}
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {product.categories?.name}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  ₹{product.price}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="flex items-center space-x-2">
+                    <span className={`text-sm ${
+                      product.stock < 5 ? 'text-red-600 font-medium' : 'text-gray-900'
+                    }`}>
+                      {product.stock}
+                    </span>
+                    {stockUpdateId === product.id ? (
+                      <div className="flex items-center space-x-2">
+                        <Input
+                          type="number"
+                          value={newStock}
+                          onChange={(e) => onNewStockChange(parseInt(e.target.value))}
+                          className="w-20"
+                          min="0"
+                        />
+                        <Button
+                          size="sm"
+                          onClick={() => onStockUpdate(product.id)}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          Save
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={onStockEditCancel}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => onStockEditStart(product.id, product.stock)}
+                      >
+                        <Package className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {product.average_rating ? `${product.average_rating.toFixed(1)} (${product.review_count})` : 'No reviews'}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => onEdit(product)}
+                  >
+                    <Edit className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => onDelete(product.id)}
+                    className="text-red-600 hover:text-red-800"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {products.length === 0 && (
+        <div className="text-center py-12">
+          <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-500">No products found</p>
+          <p className="text-sm text-gray-400">Try adjusting your search or filter criteria</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default ProductsTable;

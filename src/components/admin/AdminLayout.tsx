@@ -10,7 +10,8 @@ import {
   Tag, 
   LogOut,
   Menu,
-  X
+  X,
+  Search
 } from 'lucide-react';
 
 interface AdminLayoutProps {
@@ -22,6 +23,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleLogout = useCallback(async () => {
     await logout();
@@ -45,7 +47,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   ], []);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-naaz-cream">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div 
@@ -84,12 +86,12 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                   className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
                     isActive
                       ? 'bg-naaz-green text-white shadow-md'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm'
+                      : 'text-gray-600 hover:bg-naaz-cream hover:text-naaz-green hover:shadow-sm'
                   }`}
                   onClick={closeSidebar}
                 >
                   <Icon className={`mr-3 h-5 w-5 transition-colors ${
-                    isActive ? 'text-white' : 'text-gray-400 group-hover:text-gray-500'
+                    isActive ? 'text-white' : 'text-gray-400 group-hover:text-naaz-green'
                   }`} />
                   {item.name}
                 </Link>
@@ -100,7 +102,12 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
         <div className="absolute bottom-0 w-full p-4 border-t border-gray-200">
           <div className="flex items-center mb-4">
-            <div className="flex-1 min-w-0">
+            <div className="w-10 h-10 bg-naaz-green rounded-full flex items-center justify-center">
+              <span className="text-white font-medium">
+                {user?.email?.charAt(0).toUpperCase() || 'A'}
+              </span>
+            </div>
+            <div className="ml-3 flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-900 truncate">
                 {user?.email}
               </p>
@@ -109,7 +116,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
           </div>
           <button
             onClick={handleLogout}
-            className="flex items-center w-full px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50 hover:text-gray-900 transition-colors"
+            className="flex items-center w-full px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-naaz-cream hover:text-naaz-green transition-colors"
           >
             <LogOut className="mr-3 h-5 w-5 text-gray-400" />
             Sign out
@@ -119,17 +126,44 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
       {/* Main content */}
       <div className="lg:pl-64">
-        {/* Top bar for mobile */}
-        <div className="sticky top-0 z-10 bg-white shadow-sm border-b border-gray-200 lg:hidden">
-          <div className="flex items-center justify-between h-16 px-4">
-            <button
-              onClick={toggleSidebar}
-              className="p-1 rounded-md text-gray-400 hover:text-gray-500 transition-colors"
-            >
-              <Menu className="h-6 w-6" />
-            </button>
-            <h1 className="text-lg font-medium text-gray-900">Admin Panel</h1>
-            <div className="w-6" /> {/* Spacer */}
+        {/* Top bar */}
+        <div className="sticky top-0 z-10 bg-white shadow-sm border-b border-gray-200">
+          <div className="flex items-center justify-between h-16 px-4 lg:px-6">
+            <div className="flex items-center">
+              <button
+                onClick={toggleSidebar}
+                className="p-1 rounded-md text-gray-400 hover:text-gray-500 transition-colors lg:hidden"
+              >
+                <Menu className="h-6 w-6" />
+              </button>
+              <h1 className="ml-4 lg:ml-0 text-lg font-medium text-gray-900 lg:hidden">
+                Admin Panel
+              </h1>
+            </div>
+            
+            {/* Search bar - hidden on mobile */}
+            <div className="hidden md:flex items-center max-w-md mx-auto flex-1">
+              <div className="relative w-full">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <Search className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Search products, orders..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-naaz-green focus:border-naaz-green"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-4">
+              <div className="w-8 h-8 bg-naaz-green rounded-full flex items-center justify-center">
+                <span className="text-white text-sm font-medium">
+                  {user?.email?.charAt(0).toUpperCase() || 'A'}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 

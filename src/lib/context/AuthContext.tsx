@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { User, Session } from '@supabase/supabase-js';
@@ -159,47 +158,53 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   useEffect(() => {
+    let didCancel = false;
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (didCancel) return;
         setSession(session);
-        
         if (session?.user) {
-          const roles = await fetchUserRoles(session.user.id);
-          const userWithRoles: AuthUser = {
-            ...session.user,
-            roles: roles,
-            name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
-            joinDate: session.user.created_at
-          };
-          setUser(userWithRoles);
+          // Set user immediately for faster UI response
+          setUser({ ...session.user });
+          // Fetch roles in background and update user when ready
+          fetchUserRoles(session.user.id).then(roles => {
+            if (!didCancel) {
+              setUser(prev => prev ? { ...prev, roles, name: prev.user_metadata?.name || prev.email?.split('@')[0] || 'User', joinDate: prev.created_at } : null);
+            }
+          });
         } else {
           setUser(null);
         }
-        
         setLoading(false);
       }
     );
 
     // Check for existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (didCancel) return;
       setSession(session);
-      
       if (session?.user) {
-        const roles = await fetchUserRoles(session.user.id);
-        const userWithRoles: AuthUser = {
-          ...session.user,
-          roles: roles,
-          name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
-          joinDate: session.user.created_at
-        };
-        setUser(userWithRoles);
+        setUser({ ...session.user });
+        fetchUserRoles(session.user.id).then(roles => {
+          if (!didCancel) {
+            setUser(prev => prev ? { ...prev, roles, name: prev.user_metadata?.name || prev.email?.split('@')[0] || 'User', joinDate: prev.created_at } : null);
+          }
+        });
       }
-      
       setLoading(false);
-    });
+    }).catch(() => setLoading(false));
 
-    return () => subscription.unsubscribe();
+    // Always resolve loading after 3 seconds max (fallback)
+    const timeout = setTimeout(() => {
+      if (!didCancel) setLoading(false);
+    }, 3000);
+
+    return () => {
+      didCancel = true;
+      clearTimeout(timeout);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const isAdmin = user?.roles?.some(role => 

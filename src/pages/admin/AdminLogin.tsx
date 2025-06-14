@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Navigate, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/context/AuthContext';
@@ -24,7 +23,15 @@ const AdminLogin = () => {
     }
   }, [loading, isAuthenticated, isAdmin, navigate]);
 
-  if (loading) {
+  // Show spinner only if loading, but fallback after 3s
+  const [showSpinner, setShowSpinner] = useState(true);
+  useEffect(() => {
+    if (!loading) setShowSpinner(false);
+    const t = setTimeout(() => setShowSpinner(false), 3000);
+    return () => clearTimeout(t);
+  }, [loading]);
+
+  if (showSpinner) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-naaz-cream">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-naaz-green"></div>

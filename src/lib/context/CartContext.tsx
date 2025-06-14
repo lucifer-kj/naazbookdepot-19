@@ -171,7 +171,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (isAuthenticated && supabaseCartItems) {
       const cartItems: CartItem[] = supabaseCartItems.map(item => ({
         productId: parseInt(item.product_id),
-        variationId: item.variationId || item.variation_id || undefined,
+        variationId: item.variation_id || undefined,
         name: item.products.name,
         price: item.products.price.toString(),
         image: item.products.images?.[0] || '/placeholder.svg',
@@ -206,7 +206,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const updateQuantity = async (productId: number, variationId: string | undefined, quantity: number) => {
     if (isAuthenticated) {
       const cartItem = supabaseCartItems?.find(
-        item => parseInt(item.product_id) === productId && item.variationId === variationId
+        item => parseInt(item.product_id) === productId && (item.variation_id || undefined) === variationId
       );
       
       if (cartItem) {
@@ -227,7 +227,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const removeItem = async (productId: number, variationId?: string) => {
     if (isAuthenticated) {
       const cartItem = supabaseCartItems?.find(
-        item => parseInt(item.product_id) === productId && item.variationId === variationId
+        item => parseInt(item.product_id) === productId && (item.variation_id || undefined) === variationId
       );
       
       if (cartItem) {

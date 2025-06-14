@@ -86,7 +86,7 @@ const ProductDisplay: React.FC<ProductDisplayProps> = ({ product }) => {
 
         {/* Price */}
         <div className="text-3xl font-bold text-naaz-green">
-          ₹{product.price}
+          ₹{Number(product.price).toFixed(2)}
         </div>
 
         {/* Description */}

@@ -17,7 +17,6 @@ const AdminPromoCodes = () => {
     minimum_order_value: '',
     max_uses: '',
     valid_until: '',
-    description: '',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -31,7 +30,6 @@ const AdminPromoCodes = () => {
         minimum_order_value: formData.minimum_order_value ? parseFloat(formData.minimum_order_value) : null,
         max_uses: formData.max_uses ? parseInt(formData.max_uses) : null,
         valid_until: formData.valid_until || null,
-        description: formData.description || null,
         is_active: true,
         current_uses: 0,
       });
@@ -44,7 +42,6 @@ const AdminPromoCodes = () => {
         minimum_order_value: '',
         max_uses: '',
         valid_until: '',
-        description: '',
       });
     } catch (error) {
       console.error('Error creating promo code:', error);
@@ -155,18 +152,6 @@ const AdminPromoCodes = () => {
                   />
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Description
-                </label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-naaz-green"
-                  placeholder="Summer sale discount"
-                />
-              </div>
               <div className="flex gap-2">
                 <Button type="submit" className="bg-naaz-green hover:bg-naaz-green/90">
                   Create Promo Code
@@ -211,11 +196,6 @@ const AdminPromoCodes = () => {
                           <div className="text-sm font-medium text-gray-900">
                             {promoCode.code}
                           </div>
-                          {promoCode.description && (
-                            <div className="text-sm text-gray-500">
-                              {promoCode.description}
-                            </div>
-                          )}
                         </div>
                       </div>
                     </td>

@@ -1,7 +1,5 @@
-
 import React, { useState } from 'react';
-import { Star, ShoppingCart, Heart, Share2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Heart, Star, Share2, ShoppingCart, Plus, Minus } from 'lucide-react';
 import { useCart } from '@/lib/hooks/useCart';
 import { useWishlist } from '@/lib/hooks/useWishlist';
 import { useAuth } from '@/lib/hooks/useAuth';
@@ -11,7 +9,6 @@ import type { Tables } from '@/integrations/supabase/types';
 interface ProductDisplayProps {
   product: Tables<'products'> & {
     categories?: Tables<'categories'>;
-    variants?: Tables<'product_variants'>[];
     average_rating?: number;
     review_count?: number;
   };

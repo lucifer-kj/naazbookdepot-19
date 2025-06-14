@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/lib/context/AuthContext';
@@ -73,15 +74,20 @@ const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
 
   console.log('AdminRoute check:', authState);
 
-  if (authState.loading) {
-    // Fallback: never show loading for more than 3s
-    const [showSkeleton, setShowSkeleton] = React.useState(true);
-    React.useEffect(() => {
-      if (!authState.loading) setShowSkeleton(false);
-      const t = setTimeout(() => setShowSkeleton(false), 3000);
-      return () => clearTimeout(t);
-    }, [authState.loading]);
-    if (showSkeleton) return <LoadingSkeleton />;
+  // Always call hooks before any conditional returns
+  const [showSkeleton, setShowSkeleton] = React.useState(true);
+  
+  React.useEffect(() => {
+    if (!authState.loading) {
+      setShowSkeleton(false);
+    } else {
+      const timer = setTimeout(() => setShowSkeleton(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [authState.loading]);
+
+  if (authState.loading && showSkeleton) {
+    return <LoadingSkeleton />;
   }
 
   if (!authState.isAuthenticated) {

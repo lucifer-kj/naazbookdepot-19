@@ -24,7 +24,7 @@ export const useCreatePromoCode = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (promoCode: Omit<PromoCode, 'id' | 'created_at' | 'current_uses' | 'created_by'>) => {
+    mutationFn: async (promoCode: Omit<PromoCode, 'id' | 'created_at' | 'current_uses' | 'created_by' | 'valid_from'>) => {
       const { data, error } = await supabase
         .from('promo_codes')
         .insert(promoCode)

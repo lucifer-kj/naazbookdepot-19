@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, ShoppingCart, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useCart } from '@/lib/context/CartContext';
-import { useWishlist } from '@/lib/hooks/useWishlist';
+import { useCartContext } from '@/lib/context/CartContext';
+import { useWishlist, useAddToWishlist, useRemoveFromWishlist, useCheckWishlistStatus } from '@/lib/hooks/useWishlist';
 import type { ProductWithCategory } from '@/lib/hooks/useProducts';
 
 interface ProductCardProps {
@@ -12,26 +11,26 @@ interface ProductCardProps {
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
-  const { addItem } = useCart();
-  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  const { addItem } = useCartContext();
+  const { mutate: addToWishlist } = useAddToWishlist();
+  const { mutate: removeFromWishlist } = useRemoveFromWishlist();
+  const { data: isInWishlist = false } = useCheckWishlistStatus(product.id);
 
   const handleAddToCart = () => {
     addItem({
-      id: product.id,
+      productId: product.id,
       name: product.name,
-      price: product.price,
-      quantity: 1,
+      price: product.price.toString(),
       image: Array.isArray(product.images) ? product.images[0] : product.images || '/placeholder.svg'
     });
   };
 
   const handleWishlistToggle = () => {
-    if (isInWishlist(product.id)) {
+    if (isInWishlist) {
       removeFromWishlist(product.id);
     } else {
       addToWishlist({
-        productId: product.id,
-        price: product.price
+        productId: product.id
       });
     }
   };
@@ -62,7 +61,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         <button
           onClick={handleWishlistToggle}
           className={`absolute top-2 right-2 p-2 rounded-full ${
-            isInWishlist(product.id)
+            isInWishlist
               ? 'bg-red-500 text-white'
               : 'bg-white text-gray-600 hover:text-red-500'
           } transition-colors`}

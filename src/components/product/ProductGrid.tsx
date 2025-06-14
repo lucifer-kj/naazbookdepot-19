@@ -1,9 +1,10 @@
 
 import React from 'react';
-import ProductDisplay, { Product } from './ProductDisplay';
+import ProductCard from '../catalog/ProductCard';
+import type { ProductWithCategory } from '@/lib/hooks/useProducts';
 
 interface ProductGridProps {
-  products: Product[];
+  products: ProductWithCategory[];
   loading?: boolean;
 }
 
@@ -37,7 +38,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({ products, loading = false }) 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {products.map((product) => (
-        <ProductDisplay key={product.id} product={product} />
+        <ProductCard key={product.id} product={product} />
       ))}
     </div>
   );

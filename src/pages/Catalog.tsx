@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Navbar from '../components/Navbar';
@@ -9,6 +8,7 @@ import AdvancedFilters, { FilterOptions } from '../components/catalog/AdvancedFi
 import ProductCard from '../components/catalog/ProductCard';
 import ProductSort, { SortOption } from '../components/product/ProductSort';
 import { Filter, Grid, List } from 'lucide-react';
+import type { ProductWithCategory } from '@/lib/hooks/useProducts';
 
 // Define a Product type that matches our database schema
 interface Product {
@@ -62,7 +62,7 @@ const sortOptions: SortOption[] = [
 ];
 
 // Mock products with correct types
-const products: Product[] = [
+const products: ProductWithCategory[] = [
   {
     id: '1',
     name: 'The Noble Quran - Arabic with English Translation',
@@ -72,7 +72,9 @@ const products: Product[] = [
     average_rating: 4.8,
     review_count: 124,
     categories: { id: '1', name: 'Quran & Tafsir' },
-    images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png']
+    images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
+    category_id: '1',
+    created_at: new Date().toISOString()
   },
   {
     id: '2',
@@ -83,7 +85,9 @@ const products: Product[] = [
     average_rating: 5.0,
     review_count: 89,
     categories: { id: '2', name: 'Hadith' },
-    images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png']
+    images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
+    category_id: '2',
+    created_at: new Date().toISOString()
   },
   {
     id: '3',
@@ -94,7 +98,9 @@ const products: Product[] = [
     average_rating: 4.9,
     review_count: 203,
     categories: { id: '4', name: 'Seerah' },
-    images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png']
+    images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
+    category_id: '4',
+    created_at: new Date().toISOString()
   },
   {
     id: '4',
@@ -105,7 +111,9 @@ const products: Product[] = [
     average_rating: 4.7,
     review_count: 67,
     categories: { id: '3', name: 'Fiqh' },
-    images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png']
+    images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
+    category_id: '3',
+    created_at: new Date().toISOString()
   }
 ];
 
@@ -168,7 +176,7 @@ const Catalog = () => {
     return () => clearTimeout(timer);
   }, [searchQuery, activeCategory, activeFilters, sortBy]);
 
-  const sortProducts = (productsToSort: Product[], sortOption: string) => {
+  const sortProducts = (productsToSort: ProductWithCategory[], sortOption: string) => {
     const sorted = [...productsToSort];
     
     switch (sortOption) {
@@ -327,8 +335,6 @@ const Catalog = () => {
                     <ProductCard
                       key={product.id}
                       product={product}
-                      onQuickView={(product) => console.log('Quick view:', product)}
-                      onAddToWishlist={(id) => console.log('Add to wishlist:', id)}
                     />
                   ))}
                 </div>

@@ -1,9 +1,8 @@
-
 import React from 'react';
 import { Heart, ShoppingCart, Star, Truck, Shield, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useCart } from '@/lib/context/CartContext';
-import { useWishlist } from '@/lib/hooks/useWishlist';
+import { useCartContext } from '@/lib/context/CartContext';
+import { useAddToWishlist, useRemoveFromWishlist, useCheckWishlistStatus } from '@/lib/hooks/useWishlist';
 import type { ProductWithCategory } from '@/lib/hooks/useProducts';
 
 interface ProductDisplayProps {
@@ -11,26 +10,26 @@ interface ProductDisplayProps {
 }
 
 const ProductDisplay: React.FC<ProductDisplayProps> = ({ product }) => {
-  const { addItem } = useCart();
-  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  const { addItem } = useCartContext();
+  const { mutate: addToWishlist } = useAddToWishlist();
+  const { mutate: removeFromWishlist } = useRemoveFromWishlist();
+  const { data: isInWishlist = false } = useCheckWishlistStatus(product.id);
 
   const handleAddToCart = () => {
     addItem({
-      id: product.id,
+      productId: product.id,
       name: product.name,
-      price: product.price,
-      quantity: 1,
+      price: product.price.toString(),
       image: Array.isArray(product.images) ? product.images[0] : product.images || '/placeholder.svg'
     });
   };
 
   const handleWishlistToggle = () => {
-    if (isInWishlist(product.id)) {
+    if (isInWishlist) {
       removeFromWishlist(product.id);
     } else {
       addToWishlist({
-        productId: product.id,
-        price: product.price
+        productId: product.id
       });
     }
   };
@@ -128,7 +127,7 @@ const ProductDisplay: React.FC<ProductDisplayProps> = ({ product }) => {
             size="lg"
             className="px-6"
           >
-            <Heart className={`h-5 w-5 ${isInWishlist(product.id) ? 'fill-current text-red-500' : ''}`} />
+            <Heart className={`h-5 w-5 ${isInWishlist ? 'fill-current text-red-500' : ''}`} />
           </Button>
         </div>
 

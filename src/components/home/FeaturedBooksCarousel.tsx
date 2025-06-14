@@ -9,26 +9,26 @@ const FeaturedBooksCarousel = () => {
   const { addItem } = useCartContext();
 
   const featuredBooks = [{
-    id: 1,
+    id: "1",
     title: "Sahih Al-Bukhari",
     author: "Imam Bukhari",
-    price: "₹850",
+    price: "850",
     image: "/lovable-uploads/fb-1.jpg",
     rating: 5,
     description: "Authentic collection of Prophet's sayings"
   }, {
-    id: 2,
+    id: "2",
     title: "Tafseer Ibn Kathir",
     author: "Ibn Kathir",
-    price: "₹1,200",
+    price: "1200",
     image: "/lovable-uploads/fb-2.jpeg",
     rating: 5,
     description: "Comprehensive Quranic commentary"
   }, {
-    id: 3,
+    id: "3",
     title: "Riyadh as-Salihin",
     author: "Imam Nawawi",
-    price: "₹650",
+    price: "650",
     image: "/lovable-uploads/fb-3.jpg",
     rating: 5,
     description: "Gardens of the righteous collection"
@@ -38,7 +38,7 @@ const FeaturedBooksCarousel = () => {
     addItem({
       productId: book.id,
       name: book.title,
-      price: book.price.replace('₹', ''),
+      price: book.price,
       image: book.image
     });
   };
@@ -78,7 +78,7 @@ const FeaturedBooksCarousel = () => {
                     ))}
                   </div>
                   
-                  <p className="text-naaz-green font-bold text-xl mb-4">{book.price}</p>
+                  <p className="text-naaz-green font-bold text-xl mb-4">₹{book.price}</p>
                 </Link>
                 
                 <div className="flex gap-2">

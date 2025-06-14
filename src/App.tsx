@@ -64,7 +64,7 @@ function App() {
               <Route path="/account" element={<Account />} />
               <Route path="/wishlist" element={<Wishlist />} />
               <Route path="/blog" element={<Blog />} />
-              <Route path="/coming-soon" element={<ComingSoon />} />
+              <Route path="/coming-soon" element={<ComingSoon section="perfumes" />} />
 
               {/* Admin Routes */}
               <Route path="/admin/login" element={<AdminLogin />} />

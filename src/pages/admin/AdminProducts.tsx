@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAdminProducts, useCreateProduct, useUpdateProduct, useDeleteProduct } from '@/lib/hooks/admin/useAdminProducts';
@@ -39,6 +38,7 @@ const AdminProducts = () => {
     stock: '',
     category_id: '',
     images: [] as string[],
+    tags: [] as string[],
   });
 
   useEffect(() => {
@@ -68,7 +68,8 @@ const AdminProducts = () => {
   const filteredProducts = products?.filter(product => {
     const matchesSearch = !localSearchQuery || 
       product.name.toLowerCase().includes(localSearchQuery.toLowerCase()) ||
-      product.description?.toLowerCase().includes(localSearchQuery.toLowerCase());
+      product.description?.toLowerCase().includes(localSearchQuery.toLowerCase()) ||
+      product.tags?.some(tag => tag.toLowerCase().includes(localSearchQuery.toLowerCase()));
     
     const matchesCategory = !categoryFilter || product.category_id === categoryFilter;
     
@@ -85,6 +86,7 @@ const AdminProducts = () => {
       stock: parseInt(formData.stock),
       category_id: formData.category_id,
       images: formData.images,
+      tags: formData.tags,
     };
 
     try {
@@ -103,6 +105,7 @@ const AdminProducts = () => {
         stock: '',
         category_id: '',
         images: [],
+        tags: [],
       });
     } catch (error) {
       console.error('Error saving product:', error);
@@ -118,6 +121,7 @@ const AdminProducts = () => {
       stock: product.stock.toString(),
       category_id: product.category_id,
       images: product.images || [],
+      tags: product.tags || [],
     });
     setShowCreateForm(true);
   };
@@ -167,6 +171,7 @@ const AdminProducts = () => {
       stock: '',
       category_id: '',
       images: [],
+      tags: [],
     });
   };
 
@@ -180,6 +185,7 @@ const AdminProducts = () => {
       stock: '',
       category_id: '',
       images: [],
+      tags: [],
     });
   };
 

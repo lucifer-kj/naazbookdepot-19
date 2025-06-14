@@ -2,6 +2,8 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import ImageUpload from './ImageUpload';
+import TagsInput from './TagsInput';
 
 interface ProductFormData {
   name: string;
@@ -10,6 +12,7 @@ interface ProductFormData {
   stock: string;
   category_id: string;
   images: string[];
+  tags: string[];
 }
 
 interface ProductFormProps {
@@ -34,7 +37,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
       <h2 className="text-xl font-semibold mb-4">
         {isEditing ? 'Edit Product' : 'Create New Product'}
       </h2>
-      <form onSubmit={onSubmit} className="space-y-4">
+      <form onSubmit={onSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -89,6 +92,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
             />
           </div>
         </div>
+        
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Description
@@ -100,6 +104,19 @@ const ProductForm: React.FC<ProductFormProps> = ({
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-naaz-green"
           />
         </div>
+
+        <ImageUpload
+          images={formData.images}
+          onImagesChange={(images) => onFormDataChange({ ...formData, images })}
+        />
+
+        <TagsInput
+          tags={formData.tags}
+          onTagsChange={(tags) => onFormDataChange({ ...formData, tags })}
+          suggestions={['fiction', 'non-fiction', 'bestseller', 'new-release', 'classic', 'romance', 'mystery', 'science-fiction', 'biography', 'self-help']}
+          placeholder="Add product tags (e.g., bestseller, new-release)..."
+        />
+
         <div className="flex gap-2">
           <Button type="submit" className="bg-naaz-green hover:bg-naaz-green/90">
             {isEditing ? 'Update Product' : 'Create Product'}

@@ -1,16 +1,58 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAdminOrders, useUpdateOrderStatus } from '@/lib/hooks/admin/useAdminOrders';
+import { supabase } from '@/integrations/supabase/client';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Bell, Filter, Search } from 'lucide-react';
 
 const AdminOrders = () => {
-  const { data: orders, isLoading } = useAdminOrders();
+  const { data: orders, isLoading, refetch } = useAdminOrders();
   const updateOrderStatus = useUpdateOrderStatus();
   const [editingOrder, setEditingOrder] = useState<string | null>(null);
   const [newStatus, setNewStatus] = useState('');
   const [trackingNumber, setTrackingNumber] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [showNotification, setShowNotification] = useState(false);
+  const [lastOrderCount, setLastOrderCount] = useState(0);
+
+  // Set up real-time subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel('orders-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'orders'
+        },
+        (payload) => {
+          console.log('Orders real-time update:', payload);
+          refetch();
+          
+          // Show notification for new orders
+          if (payload.eventType === 'INSERT') {
+            setShowNotification(true);
+            setTimeout(() => setShowNotification(false), 5000);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [refetch]);
+
+  // Track order count changes
+  useEffect(() => {
+    if (orders && orders.length > lastOrderCount) {
+      setLastOrderCount(orders.length);
+    }
+  }, [orders, lastOrderCount]);
 
   const handleStatusUpdate = async (orderId: string) => {
     try {
@@ -27,6 +69,16 @@ const AdminOrders = () => {
     }
   };
 
+  const filteredOrders = orders?.filter(order => {
+    const matchesSearch = !searchQuery || 
+      (order.order_number && order.order_number.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      order.id.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesStatus = !statusFilter || order.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  }) || [];
+
   if (isLoading) {
     return (
       <AdminLayout>
@@ -40,11 +92,64 @@ const AdminOrders = () => {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-playfair font-bold text-naaz-green">Orders</h1>
-          <p className="text-gray-600">Manage customer orders</p>
+        {/* Header with notification */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-3xl font-playfair font-bold text-naaz-green flex items-center">
+              Orders
+              {showNotification && (
+                <span className="ml-3 flex items-center text-sm bg-green-100 text-green-800 px-2 py-1 rounded-full animate-pulse">
+                  <Bell className="h-3 w-3 mr-1" />
+                  New Order!
+                </span>
+              )}
+            </h1>
+            <p className="text-gray-600">Manage customer orders ({filteredOrders.length} orders)</p>
+          </div>
         </div>
 
+        {/* Filters */}
+        <div className="bg-white rounded-lg shadow-md p-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                type="text"
+                placeholder="Search orders..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <div className="relative">
+              <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-naaz-green"
+              >
+                <option value="">All Statuses</option>
+                <option value="pending">Pending</option>
+                <option value="processing">Processing</option>
+                <option value="shipped">Shipped</option>
+                <option value="delivered">Delivered</option>
+                <option value="cancelled">Cancelled</option>
+                <option value="refunded">Refunded</option>
+              </select>
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSearchQuery('');
+                setStatusFilter('');
+              }}
+            >
+              Clear Filters
+            </Button>
+          </div>
+        </div>
+
+        {/* Orders Table */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
@@ -71,8 +176,8 @@ const AdminOrders = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {orders?.map((order) => (
-                  <tr key={order.id}>
+                {filteredOrders.map((order) => (
+                  <tr key={order.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {order.order_number || `#${order.id.slice(0, 8)}`}
                     </td>

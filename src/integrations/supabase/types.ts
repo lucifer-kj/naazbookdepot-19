@@ -227,6 +227,7 @@ export type Database = {
           name: string
           price: number
           stock: number
+          tags: string[] | null
         }
         Insert: {
           category_id: string
@@ -237,6 +238,7 @@ export type Database = {
           name: string
           price: number
           stock: number
+          tags?: string[] | null
         }
         Update: {
           category_id?: string
@@ -247,6 +249,7 @@ export type Database = {
           name?: string
           price?: number
           stock?: number
+          tags?: string[] | null
         }
         Relationships: [
           {
@@ -489,6 +492,20 @@ export type Database = {
       get_product_review_count: {
         Args: { product_uuid: string }
         Returns: number
+      }
+      search_products: {
+        Args: { search_query: string }
+        Returns: {
+          id: string
+          name: string
+          description: string
+          price: number
+          stock: number
+          category_id: string
+          images: string[]
+          tags: string[]
+          created_at: string
+        }[]
       }
       update_product_stock: {
         Args: {

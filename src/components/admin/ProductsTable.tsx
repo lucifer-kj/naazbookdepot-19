@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Edit, Trash2, Package } from 'lucide-react';
+import { Edit, Trash2, Package, Tag } from 'lucide-react';
 
 interface Product {
   id: string;
@@ -11,6 +11,7 @@ interface Product {
   price: number;
   stock: number;
   images?: string[];
+  tags?: string[];
   categories?: { name: string };
   average_rating?: number;
   review_count?: number;
@@ -52,6 +53,9 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                 Category
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Tags
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Price
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -87,6 +91,24 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {product.categories?.name}
+                </td>
+                <td className="px-6 py-4">
+                  <div className="flex flex-wrap gap-1 max-w-32">
+                    {product.tags?.slice(0, 3).map((tag, index) => (
+                      <span
+                        key={index}
+                        className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800"
+                      >
+                        <Tag className="h-2.5 w-2.5 mr-1" />
+                        {tag}
+                      </span>
+                    ))}
+                    {product.tags && product.tags.length > 3 && (
+                      <span className="text-xs text-gray-500">
+                        +{product.tags.length - 3} more
+                      </span>
+                    )}
+                  </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   ₹{product.price}

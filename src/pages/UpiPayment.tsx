@@ -20,7 +20,7 @@ const UpiPayment = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   
   // Read cart from URL param and use for items & totals
-  const cart = JSON.parse(searchParams.get('cart') || '{}');
+  const cartFromUrl = JSON.parse(searchParams.get('cart') || '{}');
   const total = searchParams.get('total') || '0';
   const shippingData = JSON.parse(searchParams.get('shipping') || '{}');
   const gst = searchParams.get('gst') || '0';
@@ -35,7 +35,6 @@ const UpiPayment = () => {
   const upiUrl = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(merchantName)}&am=${total}&tn=${encodeURIComponent(`Naaz Books order reference: ${upiReference}`)}&mc=0000&mode=02&purpose=00`;
 
   // NEW: Custom QR code rendering with logo overlay (mobile/desktop optimized)
-  // Instead of directly embedding img src, use a canvas-based renderer if possible, but for now, just use QR Server plus overlayed logo div for demo:
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${encodeURIComponent(upiUrl)}`;
 
   // WhatsApp fallback data
@@ -61,7 +60,7 @@ const UpiPayment = () => {
   };
 
   const handlePaymentComplete = async () => {
-    if (!user || cart.items.length === 0) {
+    if (!user || !cartFromUrl.items || cartFromUrl.items.length === 0) {
       navigate('/cart');
       return;
     }
@@ -70,7 +69,7 @@ const UpiPayment = () => {
     
     try {
       const orderData = {
-        cartItems: cart.items,
+        cartItems: cartFromUrl.items,
         shippingAddress: shippingData,
         billingAddress: shippingData,
         total: parseFloat(total),
@@ -91,7 +90,7 @@ const UpiPayment = () => {
           payment_method: 'upi',
           payment_status: 'paid_claimed',
           upi_reference_code: upiReference,
-          payment_expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(), // 15 minutes
+          payment_expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
         }),
       });
 

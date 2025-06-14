@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Heart, ShoppingCart, Star, Truck, Shield, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -19,7 +20,7 @@ const ProductDisplay: React.FC<ProductDisplayProps> = ({ product }) => {
     addItem({
       productId: product.id,
       name: product.name,
-      price: product.price.toString(),
+      price: product.price,
       image: Array.isArray(product.images) ? product.images[0] : product.images || '/placeholder.svg'
     });
   };

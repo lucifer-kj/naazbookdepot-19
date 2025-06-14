@@ -1,9 +1,10 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, ShoppingCart, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCartContext } from '@/lib/context/CartContext';
-import { useWishlist, useAddToWishlist, useRemoveFromWishlist, useCheckWishlistStatus } from '@/lib/hooks/useWishlist';
+import { useAddToWishlist, useRemoveFromWishlist, useCheckWishlistStatus } from '@/lib/hooks/useWishlist';
 import type { ProductWithCategory } from '@/lib/hooks/useProducts';
 
 interface ProductCardProps {
@@ -20,7 +21,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     addItem({
       productId: product.id,
       name: product.name,
-      price: product.price.toString(),
+      price: product.price,
       image: Array.isArray(product.images) ? product.images[0] : product.images || '/placeholder.svg'
     });
   };

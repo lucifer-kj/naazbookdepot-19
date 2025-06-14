@@ -71,7 +71,12 @@ const products: ProductWithCategory[] = [
     stock: 15,
     average_rating: 4.8,
     review_count: 124,
-    categories: { id: '1', name: 'Quran & Tafsir' },
+    categories: { 
+      id: '1', 
+      name: 'Quran & Tafsir', 
+      slug: 'quran-tafsir',
+      created_at: new Date().toISOString()
+    },
     images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
     category_id: '1',
     created_at: new Date().toISOString()
@@ -84,7 +89,12 @@ const products: ProductWithCategory[] = [
     stock: 8,
     average_rating: 5.0,
     review_count: 89,
-    categories: { id: '2', name: 'Hadith' },
+    categories: { 
+      id: '2', 
+      name: 'Hadith', 
+      slug: 'hadith',
+      created_at: new Date().toISOString()
+    },
     images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
     category_id: '2',
     created_at: new Date().toISOString()
@@ -97,7 +107,12 @@ const products: ProductWithCategory[] = [
     stock: 22,
     average_rating: 4.9,
     review_count: 203,
-    categories: { id: '4', name: 'Seerah' },
+    categories: { 
+      id: '4', 
+      name: 'Seerah', 
+      slug: 'seerah',
+      created_at: new Date().toISOString()
+    },
     images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
     category_id: '4',
     created_at: new Date().toISOString()
@@ -110,7 +125,12 @@ const products: ProductWithCategory[] = [
     stock: 12,
     average_rating: 4.7,
     review_count: 67,
-    categories: { id: '3', name: 'Fiqh' },
+    categories: { 
+      id: '3', 
+      name: 'Fiqh', 
+      slug: 'fiqh',
+      created_at: new Date().toISOString()
+    },
     images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
     category_id: '3',
     created_at: new Date().toISOString()

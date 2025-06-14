@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -18,7 +19,12 @@ const books: ProductWithCategory[] = [
     stock: 15,
     average_rating: 4.5,
     review_count: 24,
-    categories: { id: '1', name: 'Quran & Tafsir' },
+    categories: { 
+      id: '1', 
+      name: 'Quran & Tafsir', 
+      slug: 'quran-tafsir',
+      created_at: new Date().toISOString()
+    },
     images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
     description: 'The Noble Quran with translation and commentary.',
     category_id: '1',
@@ -31,7 +37,12 @@ const books: ProductWithCategory[] = [
     stock: 12,
     average_rating: 5,
     review_count: 18,
-    categories: { id: '2', name: 'Hadith' },
+    categories: { 
+      id: '2', 
+      name: 'Hadith', 
+      slug: 'hadith',
+      created_at: new Date().toISOString()
+    },
     images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
     description: 'Complete collection of authentic Hadith.',
     category_id: '2',
@@ -44,7 +55,12 @@ const books: ProductWithCategory[] = [
     stock: 8,
     average_rating: 4.8,
     review_count: 15,
-    categories: { id: '2', name: 'Hadith' },
+    categories: { 
+      id: '2', 
+      name: 'Hadith', 
+      slug: 'hadith',
+      created_at: new Date().toISOString()
+    },
     images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
     description: 'A collection of authentic hadith covering various aspects of life.',
     category_id: '2',
@@ -57,7 +73,12 @@ const books: ProductWithCategory[] = [
     stock: 20,
     average_rating: 4.7,
     review_count: 22,
-    categories: { id: '4', name: 'Seerah' },
+    categories: { 
+      id: '4', 
+      name: 'Seerah', 
+      slug: 'seerah',
+      created_at: new Date().toISOString()
+    },
     images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
     description: 'Biography of Prophet Muhammad (PBUH).',
     category_id: '4',
@@ -70,7 +91,12 @@ const books: ProductWithCategory[] = [
     stock: 10,
     average_rating: 4.9,
     review_count: 19,
-    categories: { id: '1', name: 'Quran & Tafsir' },
+    categories: { 
+      id: '1', 
+      name: 'Quran & Tafsir', 
+      slug: 'quran-tafsir',
+      created_at: new Date().toISOString()
+    },
     images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
     description: 'Comprehensive Tafsir of the Quran.',
     category_id: '1',
@@ -83,7 +109,12 @@ const books: ProductWithCategory[] = [
     stock: 0,
     average_rating: 4.6,
     review_count: 12,
-    categories: { id: '3', name: 'Fiqh' },
+    categories: { 
+      id: '3', 
+      name: 'Fiqh', 
+      slug: 'fiqh',
+      created_at: new Date().toISOString()
+    },
     images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
     description: 'A beginner friendly guide to Islamic jurisprudence.',
     category_id: '3',
@@ -96,7 +127,12 @@ const books: ProductWithCategory[] = [
     stock: 14,
     average_rating: 4.5,
     review_count: 16,
-    categories: { id: '5', name: 'History' },
+    categories: { 
+      id: '5', 
+      name: 'History', 
+      slug: 'history',
+      created_at: new Date().toISOString()
+    },
     images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
     description: 'Stories of all the Prophets mentioned in the Quran.',
     category_id: '5',
@@ -109,7 +145,12 @@ const books: ProductWithCategory[] = [
     stock: 25,
     average_rating: 4.4,
     review_count: 14,
-    categories: { id: '6', name: 'Spirituality' },
+    categories: { 
+      id: '6', 
+      name: 'Spirituality', 
+      slug: 'spirituality',
+      created_at: new Date().toISOString()
+    },
     images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
     description: 'Guide to living according to Islamic principles.',
     category_id: '6',

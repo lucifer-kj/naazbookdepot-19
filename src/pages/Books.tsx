@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -28,7 +27,8 @@ const books: ProductWithCategory[] = [
     images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
     description: 'The Noble Quran with translation and commentary.',
     category_id: '1',
-    created_at: new Date().toISOString()
+    created_at: new Date().toISOString(),
+    tags: ['quran', 'translation', 'commentary', 'arabic']
   },
   {
     id: '2',
@@ -46,7 +46,8 @@ const books: ProductWithCategory[] = [
     images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
     description: 'Complete collection of authentic Hadith.',
     category_id: '2',
-    created_at: new Date().toISOString()
+    created_at: new Date().toISOString(),
+    tags: ['hadith', 'bukhari', 'authentic', 'collection']
   },
   {
     id: '3',
@@ -64,7 +65,8 @@ const books: ProductWithCategory[] = [
     images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
     description: 'A collection of authentic hadith covering various aspects of life.',
     category_id: '2',
-    created_at: new Date().toISOString()
+    created_at: new Date().toISOString(),
+    tags: ['hadith', 'nawawi', 'guidance', 'authentic']
   },
   {
     id: '4',
@@ -82,7 +84,8 @@ const books: ProductWithCategory[] = [
     images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
     description: 'Biography of Prophet Muhammad (PBUH).',
     category_id: '4',
-    created_at: new Date().toISOString()
+    created_at: new Date().toISOString(),
+    tags: ['seerah', 'biography', 'prophet', 'muhammad']
   },
   {
     id: '5',
@@ -100,7 +103,8 @@ const books: ProductWithCategory[] = [
     images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
     description: 'Comprehensive Tafsir of the Quran.',
     category_id: '1',
-    created_at: new Date().toISOString()
+    created_at: new Date().toISOString(),
+    tags: ['tafsir', 'ibn-kathir', 'quran', 'commentary']
   },
   {
     id: '6',
@@ -118,7 +122,8 @@ const books: ProductWithCategory[] = [
     images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
     description: 'A beginner friendly guide to Islamic jurisprudence.',
     category_id: '3',
-    created_at: new Date().toISOString()
+    created_at: new Date().toISOString(),
+    tags: ['fiqh', 'jurisprudence', 'beginner', 'guide']
   },
   {
     id: '7',
@@ -136,7 +141,8 @@ const books: ProductWithCategory[] = [
     images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
     description: 'Stories of all the Prophets mentioned in the Quran.',
     category_id: '5',
-    created_at: new Date().toISOString()
+    created_at: new Date().toISOString(),
+    tags: ['prophets', 'stories', 'history', 'quran']
   },
   {
     id: '8',
@@ -154,7 +160,8 @@ const books: ProductWithCategory[] = [
     images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
     description: 'Guide to living according to Islamic principles.',
     category_id: '6',
-    created_at: new Date().toISOString()
+    created_at: new Date().toISOString(),
+    tags: ['spirituality', 'lifestyle', 'guidance', 'principles']
   }
 ];
 

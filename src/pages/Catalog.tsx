@@ -79,7 +79,8 @@ const products: ProductWithCategory[] = [
     },
     images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
     category_id: '1',
-    created_at: new Date().toISOString()
+    created_at: new Date().toISOString(),
+    tags: ['quran', 'translation', 'commentary', 'english', 'arabic']
   },
   {
     id: '2',
@@ -97,7 +98,8 @@ const products: ProductWithCategory[] = [
     },
     images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
     category_id: '2',
-    created_at: new Date().toISOString()
+    created_at: new Date().toISOString(),
+    tags: ['hadith', 'bukhari', 'authentic', 'complete-set', 'nine-volumes']
   },
   {
     id: '3',
@@ -115,7 +117,8 @@ const products: ProductWithCategory[] = [
     },
     images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
     category_id: '4',
-    created_at: new Date().toISOString()
+    created_at: new Date().toISOString(),
+    tags: ['seerah', 'biography', 'prophet', 'award-winning', 'bestseller']
   },
   {
     id: '4',
@@ -133,7 +136,8 @@ const products: ProductWithCategory[] = [
     },
     images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
     category_id: '3',
-    created_at: new Date().toISOString()
+    created_at: new Date().toISOString(),
+    tags: ['fiqh', 'jurisprudence', 'sunnah', 'comprehensive', 'five-volumes']
   }
 ];
 

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Heart, ShoppingCart, Star, Truck, Shield, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';

@@ -1,19 +1,35 @@
 
 import { useMutation } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
-// Since newsletter_subscribers table doesn't exist in the current schema,
-// I'll create a simple implementation that can be extended later
 export const useNewsletterSubscription = () => {
   return useMutation({
     mutationFn: async ({ email, name }: { email: string; name?: string }) => {
-      // For now, just log the subscription
-      // This can be replaced with actual API call or database insertion later
-      console.log('Newsletter subscription:', { email, name });
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      return { email, name, subscribed: true };
+      const { data, error } = await supabase
+        .from('newsletter_subscriptions')
+        .insert({
+          email: email,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        // If email already exists, update is_active to true
+        if (error.code === '23505') {
+          const { data: updatedData, error: updateError } = await supabase
+            .from('newsletter_subscriptions')
+            .update({ is_active: true })
+            .eq('email', email)
+            .select()
+            .single();
+
+          if (updateError) throw updateError;
+          return updatedData;
+        }
+        throw error;
+      }
+
+      return data;
     },
   });
 };
@@ -21,13 +37,15 @@ export const useNewsletterSubscription = () => {
 export const useNewsletterUnsubscribe = () => {
   return useMutation({
     mutationFn: async (email: string) => {
-      // For now, just log the unsubscription
-      console.log('Newsletter unsubscribe:', email);
-      
-      // Simulate API call  
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      return { email, unsubscribed: true };
+      const { data, error } = await supabase
+        .from('newsletter_subscriptions')
+        .update({ is_active: false })
+        .eq('email', email)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
     },
   });
 };

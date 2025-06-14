@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, ShoppingCart, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useWishlist, useRemoveFromWishlist } from '@/lib/hooks/useWishlist';
-import { useCartContext } from '@/lib/context/CartContext';
+import { useAddToCart } from '@/lib/hooks/useCart';
 import { useAuth } from '@/lib/context/AuthContext';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -13,14 +13,12 @@ const Wishlist = () => {
   const { isAuthenticated } = useAuth();
   const { data: wishlistItems = [], isLoading } = useWishlist();
   const { mutate: removeFromWishlist } = useRemoveFromWishlist();
-  const { addItem } = useCartContext();
+  const { mutate: addToCart } = useAddToCart();
 
   const handleAddToCart = (item: any) => {
-    addItem({
-      productId: parseInt(item.products.id),
-      name: item.products.name,
-      price: item.products.price.toString(),
-      image: item.products.images?.[0] || '/placeholder.svg'
+    addToCart({
+      productId: item.products.id,
+      quantity: 1
     });
   };
 

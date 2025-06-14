@@ -4,9 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/context/AuthContext';
 import type { Tables } from '@/integrations/supabase/types';
 
-// Since there's no wishlists table, we'll use cart_items as a wishlist for now
-// This is a temporary solution - you can create a proper wishlists table later
-export type WishlistItem = Tables<'cart_items'> & {
+export type WishlistItem = Tables<'wishlist_items'> & {
   products: Tables<'products'> & {
     categories?: Tables<'categories'>;
   };
@@ -20,9 +18,8 @@ export const useWishlist = () => {
     queryFn: async () => {
       if (!user) throw new Error('User not authenticated');
 
-      // Using cart_items with quantity 0 as wishlist items for now
       const { data, error } = await supabase
-        .from('cart_items')
+        .from('wishlist_items')
         .select(`
           *,
           products(
@@ -30,8 +27,7 @@ export const useWishlist = () => {
             categories(*)
           )
         `)
-        .eq('user_id', user.id)
-        .eq('quantity', 0); // Use quantity 0 to differentiate wishlist from cart
+        .eq('user_id', user.id);
 
       if (error) throw error;
       return data as WishlistItem[];
@@ -49,11 +45,10 @@ export const useAddToWishlist = () => {
       if (!user) throw new Error('User not authenticated');
 
       const { data, error } = await supabase
-        .from('cart_items')
+        .from('wishlist_items')
         .insert({
           user_id: user.id,
           product_id: productId,
-          quantity: 0, // Use quantity 0 for wishlist items
         })
         .select()
         .single();
@@ -76,7 +71,7 @@ export const useRemoveFromWishlist = () => {
       if (!user) throw new Error('User not authenticated');
 
       const { error } = await supabase
-        .from('cart_items')
+        .from('wishlist_items')
         .delete()
         .eq('id', wishlistId)
         .eq('user_id', user.id);
@@ -86,5 +81,27 @@ export const useRemoveFromWishlist = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['wishlist'] });
     },
+  });
+};
+
+export const useCheckWishlistStatus = (productId: string) => {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ['wishlist-status', user?.id, productId],
+    queryFn: async () => {
+      if (!user) return false;
+
+      const { data, error } = await supabase
+        .from('wishlist_items')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('product_id', productId)
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error;
+      return !!data;
+    },
+    enabled: !!user && !!productId,
   });
 };

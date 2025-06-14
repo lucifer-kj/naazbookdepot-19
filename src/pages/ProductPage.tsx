@@ -3,17 +3,20 @@ import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Star, ShoppingCart, Heart, ArrowLeft, Plus, Minus } from 'lucide-react';
 import { useProduct } from '@/lib/hooks/useProducts';
-import { useCartContext } from '@/lib/context/CartContext';
-import { useAddToWishlist } from '@/lib/hooks/useWishlist';
+import { useAddToCart } from '@/lib/hooks/useCart';
+import { useAddToWishlist, useCheckWishlistStatus } from '@/lib/hooks/useWishlist';
+import { useAuth } from '@/lib/context/AuthContext';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
 const ProductPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const { data: product, isLoading, error } = useProduct(id!);
-  const { addItem } = useCartContext();
-  const { mutate: addToWishlist } = useAddToWishlist();
+  const { mutate: addToCart, isPending: isAddingToCart } = useAddToCart();
+  const { mutate: addToWishlist, isPending: isAddingToWishlist } = useAddToWishlist();
+  const { data: isInWishlist } = useCheckWishlistStatus(id!);
   const [quantity, setQuantity] = useState(1);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
@@ -50,21 +53,39 @@ const ProductPage = () => {
   }
 
   const handleAddToCart = () => {
-    addItem({
-      productId: parseInt(product.id),
-      name: product.name,
-      price: product.price.toString(),
-      image: product.images?.[0] || '/placeholder.svg'
-    });
+    if (!isAuthenticated) {
+      navigate('/account');
+      return;
+    }
+    
+    addToCart({ productId: product.id, quantity });
   };
 
   const handleBuyNow = () => {
-    handleAddToCart();
-    navigate('/checkout');
+    if (!isAuthenticated) {
+      navigate('/account');
+      return;
+    }
+    
+    addToCart({ 
+      productId: product.id, 
+      quantity 
+    }, {
+      onSuccess: () => {
+        navigate('/checkout');
+      }
+    });
   };
 
   const handleAddToWishlist = () => {
-    addToWishlist({ productId: product.id });
+    if (!isAuthenticated) {
+      navigate('/account');
+      return;
+    }
+    
+    if (!isInWishlist) {
+      addToWishlist({ productId: product.id });
+    }
   };
 
   const images = product.images?.length ? product.images : ['/placeholder.svg'];
@@ -173,15 +194,15 @@ const ProductPage = () => {
               <div className="flex gap-4 mb-6">
                 <button
                   onClick={handleAddToCart}
-                  disabled={product.stock === 0}
+                  disabled={product.stock === 0 || isAddingToCart}
                   className="flex-1 bg-naaz-green text-white py-3 px-6 rounded-lg hover:bg-naaz-green/90 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
                 >
                   <ShoppingCart size={20} className="mr-2" />
-                  Add to Cart
+                  {isAddingToCart ? 'Adding...' : 'Add to Cart'}
                 </button>
                 <button
                   onClick={handleBuyNow}
-                  disabled={product.stock === 0}
+                  disabled={product.stock === 0 || isAddingToCart}
                   className="flex-1 bg-naaz-gold text-white py-3 px-6 rounded-lg hover:bg-naaz-gold/90 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
                   Buy Now
@@ -190,10 +211,15 @@ const ProductPage = () => {
 
               <button
                 onClick={handleAddToWishlist}
-                className="w-full border border-naaz-green text-naaz-green py-3 px-6 rounded-lg hover:bg-naaz-green/5 transition-colors flex items-center justify-center"
+                disabled={isInWishlist || isAddingToWishlist}
+                className={`w-full py-3 px-6 rounded-lg transition-colors flex items-center justify-center ${
+                  isInWishlist 
+                    ? 'bg-gray-100 text-gray-500 cursor-not-allowed' 
+                    : 'border border-naaz-green text-naaz-green hover:bg-naaz-green/5'
+                }`}
               >
-                <Heart size={20} className="mr-2" />
-                Add to Wishlist
+                <Heart size={20} className={`mr-2 ${isInWishlist ? 'fill-current' : ''}`} />
+                {isInWishlist ? 'In Wishlist' : isAddingToWishlist ? 'Adding...' : 'Add to Wishlist'}
               </button>
             </div>
           </div>

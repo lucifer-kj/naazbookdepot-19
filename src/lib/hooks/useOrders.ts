@@ -4,10 +4,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/context/AuthContext';
 import type { Tables } from '@/integrations/supabase/types';
 
-export type Order = Tables<'orders'>;
-export type OrderItem = Tables<'order_items'>;
-export type OrderWithItems = Order & {
-  order_items: OrderItem[];
+export type Order = Tables<'orders'> & {
+  order_items: (Tables<'order_items'> & {
+    products: Tables<'products'>;
+  })[];
 };
 
 export const useOrders = () => {
@@ -22,40 +22,18 @@ export const useOrders = () => {
         .from('orders')
         .select(`
           *,
-          order_items(*)
+          order_items(
+            *,
+            products(*)
+          )
         `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as OrderWithItems[];
+      return data as Order[];
     },
     enabled: !!user,
-  });
-};
-
-export const useOrder = (orderId: string) => {
-  const { user } = useAuth();
-
-  return useQuery({
-    queryKey: ['order', orderId],
-    queryFn: async () => {
-      if (!user) throw new Error('User not authenticated');
-
-      const { data, error } = await supabase
-        .from('orders')
-        .select(`
-          *,
-          order_items(*)
-        `)
-        .eq('id', orderId)
-        .eq('user_id', user.id)
-        .single();
-
-      if (error) throw error;
-      return data as OrderWithItems;
-    },
-    enabled: !!user && !!orderId,
   });
 };
 
@@ -64,25 +42,31 @@ export const useCreateOrder = () => {
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async (orderData: {
-      items: Array<{
-        product_id: string;
-        quantity: number;
-        price: number;
-      }>;
+    mutationFn: async ({
+      cartItems,
+      shippingAddress,
+      billingAddress,
+      total,
+      notes
+    }: {
+      cartItems: any[];
+      shippingAddress: any;
+      billingAddress?: any;
       total: number;
+      notes?: string;
     }) => {
       if (!user) throw new Error('User not authenticated');
 
-      const { items, total } = orderData;
-
-      // Create the order
+      // Start transaction by creating order first
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
           user_id: user.id,
-          total,
+          total: total,
           status: 'pending',
+          shipping_address: shippingAddress,
+          billing_address: billingAddress || shippingAddress,
+          notes: notes,
         })
         .select()
         .single();
@@ -90,11 +74,11 @@ export const useCreateOrder = () => {
       if (orderError) throw orderError;
 
       // Create order items
-      const orderItems = items.map(item => ({
+      const orderItems = cartItems.map(item => ({
         order_id: order.id,
-        product_id: item.product_id,
+        product_id: item.product_id || item.products?.id,
         quantity: item.quantity,
-        price: item.price,
+        price: parseFloat(item.products?.price || item.price || '0'),
       }));
 
       const { error: itemsError } = await supabase
@@ -103,7 +87,71 @@ export const useCreateOrder = () => {
 
       if (itemsError) throw itemsError;
 
+      // Update stock levels
+      for (const item of cartItems) {
+        const productId = item.product_id || item.products?.id;
+        const quantity = item.quantity;
+
+        // Get current stock
+        const { data: product, error: productError } = await supabase
+          .from('products')
+          .select('stock')
+          .eq('id', productId)
+          .single();
+
+        if (productError) throw productError;
+
+        // Update stock
+        const newStock = Math.max(0, product.stock - quantity);
+        const { error: stockError } = await supabase
+          .from('products')
+          .update({ stock: newStock })
+          .eq('id', productId);
+
+        if (stockError) throw stockError;
+      }
+
+      // Clear cart after successful order
+      const { error: clearCartError } = await supabase
+        .from('cart_items')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (clearCartError) throw clearCartError;
+
       return order;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['cart'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+    },
+  });
+};
+
+export const useUpdateOrderStatus = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ orderId, status, trackingNumber }: {
+      orderId: string;
+      status: string;
+      trackingNumber?: string;
+    }) => {
+      const updateData: any = { status };
+      if (trackingNumber) {
+        updateData.tracking_number = trackingNumber;
+      }
+
+      const { data, error } = await supabase
+        .from('orders')
+        .update(updateData)
+        .eq('id', orderId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });

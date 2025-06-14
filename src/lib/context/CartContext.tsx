@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import { useCart, useAddToCart, useUpdateCartItem, useRemoveFromCart, useClearCart } from '../hooks/useCart';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface CartItem {
   productId: string;
@@ -149,7 +150,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const removeFromCartMutation = useRemoveFromCart();
   const clearCartMutation = useClearCart();
 
-  // Load cart from localStorage on mount
+  // Load cart from localStorage on mount for non-authenticated users
   useEffect(() => {
     if (!isAuthenticated) {
       const savedCart = localStorage.getItem(CART_STORAGE_KEY);
@@ -165,7 +166,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, [isAuthenticated]);
 
-  // Sync Supabase cart to local state
+  // Sync Supabase cart to local state for authenticated users
   useEffect(() => {
     if (isAuthenticated && supabaseCartItems) {
       const cartItems: CartItem[] = supabaseCartItems.map(item => ({
@@ -186,6 +187,32 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, [cart.items, isAuthenticated]);
 
+  // Real-time cart updates for authenticated users
+  useEffect(() => {
+    if (!isAuthenticated || !user) return;
+
+    const channel = supabase
+      .channel('cart-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'cart_items',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          // Cart data will be automatically refetched by react-query
+          console.log('Cart updated in real-time');
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isAuthenticated, user]);
+
   const addItem = async (item: Omit<CartItem, 'quantity'>) => {
     if (isAuthenticated) {
       try {
@@ -193,6 +220,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           productId: item.productId,
           quantity: 1
         });
+        dispatch({ type: 'TRIGGER_ANIMATION' });
       } catch (error) {
         console.error('Failed to add item to cart:', error);
       }
@@ -202,6 +230,11 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const updateQuantity = async (productId: string, quantity: number) => {
+    if (quantity <= 0) {
+      removeItem(productId);
+      return;
+    }
+
     if (isAuthenticated) {
       const cartItem = supabaseCartItems?.find(
         item => item.product_id === productId

@@ -34,13 +34,18 @@ const FeaturedBooksCarousel = () => {
     description: "Gardens of the righteous collection"
   }];
 
-  const handleAddToCart = (book: typeof featuredBooks[0]) => {
-    addItem({
-      productId: book.id,
-      name: book.title,
-      price: book.price,
-      image: book.image
-    });
+  const handleAddToCart = async (book: typeof featuredBooks[0]) => {
+    try {
+      await addItem({
+        productId: book.id,
+        name: book.title,
+        price: book.price,
+        image: book.image
+      });
+      console.log('Item added to cart successfully');
+    } catch (error) {
+      console.error('Failed to add item to cart:', error);
+    }
   };
 
   return (

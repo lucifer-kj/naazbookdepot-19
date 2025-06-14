@@ -3,9 +3,9 @@ import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Star, ShoppingCart, Heart, ArrowLeft, Plus, Minus } from 'lucide-react';
 import { useProduct } from '@/lib/hooks/useProducts';
-import { useAddToCart } from '@/lib/hooks/useCart';
 import { useAddToWishlist, useCheckWishlistStatus } from '@/lib/hooks/useWishlist';
 import { useAuth } from '@/lib/context/AuthContext';
+import { useCartContext } from '@/lib/context/CartContext';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
@@ -13,8 +13,8 @@ const ProductPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const { addItem, isLoading: cartLoading } = useCartContext();
   const { data: product, isLoading, error } = useProduct(id!);
-  const { mutate: addToCart, isPending: isAddingToCart } = useAddToCart();
   const { mutate: addToWishlist, isPending: isAddingToWishlist } = useAddToWishlist();
   const { data: isInWishlist } = useCheckWishlistStatus(id!);
   const [quantity, setQuantity] = useState(1);
@@ -52,29 +52,34 @@ const ProductPage = () => {
     );
   }
 
-  const handleAddToCart = () => {
-    if (!isAuthenticated) {
-      navigate('/account');
-      return;
+  const handleAddToCart = async () => {
+    try {
+      await addItem({
+        productId: product.id,
+        name: product.name,
+        price: product.price.toString(),
+        image: product.images?.[0] || '/placeholder.svg'
+      });
+      
+      // Show success feedback
+      console.log('Item added to cart successfully');
+    } catch (error) {
+      console.error('Failed to add item to cart:', error);
     }
-    
-    addToCart({ productId: product.id, quantity });
   };
 
-  const handleBuyNow = () => {
-    if (!isAuthenticated) {
-      navigate('/account');
-      return;
+  const handleBuyNow = async () => {
+    try {
+      await addItem({
+        productId: product.id,
+        name: product.name,
+        price: product.price.toString(),
+        image: product.images?.[0] || '/placeholder.svg'
+      });
+      navigate('/checkout');
+    } catch (error) {
+      console.error('Failed to add item for buy now:', error);
     }
-    
-    addToCart({ 
-      productId: product.id, 
-      quantity 
-    }, {
-      onSuccess: () => {
-        navigate('/checkout');
-      }
-    });
   };
 
   const handleAddToWishlist = () => {
@@ -194,15 +199,15 @@ const ProductPage = () => {
               <div className="flex gap-4 mb-6">
                 <button
                   onClick={handleAddToCart}
-                  disabled={product.stock === 0 || isAddingToCart}
+                  disabled={product.stock === 0 || cartLoading}
                   className="flex-1 bg-naaz-green text-white py-3 px-6 rounded-lg hover:bg-naaz-green/90 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
                 >
                   <ShoppingCart size={20} className="mr-2" />
-                  {isAddingToCart ? 'Adding...' : 'Add to Cart'}
+                  {cartLoading ? 'Adding...' : 'Add to Cart'}
                 </button>
                 <button
                   onClick={handleBuyNow}
-                  disabled={product.stock === 0 || isAddingToCart}
+                  disabled={product.stock === 0 || cartLoading}
                   className="flex-1 bg-naaz-gold text-white py-3 px-6 rounded-lg hover:bg-naaz-gold/90 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
                   Buy Now

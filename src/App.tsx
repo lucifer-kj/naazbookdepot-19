@@ -1,8 +1,9 @@
 
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './lib/context/AuthContext';
 import { CartProvider } from './lib/context/CartContext';
+import { useEffect } from 'react';
 import './App.css';
 
 // Pages
@@ -39,12 +40,24 @@ import AdminRoute from './components/admin/AdminRoute';
 
 const queryClient = new QueryClient();
 
+// Component to handle auto-scroll to top on route changes
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+  
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  
+  return null;
+};
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <CartProvider>
           <Router>
+            <ScrollToTop />
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/books" element={<Books />} />

@@ -1,15 +1,16 @@
-
 import React, { useState } from 'react';
 import { useAdminProducts, useCreateProduct, useUpdateProduct, useDeleteProduct, useUpdateStock } from '@/lib/hooks/useAdmin';
 import { useCategories } from '@/lib/hooks/useCategories';
+import { useUpdateStock, useStockHistory } from '@/lib/hooks/useStockHistory';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Edit, Trash2, Package } from 'lucide-react';
+import { Plus, Edit, Trash2, Package, History } from 'lucide-react';
 
 const AdminProducts = () => {
   const { data: products, isLoading } = useAdminProducts();
   const { data: categories } = useCategories();
+  const { data: stockHistory } = useStockHistory();
   const createProduct = useCreateProduct();
   const updateProduct = useUpdateProduct();
   const deleteProduct = useDeleteProduct();
@@ -19,6 +20,7 @@ const AdminProducts = () => {
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [stockUpdateId, setStockUpdateId] = useState<string | null>(null);
   const [newStock, setNewStock] = useState<number>(0);
+  const [showStockHistory, setShowStockHistory] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -119,25 +121,90 @@ const AdminProducts = () => {
             <h1 className="text-3xl font-playfair font-bold text-naaz-green">Products</h1>
             <p className="text-gray-600">Manage your product catalog</p>
           </div>
-          <Button
-            onClick={() => {
-              setShowCreateForm(true);
-              setEditingProduct(null);
-              setFormData({
-                name: '',
-                description: '',
-                price: '',
-                stock: '',
-                category_id: '',
-                images: [],
-              });
-            }}
-            className="bg-naaz-green hover:bg-naaz-green/90"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Product
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => setShowStockHistory(!showStockHistory)}
+              variant="outline"
+              className="flex items-center"
+            >
+              <History className="h-4 w-4 mr-2" />
+              Stock History
+            </Button>
+            <Button
+              onClick={() => {
+                setShowCreateForm(true);
+                setEditingProduct(null);
+                setFormData({
+                  name: '',
+                  description: '',
+                  price: '',
+                  stock: '',
+                  category_id: '',
+                  images: [],
+                });
+              }}
+              className="bg-naaz-green hover:bg-naaz-green/90"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Product
+            </Button>
+          </div>
         </div>
+
+        {/* Stock History Panel */}
+        {showStockHistory && (
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-xl font-semibold mb-4">Stock History</h2>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Product
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Change
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Stock Change
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Reason
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Date
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {stockHistory?.slice(0, 10).map((item) => (
+                    <tr key={item.id}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {item.products.name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {item.previous_stock} → {item.new_stock}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`text-sm font-medium ${
+                          item.quantity_change > 0 ? 'text-green-600' : 'text-red-600'
+                        }`}>
+                          {item.quantity_change > 0 ? '+' : ''}{item.quantity_change}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {item.reason}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {new Date(item.created_at).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
         {/* Create/Edit Form */}
         {showCreateForm && (
@@ -249,6 +316,9 @@ const AdminProducts = () => {
                     Stock
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Rating
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -326,6 +396,9 @@ const AdminProducts = () => {
                           </Button>
                         )}
                       </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {product.average_rating ? `${product.average_rating.toFixed(1)} (${product.review_count})` : 'No reviews'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                       <Button

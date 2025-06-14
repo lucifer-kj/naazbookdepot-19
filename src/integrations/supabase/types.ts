@@ -482,6 +482,23 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_product_average_rating: {
+        Args: { product_uuid: string }
+        Returns: number
+      }
+      get_product_review_count: {
+        Args: { product_uuid: string }
+        Returns: number
+      }
+      update_product_stock: {
+        Args: {
+          product_uuid: string
+          quantity_change: number
+          change_reason?: string
+          change_type_param?: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

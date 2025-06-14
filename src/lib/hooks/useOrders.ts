@@ -47,15 +47,23 @@ export const useCreateOrder = () => {
       shippingAddress,
       billingAddress,
       total,
-      notes
+      notes,
+      paymentMethod = 'cod'
     }: {
       cartItems: any[];
       shippingAddress: any;
       billingAddress?: any;
       total: number;
       notes?: string;
+      paymentMethod?: string;
     }) => {
       if (!user) throw new Error('User not authenticated');
+
+      // Generate order number
+      const { data: orderNumberData, error: orderNumberError } = await supabase
+        .rpc('generate_order_number');
+
+      if (orderNumberError) throw orderNumberError;
 
       // Start transaction by creating order first
       const { data: order, error: orderError } = await supabase
@@ -64,9 +72,12 @@ export const useCreateOrder = () => {
           user_id: user.id,
           total: total,
           status: 'pending',
+          order_number: orderNumberData,
           shipping_address: shippingAddress,
           billing_address: billingAddress || shippingAddress,
           notes: notes,
+          payment_method: paymentMethod,
+          payment_status: paymentMethod === 'upi' ? 'pending' : 'pending',
         })
         .select()
         .single();
@@ -111,13 +122,15 @@ export const useCreateOrder = () => {
         if (stockError) throw stockError;
       }
 
-      // Clear cart after successful order
-      const { error: clearCartError } = await supabase
-        .from('cart_items')
-        .delete()
-        .eq('user_id', user.id);
+      // Clear cart after successful order (only for non-UPI orders)
+      if (paymentMethod !== 'upi') {
+        const { error: clearCartError } = await supabase
+          .from('cart_items')
+          .delete()
+          .eq('user_id', user.id);
 
-      if (clearCartError) throw clearCartError;
+        if (clearCartError) throw clearCartError;
+      }
 
       return order;
     },

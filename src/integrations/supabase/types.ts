@@ -139,10 +139,14 @@ export type Database = {
           id: string
           notes: string | null
           order_number: string | null
+          payment_expires_at: string | null
+          payment_method: string | null
+          payment_status: string | null
           shipping_address: Json | null
           status: string
           total: number
           tracking_number: string | null
+          upi_reference_code: string | null
           user_id: string
         }
         Insert: {
@@ -151,10 +155,14 @@ export type Database = {
           id?: string
           notes?: string | null
           order_number?: string | null
+          payment_expires_at?: string | null
+          payment_method?: string | null
+          payment_status?: string | null
           shipping_address?: Json | null
           status: string
           total: number
           tracking_number?: string | null
+          upi_reference_code?: string | null
           user_id: string
         }
         Update: {
@@ -163,10 +171,14 @@ export type Database = {
           id?: string
           notes?: string | null
           order_number?: string | null
+          payment_expires_at?: string | null
+          payment_method?: string | null
+          payment_status?: string | null
           shipping_address?: Json | null
           status?: string
           total?: number
           tracking_number?: string | null
+          upi_reference_code?: string | null
           user_id?: string
         }
         Relationships: [
@@ -481,8 +493,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      expire_unpaid_orders: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       generate_order_number: {
         Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_upi_reference: {
+        Args: { order_id_param: string }
         Returns: string
       }
       get_product_average_rating: {

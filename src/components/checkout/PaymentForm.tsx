@@ -9,7 +9,7 @@ interface PaymentFormProps {
 }
 
 const PaymentForm: React.FC<PaymentFormProps> = ({ shippingData, onComplete, onBack }) => {
-  const [paymentMethod, setPaymentMethod] = useState('cod');
+  const [paymentMethod, setPaymentMethod] = useState('upi');
   const [cardData, setCardData] = useState({
     number: '',
     expiry: '',
@@ -18,6 +18,13 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ shippingData, onComplete, onB
   });
 
   const paymentMethods = [
+    {
+      id: 'upi',
+      name: 'UPI Payment',
+      icon: Smartphone,
+      description: 'Pay instantly with UPI apps',
+      blessing: 'Swift and secure, Alhamdulillah'
+    },
     {
       id: 'cod',
       name: 'Cash on Delivery',
@@ -33,13 +40,6 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ shippingData, onComplete, onB
       blessing: 'Protected by divine providence'
     },
     {
-      id: 'upi',
-      name: 'UPI Payment',
-      icon: Smartphone,
-      description: 'Pay with your UPI app',
-      blessing: 'Swift and secure, Alhamdulillah'
-    },
-    {
       id: 'wallet',
       name: 'Digital Wallet',
       icon: Wallet,
@@ -53,6 +53,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ shippingData, onComplete, onB
     const selectedMethod = paymentMethods.find(m => m.id === paymentMethod);
     onComplete({ 
       method: selectedMethod?.name,
+      type: paymentMethod,
       ...cardData
     });
   };
@@ -105,6 +106,19 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ shippingData, onComplete, onB
             );
           })}
         </div>
+
+        {paymentMethod === 'upi' && (
+          <div className="bg-naaz-green/5 p-4 rounded-lg">
+            <h3 className="font-medium text-naaz-green mb-2">UPI Payment</h3>
+            <p className="text-gray-700 text-sm">
+              You will be redirected to a secure UPI payment page where you can scan a QR code 
+              or use your UPI app to complete the payment instantly.
+            </p>
+            <p className="text-naaz-gold text-xs mt-2 italic">
+              "And whoever relies upon Allah - then He is sufficient for him" - Quran 65:3
+            </p>
+          </div>
+        )}
 
         {paymentMethod === 'card' && (
           <div className="bg-gray-50 p-4 rounded-lg space-y-4">
@@ -197,7 +211,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ shippingData, onComplete, onB
             type="submit"
             className="flex-1 bg-naaz-green text-white py-3 rounded-lg hover:bg-naaz-green/90 transition-colors"
           >
-            Review Order
+            {paymentMethod === 'upi' ? 'Proceed to UPI Payment' : 'Review Order'}
           </button>
         </div>
       </form>

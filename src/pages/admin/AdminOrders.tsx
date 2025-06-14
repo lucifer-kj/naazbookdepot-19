@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Bell, Filter, Search } from 'lucide-react';
+import { Bell, Filter, Search, CheckCircle, XCircle, Clock } from 'lucide-react';
 
 const AdminOrders = () => {
   const { data: orders, isLoading, refetch } = useAdminOrders();
@@ -15,6 +15,7 @@ const AdminOrders = () => {
   const [trackingNumber, setTrackingNumber] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [paymentFilter, setPaymentFilter] = useState('');
   const [showNotification, setShowNotification] = useState(false);
   const [lastOrderCount, setLastOrderCount] = useState(0);
 
@@ -69,14 +70,33 @@ const AdminOrders = () => {
     }
   };
 
+  const handlePaymentVerification = async (orderId: string, verified: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({
+          payment_status: verified ? 'verified' : 'failed',
+          status: verified ? 'processing' : 'cancelled'
+        })
+        .eq('id', orderId);
+
+      if (error) throw error;
+      refetch();
+    } catch (error) {
+      console.error('Error updating payment status:', error);
+    }
+  };
+
   const filteredOrders = orders?.filter(order => {
     const matchesSearch = !searchQuery || 
       (order.order_number && order.order_number.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      order.id.toLowerCase().includes(searchQuery.toLowerCase());
+      order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (order.upi_reference_code && order.upi_reference_code.toLowerCase().includes(searchQuery.toLowerCase()));
     
     const matchesStatus = !statusFilter || order.status === statusFilter;
+    const matchesPayment = !paymentFilter || order.payment_method === paymentFilter;
     
-    return matchesSearch && matchesStatus;
+    return matchesSearch && matchesStatus && matchesPayment;
   }) || [];
 
   if (isLoading) {
@@ -110,7 +130,7 @@ const AdminOrders = () => {
 
         {/* Filters */}
         <div className="bg-white rounded-lg shadow-md p-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
@@ -137,11 +157,25 @@ const AdminOrders = () => {
                 <option value="refunded">Refunded</option>
               </select>
             </div>
+            <div>
+              <select
+                value={paymentFilter}
+                onChange={(e) => setPaymentFilter(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-naaz-green"
+              >
+                <option value="">All Payment Methods</option>
+                <option value="upi">UPI</option>
+                <option value="cod">Cash on Delivery</option>
+                <option value="card">Card</option>
+                <option value="wallet">Wallet</option>
+              </select>
+            </div>
             <Button
               variant="outline"
               onClick={() => {
                 setSearchQuery('');
                 setStatusFilter('');
+                setPaymentFilter('');
               }}
             >
               Clear Filters
@@ -156,16 +190,16 @@ const AdminOrders = () => {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Order Number
+                    Order Details
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Payment
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Total
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Items
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Date
@@ -178,8 +212,44 @@ const AdminOrders = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredOrders.map((order) => (
                   <tr key={order.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {order.order_number || `#${order.id.slice(0, 8)}`}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {order.order_number || `#${order.id.slice(0, 8)}`}
+                        </div>
+                        {order.upi_reference_code && (
+                          <div className="text-xs text-gray-500">
+                            UPI Ref: {order.upi_reference_code}
+                          </div>
+                        )}
+                        <div className="text-xs text-gray-500">
+                          {order.order_items?.length || 0} items
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex flex-col">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          order.payment_method === 'upi' ? 'bg-blue-100 text-blue-800' :
+                          order.payment_method === 'cod' ? 'bg-orange-100 text-orange-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {order.payment_method?.toUpperCase() || 'COD'}
+                        </span>
+                        {order.payment_method === 'upi' && (
+                          <div className="mt-1">
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                              order.payment_status === 'verified' ? 'bg-green-100 text-green-800' :
+                              order.payment_status === 'paid_claimed' ? 'bg-yellow-100 text-yellow-800' :
+                              order.payment_status === 'failed' ? 'bg-red-100 text-red-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {order.payment_status === 'paid_claimed' ? 'Needs Verification' : 
+                               order.payment_status?.replace('_', ' ') || 'Pending'}
+                            </span>
+                          </div>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {editingOrder === order.id ? (
@@ -211,55 +281,76 @@ const AdminOrders = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       ₹{order.total.toFixed(2)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {order.order_items?.length || 0} items
-                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {new Date(order.created_at!).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      {editingOrder === order.id ? (
-                        <div className="space-y-2">
-                          <Input
-                            placeholder="Tracking Number (optional)"
-                            value={trackingNumber}
-                            onChange={(e) => setTrackingNumber(e.target.value)}
-                            className="text-xs"
-                          />
+                      <div className="flex flex-col space-y-2">
+                        {order.payment_method === 'upi' && order.payment_status === 'paid_claimed' && (
                           <div className="flex space-x-2">
                             <Button
                               size="sm"
-                              onClick={() => handleStatusUpdate(order.id)}
-                              className="bg-green-600 hover:bg-green-700"
+                              onClick={() => handlePaymentVerification(order.id, true)}
+                              className="bg-green-600 hover:bg-green-700 text-xs px-2 py-1"
                             >
-                              Save
+                              <CheckCircle size={12} className="mr-1" />
+                              Verify
                             </Button>
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => {
-                                setEditingOrder(null);
-                                setNewStatus('');
-                                setTrackingNumber('');
-                              }}
+                              onClick={() => handlePaymentVerification(order.id, false)}
+                              className="text-red-600 border-red-600 hover:bg-red-50 text-xs px-2 py-1"
                             >
-                              Cancel
+                              <XCircle size={12} className="mr-1" />
+                              Reject
                             </Button>
                           </div>
-                        </div>
-                      ) : (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setEditingOrder(order.id);
-                            setNewStatus(order.status);
-                            setTrackingNumber(order.tracking_number || '');
-                          }}
-                        >
-                          Edit
-                        </Button>
-                      )}
+                        )}
+                        
+                        {editingOrder === order.id ? (
+                          <div className="space-y-2">
+                            <Input
+                              placeholder="Tracking Number (optional)"
+                              value={trackingNumber}
+                              onChange={(e) => setTrackingNumber(e.target.value)}
+                              className="text-xs"
+                            />
+                            <div className="flex space-x-2">
+                              <Button
+                                size="sm"
+                                onClick={() => handleStatusUpdate(order.id)}
+                                className="bg-green-600 hover:bg-green-700"
+                              >
+                                Save
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setEditingOrder(null);
+                                  setNewStatus('');
+                                  setTrackingNumber('');
+                                }}
+                              >
+                                Cancel
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setEditingOrder(order.id);
+                              setNewStatus(order.status);
+                              setTrackingNumber(order.tracking_number || '');
+                            }}
+                          >
+                            Edit Status
+                          </Button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}

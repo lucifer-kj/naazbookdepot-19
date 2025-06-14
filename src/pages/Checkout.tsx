@@ -15,7 +15,7 @@ import OrderReview from '@/components/checkout/OrderReview';
 import EmptyCartMessage from '@/components/checkout/EmptyCartMessage';
 
 const Checkout = () => {
-  const { cart, clearCart } = useCartContext();
+  const { cart } = useCartContext();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
@@ -28,17 +28,32 @@ const Checkout = () => {
     { id: 3, title: 'Review', icon: Shield }
   ];
 
+  // Calculate total with shipping and tax
+  const shipping = cart.items.length > 0 ? 100 : 0;
+  const tax = Math.round(cart.subtotal * 0.02);
+  const total = cart.subtotal + shipping + tax;
+
   const handleStepComplete = (stepData: any) => {
     if (currentStep === 1) {
       setShippingData(stepData);
       setCurrentStep(2);
     } else if (currentStep === 2) {
       setPaymentData(stepData);
-      setCurrentStep(3);
+      
+      // If UPI payment is selected, redirect to UPI payment page
+      if (stepData.type === 'upi') {
+        const params = new URLSearchParams({
+          total: total.toString(),
+          shipping: JSON.stringify(shippingData),
+          payment: JSON.stringify(stepData),
+        });
+        navigate(`/upi-payment?${params.toString()}`);
+      } else {
+        setCurrentStep(3);
+      }
     } else if (currentStep === 3) {
-      // Process order
+      // For non-UPI payments, process order normally
       const orderNumber = `NBD-${Date.now()}`;
-      clearCart();
       navigate(`/order-confirmation?orderNumber=${orderNumber}`);
     }
   };

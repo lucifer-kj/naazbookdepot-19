@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Trash2, Loader2 } from 'lucide-react';
@@ -16,8 +15,11 @@ const Cart = () => {
   const [appliedPromo, setAppliedPromo] = useState<string>('');
   const [promoDiscount, setPromoDiscount] = useState<number>(0);
 
-  // Calculate cart totals
+  // GST/Tax logic:
   const subtotal = cart.subtotal;
+  const gstRate = 0.12;
+  const gstAmount = +(subtotal * gstRate).toFixed(2);
+  const baseSubtotal = +(subtotal / (1 + gstRate)).toFixed(2);
   const shipping = cart.items.length > 0 ? 100 : 0;
   const total = subtotal + shipping - promoDiscount;
 
@@ -130,6 +132,35 @@ const Cart = () => {
                     appliedPromo={appliedPromo}
                     discount={promoDiscount}
                   />
+                </div>
+                {/* Transparent Price summary */}
+                <div className="mt-6 bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
+                  <div className="flex justify-between text-gray-600">
+                    <span>Item value (excl. GST):</span>
+                    <span>₹{baseSubtotal.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-gray-600">
+                    <span>GST @12% included:</span>
+                    <span>₹{gstAmount.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Subtotal:</span>
+                    <span>₹{subtotal.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Shipping:</span>
+                    <span>₹{shipping.toFixed(2)}</span>
+                  </div>
+                  {promoDiscount > 0 && (
+                    <div className="flex justify-between text-green-600">
+                      <span>Discount ({appliedPromo})</span>
+                      <span>-₹{promoDiscount.toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div className="border-t pt-3 flex justify-between font-semibold text-lg">
+                    <span>Total</span>
+                    <span className="text-naaz-gold">₹{total.toFixed(2)}</span>
+                  </div>
                 </div>
               </div>
               

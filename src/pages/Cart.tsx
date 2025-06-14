@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Trash2 } from 'lucide-react';
+import { ArrowLeft, Trash2, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useCartContext } from '@/lib/context/CartContext';
 import Navbar from '../components/Navbar';
@@ -12,7 +12,7 @@ import CartSummary from '@/components/cart/CartSummary';
 import PromoCodeInput from '@/components/cart/PromoCodeInput';
 
 const Cart = () => {
-  const { cart, updateQuantity, removeItem, clearCart } = useCartContext();
+  const { cart, updateQuantity, removeItem, clearCart, isLoading } = useCartContext();
   const [appliedPromo, setAppliedPromo] = useState<string>('');
   const [promoDiscount, setPromoDiscount] = useState<number>(0);
 
@@ -55,6 +55,21 @@ const Cart = () => {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-grow flex items-center justify-center py-16 px-4">
+          <div className="flex items-center space-x-2 text-naaz-green">
+            <Loader2 className="animate-spin" size={24} />
+            <span>Loading your cart...</span>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -84,11 +99,11 @@ const Cart = () => {
                         Cart Items ({cart.totalItems})
                       </h2>
                       <motion.button 
-                        className="text-naaz-burgundy hover:text-naaz-burgundy/80 flex items-center font-medium"
+                        className="text-naaz-burgundy hover:text-naaz-burgundy/80 flex items-center font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                         onClick={clearCart}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        disabled={cart.items.length === 0}
+                        disabled={cart.items.length === 0 || isLoading}
                       >
                         <Trash2 size={16} className="mr-1" />
                         Clear Cart

@@ -17,7 +17,7 @@ const CartItem: React.FC<CartItemProps> = ({ item, onUpdateQuantity, onRemove })
   };
 
   return (
-    <div className="flex items-center space-x-4 py-4 border-b border-gray-200">
+    <div className="flex items-center space-x-4 py-4 border-b border-gray-200 last:border-b-0">
       <img 
         src={item.image} 
         alt={item.name}
@@ -30,21 +30,22 @@ const CartItem: React.FC<CartItemProps> = ({ item, onUpdateQuantity, onRemove })
       <div className="flex items-center space-x-2">
         <button 
           onClick={() => handleQuantityChange(item.quantity - 1)}
-          className="p-1 hover:bg-gray-100 rounded"
+          className="p-1 hover:bg-gray-100 rounded transition-colors"
+          disabled={item.quantity <= 1}
         >
           <Minus size={16} />
         </button>
-        <span className="w-8 text-center">{item.quantity}</span>
+        <span className="w-8 text-center font-medium">{item.quantity}</span>
         <button 
           onClick={() => handleQuantityChange(item.quantity + 1)}
-          className="p-1 hover:bg-gray-100 rounded"
+          className="p-1 hover:bg-gray-100 rounded transition-colors"
         >
           <Plus size={16} />
         </button>
       </div>
       <button 
         onClick={() => onRemove(item.productId, item.variationId)}
-        className="p-1 hover:bg-red-100 text-red-600 rounded"
+        className="p-1 hover:bg-red-100 text-red-600 rounded transition-colors"
       >
         <Trash2 size={16} />
       </button>

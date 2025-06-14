@@ -1,8 +1,10 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, ShoppingCart, User, Menu, X, LogOut, ChevronDown } from 'lucide-react';
+import { Search, User, Menu, X, LogOut, ChevronDown } from 'lucide-react';
 import { useAuth } from '@/lib/context/AuthContext';
 import LoginModal from '@/components/auth/LoginModal';
+import AnimatedCartIcon from '@/components/ui/AnimatedCartIcon';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -169,12 +171,9 @@ const Navbar = () => {
                 )}
               </div>
 
-              {/* Cart */}
-              <Link to="/cart" className="relative">
-                <ShoppingCart className="text-naaz-green hover:text-naaz-gold transition-colors" size={24} />
-                <span className="absolute -top-2 -right-2 bg-naaz-gold text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  0
-                </span>
+              {/* Animated Cart */}
+              <Link to="/cart">
+                <AnimatedCartIcon />
               </Link>
 
               {/* User Dropdown */}

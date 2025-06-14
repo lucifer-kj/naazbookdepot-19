@@ -20,8 +20,7 @@ export const useStockHistory = (productId?: string) => {
         .from('stock_history')
         .select(`
           *,
-          products!inner(name),
-          profiles(name)
+          products!inner(name)
         `)
         .order('created_at', { ascending: false });
 
@@ -31,7 +30,14 @@ export const useStockHistory = (productId?: string) => {
 
       const { data, error } = await query;
       if (error) throw error;
-      return data as StockHistoryItem[];
+      
+      // Transform the data to match our type
+      const transformedData = data?.map(item => ({
+        ...item,
+        profiles: null // We'll handle user info separately if needed
+      })) || [];
+
+      return transformedData as StockHistoryItem[];
     },
   });
 };

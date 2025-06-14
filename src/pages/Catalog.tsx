@@ -8,8 +8,20 @@ import SearchBar from '../components/catalog/SearchBar';
 import AdvancedFilters, { FilterOptions } from '../components/catalog/AdvancedFilters';
 import ProductCard from '../components/catalog/ProductCard';
 import ProductSort, { SortOption } from '../components/product/ProductSort';
-import { Product } from '../components/product/ProductDisplay';
 import { Filter, Grid, List } from 'lucide-react';
+
+// Define a Product type that matches our database schema
+interface Product {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  stock: number;
+  average_rating: number;
+  review_count: number;
+  categories: { id: string; name: string; };
+  images: string[];
+}
 
 // Mock categories
 const categories: Category[] = [
@@ -49,89 +61,51 @@ const sortOptions: SortOption[] = [
   { value: 'rating', label: 'Highest Rated' }
 ];
 
-// Extended mock products
+// Mock products with correct types
 const products: Product[] = [
   {
-    id: 1,
+    id: '1',
     name: 'The Noble Quran - Arabic with English Translation',
-    author: 'Dr. Muhammad Taqi-ud-Din Al-Hilali',
-    isbn: '978-9960717456',
-    publisher: 'Darussalam',
-    pages: 1056,
-    binding: 'Hardcover',
-    language: 'Arabic, English',
-    publication_year: 2020,
-    price: '1200',
-    stock_status: 'instock',
-    average_rating: '4.8',
-    rating_count: 124,
-    categories: [{ id: 1, name: 'Quran & Tafsir', slug: 'quran-tafsir' }],
-    images: [{ id: 1, src: '/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png', alt: 'Noble Quran' }],
     description: 'A comprehensive Quran with English translation and commentary.',
-    short_description: 'Noble Quran with authentic English translation',
-    quantity_in_stock: 15
+    price: 1200,
+    stock: 15,
+    average_rating: 4.8,
+    review_count: 124,
+    categories: { id: '1', name: 'Quran & Tafsir' },
+    images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png']
   },
   {
-    id: 2,
+    id: '2',
     name: 'Sahih Al-Bukhari (9 Volume Set)',
-    author: 'Imam Bukhari',
-    isbn: '978-9960717123',
-    publisher: 'Darussalam',
-    pages: 4500,
-    binding: 'Hardcover',
-    language: 'Arabic, English',
-    publication_year: 2019,
-    price: '2450',
-    regular_price: '2800',
-    sale_price: '2450',
-    stock_status: 'instock',
-    average_rating: '5.0',
-    rating_count: 89,
-    categories: [{ id: 2, name: 'Hadith', slug: 'hadith' }],
-    images: [{ id: 1, src: '/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png', alt: 'Sahih Bukhari' }],
     description: 'Complete authentic collection of Prophet Muhammad\'s sayings.',
-    short_description: 'Complete 9-volume set of authentic Hadith',
-    quantity_in_stock: 8
+    price: 2450,
+    stock: 8,
+    average_rating: 5.0,
+    review_count: 89,
+    categories: { id: '2', name: 'Hadith' },
+    images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png']
   },
   {
-    id: 3,
+    id: '3',
     name: 'The Sealed Nectar (Ar-Raheeq Al-Makhtum)',
-    author: 'Safi-ur-Rahman al-Mubarakpuri',
-    isbn: '978-9960899558',
-    publisher: 'Darussalam',
-    pages: 576,
-    binding: 'Paperback',
-    language: 'English',
-    publication_year: 2018,
-    price: '850',
-    stock_status: 'instock',
-    average_rating: '4.9',
-    rating_count: 203,
-    categories: [{ id: 4, name: 'Seerah', slug: 'seerah' }],
-    images: [{ id: 1, src: '/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png', alt: 'The Sealed Nectar' }],
     description: 'Award-winning biography of Prophet Muhammad (PBUH).',
-    short_description: 'Comprehensive biography of Prophet Muhammad',
-    quantity_in_stock: 22
+    price: 850,
+    stock: 22,
+    average_rating: 4.9,
+    review_count: 203,
+    categories: { id: '4', name: 'Seerah' },
+    images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png']
   },
   {
-    id: 4,
+    id: '4',
     name: 'Fiqh-us-Sunnah (5 Volume Set)',
-    author: 'As-Sayyid Sabiq',
-    isbn: '978-0892591077',
-    publisher: 'American Trust Publications',
-    pages: 2000,
-    binding: 'Hardcover',
-    language: 'English',
-    publication_year: 2021,
-    price: '1800',
-    stock_status: 'instock',
-    average_rating: '4.7',
-    rating_count: 67,
-    categories: [{ id: 3, name: 'Fiqh', slug: 'fiqh' }],
-    images: [{ id: 1, src: '/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png', alt: 'Fiqh-us-Sunnah' }],
     description: 'Comprehensive guide to Islamic jurisprudence.',
-    short_description: 'Complete Islamic jurisprudence guide',
-    quantity_in_stock: 12
+    price: 1800,
+    stock: 12,
+    average_rating: 4.7,
+    review_count: 67,
+    categories: { id: '3', name: 'Fiqh' },
+    images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png']
   }
 ];
 
@@ -157,7 +131,6 @@ const Catalog = () => {
       if (searchQuery) {
         result = result.filter(product => 
           product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          product.author?.toLowerCase().includes(searchQuery.toLowerCase()) ||
           product.description.toLowerCase().includes(searchQuery.toLowerCase())
         );
       }
@@ -165,36 +138,22 @@ const Catalog = () => {
       // Filter by category
       if (activeCategory) {
         result = result.filter(product =>
-          product.categories.some(cat => cat.slug === activeCategory)
+          product.categories.name.toLowerCase() === activeCategory.toLowerCase()
         );
       }
 
       // Apply advanced filters
       if (activeFilters.priceMin) {
-        result = result.filter(product => parseFloat(product.price) >= parseFloat(activeFilters.priceMin));
+        result = result.filter(product => product.price >= activeFilters.priceMin);
       }
       
       if (activeFilters.priceMax) {
-        result = result.filter(product => parseFloat(product.price) <= parseFloat(activeFilters.priceMax));
-      }
-
-      if (activeFilters.languages?.length > 0) {
-        result = result.filter(product =>
-          activeFilters.languages.some((lang: string) => 
-            product.language?.includes(lang)
-          )
-        );
-      }
-
-      if (activeFilters.bindings?.length > 0) {
-        result = result.filter(product =>
-          activeFilters.bindings.includes(product.binding)
-        );
+        result = result.filter(product => product.price <= activeFilters.priceMax);
       }
 
       if (activeFilters.availability?.length > 0) {
         result = result.filter(product => {
-          const status = product.stock_status === 'instock' ? 'In Stock' : 'Out of Stock';
+          const status = product.stock > 0 ? 'In Stock' : 'Out of Stock';
           return activeFilters.availability.includes(status);
         });
       }
@@ -214,15 +173,15 @@ const Catalog = () => {
     
     switch (sortOption) {
       case 'price-low':
-        return sorted.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
+        return sorted.sort((a, b) => a.price - b.price);
       case 'price-high':
-        return sorted.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
+        return sorted.sort((a, b) => b.price - a.price);
       case 'rating':
-        return sorted.sort((a, b) => parseFloat(b.average_rating) - parseFloat(a.average_rating));
+        return sorted.sort((a, b) => b.average_rating - a.average_rating);
       case 'newest':
-        return sorted.sort((a, b) => (b.publication_year || 0) - (a.publication_year || 0));
+        return sorted.reverse();
       case 'bestselling':
-        return sorted.sort((a, b) => b.rating_count - a.rating_count);
+        return sorted.sort((a, b) => b.review_count - a.review_count);
       case 'relevance':
       default:
         return sorted;

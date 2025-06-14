@@ -10,9 +10,9 @@ export interface Product {
   description?: string;
   price: number;
   images: string[];
-  categories: { id: string; name: string; }[];
-  average_rating: number;
-  review_count: number;
+  categories?: { id: string; name: string; };
+  average_rating?: number;
+  review_count?: number;
   stock: number;
 }
 
@@ -65,9 +65,9 @@ const ProductDisplay: React.FC<ProductDisplayProps> = ({
           />
           
           {/* Category Badge */}
-          {product.categories[0] && (
+          {product.categories && (
             <div className="absolute top-2 left-2 bg-naaz-green text-white px-2 py-1 rounded text-xs">
-              {product.categories[0].name}
+              {product.categories.name}
             </div>
           )}
           
@@ -114,12 +114,12 @@ const ProductDisplay: React.FC<ProductDisplayProps> = ({
           <div className="flex items-center mb-2">
             <div className="flex text-yellow-400">
               {[...Array(5)].map((_, i) => (
-                <span key={i} className={i < Math.floor(product.average_rating) ? 'text-yellow-400' : 'text-gray-300'}>
+                <span key={i} className={i < Math.floor(product.average_rating || 0) ? 'text-yellow-400' : 'text-gray-300'}>
                   ⭐
                 </span>
               ))}
             </div>
-            <span className="text-sm text-gray-500 ml-1">({product.review_count})</span>
+            <span className="text-sm text-gray-500 ml-1">({product.review_count || 0})</span>
           </div>
           
           {/* Price */}

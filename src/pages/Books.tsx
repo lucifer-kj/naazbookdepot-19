@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { Search, Filter, ChevronDown, ChevronUp, X } from 'lucide-react';
+import { Search, Filter, X } from 'lucide-react';
 import ProductGrid from '../components/product/ProductGrid';
 import ProductFilters, { FilterOption } from '../components/product/ProductFilters';
 import ProductSort, { SortOption } from '../components/product/ProductSort';
@@ -9,137 +10,95 @@ import { Product } from '../components/product/ProductDisplay';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 
-// Mock book data
+// Mock book data with correct types
 const books: Product[] = [
   {
-    id: 1,
+    id: '1',
     name: 'The Noble Quran',
-    price: '1200',
-    stock_status: 'instock',
-    average_rating: '4.5',
-    rating_count: 24,
-    categories: [
-      { id: 1, name: 'quran', slug: 'quran' }
-    ],
-    images: [
-      { id: 1, src: '/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png', alt: 'The Noble Quran' }
-    ],
-    description: 'The Noble Quran with translation and commentary.',
-    quantity_in_stock: 15
+    price: 1200,
+    stock: 15,
+    average_rating: 4.5,
+    review_count: 24,
+    categories: { id: '1', name: 'Quran & Tafsir' },
+    images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
+    description: 'The Noble Quran with translation and commentary.'
   },
   {
-    id: 2,
+    id: '2',
     name: 'Sahih Al-Bukhari',
-    price: '1450',
-    stock_status: 'instock',
-    average_rating: '5',
-    rating_count: 18,
-    categories: [
-      { id: 2, name: 'hadith', slug: 'hadith' }
-    ],
-    images: [
-      { id: 1, src: '/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png', alt: 'Sahih Al-Bukhari' }
-    ],
-    description: 'Complete collection of authentic Hadith.',
-    quantity_in_stock: 12
+    price: 1450,
+    stock: 12,
+    average_rating: 5,
+    review_count: 18,
+    categories: { id: '2', name: 'Hadith' },
+    images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
+    description: 'Complete collection of authentic Hadith.'
   },
   {
-    id: 3,
+    id: '3',
     name: 'Riyad-us-Saliheen',
-    price: '950',
-    regular_price: '1100',
-    sale_price: '950',
-    stock_status: 'instock',
-    average_rating: '4.8',
-    rating_count: 15,
-    categories: [
-      { id: 2, name: 'hadith', slug: 'hadith' }
-    ],
-    images: [
-      { id: 1, src: '/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png', alt: 'Riyad-us-Saliheen' }
-    ],
-    description: 'A collection of authentic hadith covering various aspects of life.',
-    quantity_in_stock: 8
+    price: 950,
+    stock: 8,
+    average_rating: 4.8,
+    review_count: 15,
+    categories: { id: '2', name: 'Hadith' },
+    images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
+    description: 'A collection of authentic hadith covering various aspects of life.'
   },
   {
-    id: 4,
+    id: '4',
     name: 'The Sealed Nectar',
-    price: '850',
-    stock_status: 'instock',
-    average_rating: '4.7',
-    rating_count: 22,
-    categories: [
-      { id: 4, name: 'seerah', slug: 'seerah' }
-    ],
-    images: [
-      { id: 1, src: '/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png', alt: 'The Sealed Nectar' }
-    ],
-    description: 'Biography of Prophet Muhammad (PBUH).',
-    quantity_in_stock: 20
+    price: 850,
+    stock: 20,
+    average_rating: 4.7,
+    review_count: 22,
+    categories: { id: '4', name: 'Seerah' },
+    images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
+    description: 'Biography of Prophet Muhammad (PBUH).'
   },
   {
-    id: 5,
+    id: '5',
     name: 'Tafsir Ibn Kathir',
-    price: '1500',
-    stock_status: 'instock',
-    average_rating: '4.9',
-    rating_count: 19,
-    categories: [
-      { id: 1, name: 'quran', slug: 'quran' }
-    ],
-    images: [
-      { id: 1, src: '/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png', alt: 'Tafsir Ibn Kathir' }
-    ],
-    description: 'Comprehensive Tafsir of the Quran.',
-    quantity_in_stock: 10
+    price: 1500,
+    stock: 10,
+    average_rating: 4.9,
+    review_count: 19,
+    categories: { id: '1', name: 'Quran & Tafsir' },
+    images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
+    description: 'Comprehensive Tafsir of the Quran.'
   },
   {
-    id: 6,
+    id: '6',
     name: 'Fiqh Made Easy',
-    price: '750',
-    stock_status: 'outofstock',
-    average_rating: '4.6',
-    rating_count: 12,
-    categories: [
-      { id: 3, name: 'fiqh', slug: 'fiqh' }
-    ],
-    images: [
-      { id: 1, src: '/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png', alt: 'Fiqh Made Easy' }
-    ],
-    description: 'A beginner friendly guide to Islamic jurisprudence.',
-    quantity_in_stock: 0
+    price: 750,
+    stock: 0,
+    average_rating: 4.6,
+    review_count: 12,
+    categories: { id: '3', name: 'Fiqh' },
+    images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
+    description: 'A beginner friendly guide to Islamic jurisprudence.'
   },
   {
-    id: 7,
+    id: '7',
     name: 'Stories of the Prophets',
-    price: '900',
-    stock_status: 'instock',
-    average_rating: '4.5',
-    rating_count: 16,
-    categories: [
-      { id: 5, name: 'history', slug: 'history' }
-    ],
-    images: [
-      { id: 1, src: '/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png', alt: 'Stories of the Prophets' }
-    ],
-    description: 'Stories of all the Prophets mentioned in the Quran.',
-    quantity_in_stock: 14
+    price: 900,
+    stock: 14,
+    average_rating: 4.5,
+    review_count: 16,
+    categories: { id: '5', name: 'History' },
+    images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
+    description: 'Stories of all the Prophets mentioned in the Quran.'
   },
   {
-    id: 8,
+    id: '8',
     name: 'Islamic Way of Life',
-    price: '650',
-    stock_status: 'instock',
-    average_rating: '4.4',
-    rating_count: 14,
-    categories: [
-      { id: 6, name: 'spirituality', slug: 'spirituality' }
-    ],
-    images: [
-      { id: 1, src: '/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png', alt: 'Islamic Way of Life' }
-    ],
-    description: 'Guide to living according to Islamic principles.',
-    quantity_in_stock: 25
+    price: 650,
+    stock: 25,
+    average_rating: 4.4,
+    review_count: 14,
+    categories: { id: '6', name: 'Spirituality' },
+    images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
+    description: 'Guide to living according to Islamic principles.'
   }
 ];
 
@@ -149,12 +108,12 @@ const filterOptions: FilterOption[] = [
     id: 'category',
     name: 'Category',
     options: [
-      { value: 'quran', label: 'Quran & Tafsir', count: 2 },
-      { value: 'hadith', label: 'Hadith', count: 2 },
-      { value: 'fiqh', label: 'Fiqh', count: 1 },
-      { value: 'seerah', label: 'Seerah & Biography', count: 1 },
-      { value: 'history', label: 'Islamic History', count: 1 },
-      { value: 'spirituality', label: 'Spirituality', count: 1 }
+      { value: 'Quran & Tafsir', label: 'Quran & Tafsir', count: 2 },
+      { value: 'Hadith', label: 'Hadith', count: 2 },
+      { value: 'Fiqh', label: 'Fiqh', count: 1 },
+      { value: 'Seerah', label: 'Seerah & Biography', count: 1 },
+      { value: 'History', label: 'Islamic History', count: 1 },
+      { value: 'Spirituality', label: 'Spirituality', count: 1 }
     ]
   },
   {
@@ -226,14 +185,14 @@ const Books = () => {
       // Filter by category
       if (activeFilters.category.length > 0) {
         result = result.filter(book => 
-          book.categories.some(cat => activeFilters.category.includes(cat.name))
+          book.categories && activeFilters.category.includes(book.categories.name)
         );
       }
 
       // Filter by price range
       if (activeFilters.price.length > 0) {
         result = result.filter(book => {
-          const price = parseFloat(book.price);
+          const price = book.price;
           return activeFilters.price.some(range => {
             switch (range) {
               case 'under-800': return price < 800;
@@ -249,16 +208,17 @@ const Books = () => {
       // Filter by rating
       if (activeFilters.rating.length > 0) {
         result = result.filter(book => {
-          const rating = parseFloat(book.average_rating);
+          const rating = book.average_rating || 0;
           return activeFilters.rating.some(r => rating >= parseFloat(r));
         });
       }
 
       // Filter by availability
       if (activeFilters.availability.length > 0) {
-        result = result.filter(book => 
-          activeFilters.availability.includes(book.stock_status)
-        );
+        result = result.filter(book => {
+          const status = book.stock > 0 ? 'instock' : 'outofstock';
+          return activeFilters.availability.includes(status);
+        });
       }
 
       // Sort results
@@ -306,17 +266,17 @@ const Books = () => {
     
     switch (sortOption) {
       case 'price-low':
-        return sorted.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
+        return sorted.sort((a, b) => a.price - b.price);
       case 'price-high':
-        return sorted.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
+        return sorted.sort((a, b) => b.price - a.price);
       case 'rating':
-        return sorted.sort((a, b) => parseFloat(b.average_rating) - parseFloat(a.average_rating));
+        return sorted.sort((a, b) => (b.average_rating || 0) - (a.average_rating || 0));
       case 'newest':
         // In a real app, we would sort by date added
         return sorted.reverse();
       case 'popularity':
       default:
-        return sorted.sort((a, b) => b.rating_count - a.rating_count);
+        return sorted.sort((a, b) => (b.review_count || 0) - (a.review_count || 0));
     }
   };
 

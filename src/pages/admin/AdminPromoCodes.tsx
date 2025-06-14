@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { usePromoCodes, useCreatePromoCode } from '@/lib/hooks/admin/useAdminPromoCodes';
 import AdminLayout from '@/components/admin/AdminLayout';
@@ -31,7 +30,6 @@ const AdminPromoCodes = () => {
         max_uses: formData.max_uses ? parseInt(formData.max_uses) : null,
         valid_until: formData.valid_until || null,
         is_active: true,
-        current_uses: 0,
       });
       
       setShowCreateForm(false);

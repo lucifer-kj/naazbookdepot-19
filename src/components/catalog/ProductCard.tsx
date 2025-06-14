@@ -1,8 +1,9 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, Star, ShoppingCart } from 'lucide-react';
-import { useCart } from '@/lib/hooks/useCart';
-import { useWishlist } from '@/lib/hooks/useWishlist';
+import { useAddToCart } from '@/lib/hooks/useCart';
+import { useAddToWishlist, useRemoveFromWishlist, useCheckWishlistStatus } from '@/lib/hooks/useWishlist';
 import { Button } from '@/components/ui/button';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -15,18 +16,23 @@ interface ProductCardProps {
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
-  const { addToCart } = useCart();
-  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  const addToCart = useAddToCart();
+  const addToWishlist = useAddToWishlist();
+  const removeFromWishlist = useRemoveFromWishlist();
+  const { data: isInWishlist } = useCheckWishlistStatus(product.id);
 
   const handleAddToCart = () => {
-    addToCart(product);
+    addToCart.mutate({
+      productId: product.id,
+      quantity: 1,
+    });
   };
 
   const handleWishlist = () => {
-    if (isInWishlist(product.id)) {
-      removeFromWishlist(product.id);
+    if (isInWishlist) {
+      removeFromWishlist.mutate(product.id);
     } else {
-      addToWishlist(product);
+      addToWishlist.mutate({ productId: product.id });
     }
   };
 
@@ -34,7 +40,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
       <Link to={`/product/${product.id}`}>
         <img
-          src={product.image_url}
+          src={product.images?.[0] || '/placeholder.svg'}
           alt={product.name}
           className="w-full h-48 object-cover"
         />
@@ -54,7 +60,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             Add to Cart
           </Button>
           <button onClick={handleWishlist} className="text-gray-600 hover:text-red-500 transition-colors">
-            {isInWishlist(product.id) ? (
+            {isInWishlist ? (
               <Heart className="h-5 w-5 fill-red-500 text-red-500" />
             ) : (
               <Heart className="h-5 w-5" />

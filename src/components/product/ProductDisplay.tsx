@@ -1,8 +1,10 @@
+
 import React, { useState } from 'react';
 import { Heart, Star, Share2, ShoppingCart, Plus, Minus } from 'lucide-react';
-import { useCart } from '@/lib/hooks/useCart';
-import { useWishlist } from '@/lib/hooks/useWishlist';
+import { useAddToCart } from '@/lib/hooks/useCart';
+import { useAddToWishlist, useRemoveFromWishlist, useCheckWishlistStatus } from '@/lib/hooks/useWishlist';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { Button } from '@/components/ui/button';
 import ProductReviews from './ProductReviews';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -15,15 +17,16 @@ interface ProductDisplayProps {
 }
 
 const ProductDisplay: React.FC<ProductDisplayProps> = ({ product }) => {
-  const { addToCart } = useCart();
-  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  const addToCart = useAddToCart();
+  const addToWishlist = useAddToWishlist();
+  const removeFromWishlist = useRemoveFromWishlist();
+  const { data: isInWishlist } = useCheckWishlistStatus(product.id);
   const { user } = useAuth();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   
   const averageRating = Number(product.average_rating) || 0;
   const reviewCount = Number(product.review_count) || 0;
-  const inWishlist = isInWishlist(product.id);
 
   const handleAddToCart = () => {
     if (user) {
@@ -37,10 +40,10 @@ const ProductDisplay: React.FC<ProductDisplayProps> = ({ product }) => {
   const handleWishlistToggle = () => {
     if (!user) return;
     
-    if (inWishlist) {
+    if (isInWishlist) {
       removeFromWishlist.mutate(product.id);
     } else {
-      addToWishlist.mutate(product.id);
+      addToWishlist.mutate({ productId: product.id });
     }
   };
 
@@ -148,10 +151,10 @@ const ProductDisplay: React.FC<ProductDisplayProps> = ({ product }) => {
               <Button
                 onClick={handleWishlistToggle}
                 variant="outline"
-                className={inWishlist ? 'text-red-500 border-red-500' : ''}
+                className={isInWishlist ? 'text-red-500 border-red-500' : ''}
                 disabled={!user}
               >
-                <Heart className={`h-5 w-5 ${inWishlist ? 'fill-current' : ''}`} />
+                <Heart className={`h-5 w-5 ${isInWishlist ? 'fill-current' : ''}`} />
               </Button>
               
               <Button variant="outline">

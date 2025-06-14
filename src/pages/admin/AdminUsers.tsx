@@ -5,65 +5,55 @@ import { supabase } from '@/integrations/supabase/client';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Users, UserCheck, Shield, Calendar } from 'lucide-react';
+import { Search, Filter, UserPlus, Mail, Phone, Calendar, Shield } from 'lucide-react';
 
 interface User {
   id: string;
-  name?: string;
-  role?: string;
-  created_at: string;
+  email?: string;
+  phone?: string;
+  created_at?: string;
+  last_sign_in_at?: string;
+  email_confirmed_at?: string;
+  phone_confirmed_at?: string;
+  user_metadata?: {
+    full_name?: string;
+    avatar_url?: string;
+  };
+  app_metadata?: {
+    provider?: string;
+    providers?: string[];
+  };
 }
 
 const AdminUsers = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [roleFilter, setRoleFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('');
 
-  const { data: users, isLoading, refetch } = useQuery({
+  const { data: users, isLoading } = useQuery({
     queryKey: ['admin-users'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select(`
-          id,
-          name,
-          role,
-          created_at
-        `)
-        .order('created_at', { ascending: false });
-
+      const { data, error } = await supabase.auth.admin.listUsers();
+      
       if (error) throw error;
-      return data as User[];
+      return data.users as User[];
     },
   });
 
-  const updateUserRole = async (userId: string, newRole: string) => {
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ role: newRole })
-        .eq('id', userId);
-
-      if (error) throw error;
-      refetch();
-    } catch (error) {
-      console.error('Error updating user role:', error);
-    }
-  };
-
   const filteredUsers = users?.filter(user => {
     const matchesSearch = !searchQuery || 
-      user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.id.toLowerCase().includes(searchQuery.toLowerCase());
+      user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.user_metadata?.full_name?.toLowerCase().includes(searchQuery.toLowerCase());
     
-    const matchesRole = roleFilter === 'all' || user.role === roleFilter;
+    const matchesStatus = !statusFilter || 
+      (statusFilter === 'verified' && user.email_confirmed_at) ||
+      (statusFilter === 'unverified' && !user.email_confirmed_at);
     
-    return matchesSearch && matchesRole;
+    return matchesSearch && matchesStatus;
   }) || [];
 
-  const stats = {
-    totalUsers: users?.length || 0,
-    adminUsers: users?.filter(u => u.role === 'admin').length || 0,
-    customerUsers: users?.filter(u => u.role === 'customer').length || 0,
+  const handleClearFilters = () => {
+    setSearchQuery('');
+    setStatusFilter('');
   };
 
   if (isLoading) {
@@ -79,78 +69,50 @@ const AdminUsers = () => {
   return (
     <AdminLayout>
       <div className="space-y-6 animate-fade-in">
-        {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-playfair font-bold text-naaz-green">User Management</h1>
-            <p className="text-gray-600">Manage user accounts and permissions</p>
+            <h1 className="text-3xl font-playfair font-bold text-naaz-green">Users</h1>
+            <p className="text-gray-600">Manage user accounts and permissions ({filteredUsers.length} users)</p>
           </div>
+          <Button className="bg-naaz-green hover:bg-naaz-green/90 mt-4 sm:mt-0">
+            <UserPlus className="h-4 w-4 mr-2" />
+            Invite User
+          </Button>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center">
-              <div className="p-3 bg-naaz-green rounded-lg">
-                <Users className="h-6 w-6 text-white" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Users</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalUsers}</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center">
-              <div className="p-3 bg-blue-500 rounded-lg">
-                <Shield className="h-6 w-6 text-white" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Administrators</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.adminUsers}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center">
-              <div className="p-3 bg-green-500 rounded-lg">
-                <UserCheck className="h-6 w-6 text-white" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Customers</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.customerUsers}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Filters */}
+        {/* Search and Filters */}
         <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
                   type="text"
-                  placeholder="Search users by name or ID..."
+                  placeholder="Search users by email or name..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
                 />
               </div>
             </div>
-            <div className="sm:w-48">
+            <div className="flex gap-2">
               <select
-                value={roleFilter}
-                onChange={(e) => setRoleFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-naaz-green"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-naaz-green"
               >
-                <option value="all">All Roles</option>
-                <option value="admin">Administrators</option>
-                <option value="customer">Customers</option>
+                <option value="">All Status</option>
+                <option value="verified">Verified</option>
+                <option value="unverified">Unverified</option>
               </select>
+              <Button
+                variant="outline"
+                onClick={handleClearFilters}
+                className="flex items-center"
+              >
+                <Filter className="h-4 w-4 mr-2" />
+                Clear
+              </Button>
             </div>
           </div>
         </div>
@@ -165,10 +127,16 @@ const AdminUsers = () => {
                     User
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Role
+                    Contact
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Joined
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Last Active
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
@@ -176,74 +144,75 @@ const AdminUsers = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredUsers.length > 0 ? (
-                  filteredUsers.map((user) => (
-                    <tr key={user.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="w-10 h-10 bg-naaz-green rounded-full flex items-center justify-center">
-                            <span className="text-white font-medium">
-                              {user.name?.charAt(0).toUpperCase() || user.id.charAt(0).toUpperCase()}
-                            </span>
+                {filteredUsers.map((user) => (
+                  <tr key={user.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0 h-10 w-10">
+                          <img
+                            className="h-10 w-10 rounded-full"
+                            src={user.user_metadata?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.user_metadata?.full_name || user.email || 'User')}&background=10B981&color=fff`}
+                            alt=""
+                          />
+                        </div>
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900">
+                            {user.user_metadata?.full_name || 'Unknown User'}
                           </div>
-                          <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">
-                              {user.name || 'No name set'}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              {user.id}
-                            </div>
+                          <div className="text-sm text-gray-500">
+                            ID: {user.id.slice(0, 8)}...
                           </div>
                         </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900 flex items-center">
+                        <Mail className="h-4 w-4 mr-2 text-gray-400" />
+                        {user.email}
+                      </div>
+                      {user.phone && (
+                        <div className="text-sm text-gray-500 flex items-center mt-1">
+                          <Phone className="h-4 w-4 mr-2 text-gray-400" />
+                          {user.phone}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex flex-col gap-1">
                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          user.role === 'admin' 
-                            ? 'bg-red-100 text-red-800' 
-                            : 'bg-green-100 text-green-800'
+                          user.email_confirmed_at ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                         }`}>
-                          {user.role?.charAt(0).toUpperCase() + (user.role?.slice(1) || '')}
+                          {user.email_confirmed_at ? 'Verified' : 'Unverified'}
                         </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <div className="flex items-center">
-                          <Calendar className="h-3 w-3 mr-1" />
-                          {new Date(user.created_at).toLocaleDateString()}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex space-x-2">
-                          {user.role !== 'admin' && (
-                            <Button
-                              size="sm"
-                              onClick={() => updateUserRole(user.id, 'admin')}
-                              className="bg-red-600 hover:bg-red-700 text-white"
-                            >
-                              Make Admin
-                            </Button>
-                          )}
-                          {user.role !== 'customer' && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => updateUserRole(user.id, 'customer')}
-                            >
-                              Make Customer
-                            </Button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={4} className="px-6 py-12 text-center">
-                      <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-500">No users found</p>
-                      <p className="text-sm text-gray-400">Try adjusting your search or filter criteria</p>
+                        {user.app_metadata?.provider && (
+                          <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                            {user.app_metadata.provider}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <div className="flex items-center">
+                        <Calendar className="h-4 w-4 mr-2 text-gray-400" />
+                        {user.created_at ? new Date(user.created_at).toLocaleDateString() : 'Unknown'}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleDateString() : 'Never'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex space-x-2">
+                        <Button size="sm" variant="outline">
+                          <Shield className="h-4 w-4 mr-1" />
+                          Manage
+                        </Button>
+                        <Button size="sm" variant="outline" className="text-red-600 hover:text-red-800">
+                          Suspend
+                        </Button>
+                      </div>
                     </td>
                   </tr>
-                )}
+                ))}
               </tbody>
             </table>
           </div>

@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useAdminProducts, useCreateProduct, useUpdateProduct, useDeleteProduct } from '@/lib/hooks/useAdmin';
+import { useAdminProducts, useCreateProduct, useUpdateProduct, useDeleteProduct } from '@/lib/hooks/admin/useAdminProducts';
 import { useCategories } from '@/lib/hooks/useCategories';
 import { useUpdateStock, useStockHistory } from '@/lib/hooks/useStockHistory';
 import AdminLayout from '@/components/admin/AdminLayout';

@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useAdminOrders, useUpdateOrderStatus } from '@/lib/hooks/useAdmin';
+import { useAdminOrders, useUpdateOrderStatus } from '@/lib/hooks/admin/useAdminOrders';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

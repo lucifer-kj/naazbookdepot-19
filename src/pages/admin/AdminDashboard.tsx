@@ -1,330 +1,248 @@
 
-import React from "react";
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAdminProducts, useAdminOrders } from '@/lib/hooks/useAdmin';
-import { Package, ShoppingCart, Users, TrendingUp, AlertTriangle, Clock, Plus, Eye, Settings } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useAdminDashboardStats } from '@/lib/hooks/admin/useAdminDashboard';
 import AdminLayout from '@/components/admin/AdminLayout';
-
-const DashboardSkeleton = () => (
-  <div className="space-y-6 animate-pulse">
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      {[...Array(4)].map((_, i) => (
-        <div key={i} className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center">
-            <div className="p-2 bg-gray-200 rounded-lg w-10 h-10"></div>
-            <div className="ml-4 flex-1">
-              <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-              <div className="h-6 bg-gray-200 rounded w-1/2"></div>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  </div>
-);
-
-const StatsCard = ({ 
-  icon: Icon, 
-  title, 
-  value, 
-  change, 
-  color, 
-  bgColor, 
-  onClick 
-}: {
-  icon: React.ComponentType<any>;
-  title: string;
-  value: number | string;
-  change?: string;
-  color: string;
-  bgColor: string;
-  onClick?: () => void;
-}) => (
-  <div 
-    className={`bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-all duration-200 ${
-      onClick ? 'cursor-pointer hover:scale-105' : ''
-    }`}
-    onClick={onClick}
-  >
-    <div className="flex items-center justify-between">
-      <div className="flex items-center">
-        <div className={`p-3 ${bgColor} rounded-lg`}>
-          <Icon className={`h-6 w-6 ${color}`} />
-        </div>
-        <div className="ml-4">
-          <p className="text-sm font-medium text-gray-600">{title}</p>
-          <p className="text-2xl font-bold text-gray-900">{value}</p>
-          {change && (
-            <p className="text-xs text-naaz-green font-medium">{change}</p>
-          )}
-        </div>
-      </div>
-    </div>
-  </div>
-);
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { 
+  Package, 
+  ShoppingCart, 
+  DollarSign, 
+  Users, 
+  Plus, 
+  Search,
+  TrendingUp,
+  AlertTriangle,
+  Eye
+} from 'lucide-react';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const { data: products, isLoading: productsLoading } = useAdminProducts();
-  const { data: orders, isLoading: ordersLoading } = useAdminOrders();
+  const { data: stats, isLoading } = useAdminDashboardStats();
+  const [globalSearch, setGlobalSearch] = useState('');
 
-  const isLoading = productsLoading || ordersLoading;
-
-  const stats = React.useMemo(() => {
-    const totalProducts = products?.length || 0;
-    const totalOrders = orders?.length || 0;
-    const pendingOrders = orders?.filter(order => order.status === 'pending').length || 0;
-    const lowStockProducts = products?.filter(product => product.stock < 5).length || 0;
-    const totalRevenue = orders?.reduce((sum, order) => sum + parseFloat(order.total.toString()), 0) || 0;
-    
-    return {
-      totalProducts,
-      totalOrders,
-      pendingOrders,
-      lowStockProducts,
-      totalRevenue,
-    };
-  }, [products, orders]);
-
-  const recentOrders = React.useMemo(() => 
-    orders?.slice(0, 5) || [], [orders]
-  );
-
-  const lowStockProducts = React.useMemo(() => 
-    products?.filter(product => product.stock < 5).slice(0, 5) || [], [products]
-  );
+  const handleGlobalSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (globalSearch.trim()) {
+      // Navigate to products page with search query
+      navigate(`/admin/products?search=${encodeURIComponent(globalSearch.trim())}`);
+    }
+  };
 
   const quickActions = [
     {
       title: 'Add Product',
-      description: 'Add new books to your catalog',
-      icon: Package,
-      color: 'bg-naaz-green',
-      action: () => navigate('/admin/products')
+      description: 'Create a new product',
+      icon: Plus,
+      action: () => navigate('/admin/products'),
+      color: 'bg-green-500 hover:bg-green-600'
     },
     {
       title: 'View Orders',
       description: 'Manage customer orders',
       icon: ShoppingCart,
-      color: 'bg-blue-500',
-      action: () => navigate('/admin/orders')
+      action: () => navigate('/admin/orders'),
+      color: 'bg-blue-500 hover:bg-blue-600'
     },
     {
       title: 'Manage Users',
       description: 'View and manage users',
       icon: Users,
-      color: 'bg-green-500',
-      action: () => navigate('/admin/users')
+      action: () => navigate('/admin/users'),
+      color: 'bg-purple-500 hover:bg-purple-600'
     },
     {
       title: 'Promo Codes',
       description: 'Create discount codes',
-      icon: Settings,
-      color: 'bg-purple-500',
-      action: () => navigate('/admin/promo-codes')
+      icon: DollarSign,
+      action: () => navigate('/admin/promo-codes'),
+      color: 'bg-orange-500 hover:bg-orange-600'
+    }
+  ];
+
+  const statsCards = [
+    {
+      title: 'Total Products',
+      value: stats?.totalProducts || 0,
+      icon: Package,
+      color: 'text-green-600',
+      bgColor: 'bg-green-50',
+      action: () => navigate('/admin/products')
+    },
+    {
+      title: 'Total Orders',
+      value: stats?.totalOrders || 0,
+      icon: ShoppingCart,
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50',
+      action: () => navigate('/admin/orders')
+    },
+    {
+      title: 'Revenue',
+      value: `₹${stats?.totalRevenue?.toLocaleString() || 0}`,
+      icon: TrendingUp,
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-50',
+      action: () => navigate('/admin/orders')
+    },
+    {
+      title: 'Total Users',
+      value: stats?.totalUsers || 0,
+      icon: Users,
+      color: 'text-orange-600',
+      bgColor: 'bg-orange-50',
+      action: () => navigate('/admin/users')
     }
   ];
 
   if (isLoading) {
     return (
       <AdminLayout>
-        <DashboardSkeleton />
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-naaz-green"></div>
+        </div>
       </AdminLayout>
     );
   }
 
   return (
     <AdminLayout>
-      <div className="space-y-6 animate-fade-in">
+      <div className="space-y-8 animate-fade-in">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 font-playfair">Dashboard</h1>
-            <p className="text-gray-600 mt-1">Welcome to your Naaz Books admin panel</p>
+            <h1 className="text-3xl font-playfair font-bold text-naaz-green">Dashboard</h1>
+            <p className="text-gray-600 mt-1">Welcome back! Here's what's happening with your store.</p>
           </div>
-          <div className="mt-4 sm:mt-0 text-right">
-            <p className="text-sm text-gray-500">
-              Last updated: {new Date().toLocaleString()}
-            </p>
-            <p className="text-xs text-gray-400 mt-1">
-              Total Books: {stats.totalProducts} | Active Orders: {stats.totalOrders}
-            </p>
-          </div>
+          
+          {/* Global Search */}
+          <form onSubmit={handleGlobalSearch} className="mt-4 lg:mt-0">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                type="text"
+                placeholder="Search products, orders, users..."
+                value={globalSearch}
+                onChange={(e) => setGlobalSearch(e.target.value)}
+                className="pl-10 w-full lg:w-80"
+              />
+            </div>
+          </form>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatsCard
-            icon={Package}
-            title="Total Products"
-            value={stats.totalProducts}
-            change="+2 this week"
-            color="text-white"
-            bgColor="bg-naaz-green"
-            onClick={() => navigate('/admin/products')}
-          />
-          <StatsCard
-            icon={ShoppingCart}
-            title="Total Orders"
-            value={stats.totalOrders}
-            change="+12% from last month"
-            color="text-white"
-            bgColor="bg-blue-500"
-            onClick={() => navigate('/admin/orders')}
-          />
-          <StatsCard
-            icon={TrendingUp}
-            title="Revenue"
-            value={`₹${stats.totalRevenue.toLocaleString()}`}
-            change="+8.2% from last month"
-            color="text-white"
-            bgColor="bg-green-500"
-          />
-          <StatsCard
-            icon={AlertTriangle}
-            title="Low Stock Alert"
-            value={stats.lowStockProducts}
-            change={stats.lowStockProducts > 0 ? "Needs attention" : "All good"}
-            color="text-white"
-            bgColor={stats.lowStockProducts > 0 ? "bg-red-500" : "bg-gray-500"}
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {statsCards.map((stat, index) => (
+            <div
+              key={index}
+              onClick={stat.action}
+              className={`${stat.bgColor} rounded-lg p-6 cursor-pointer hover:shadow-lg transition-all duration-200 transform hover:scale-105`}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-600 text-sm font-medium">{stat.title}</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">{stat.value}</p>
+                </div>
+                <div className={`${stat.color} p-3 rounded-full bg-white shadow-sm`}>
+                  <stat.icon className="h-6 w-6" />
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* Quick Actions */}
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-            <Plus className="h-5 w-5 mr-2 text-naaz-green" />
-            Quick Actions
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {quickActions.map((action, index) => (
               <Button
                 key={index}
                 onClick={action.action}
-                className={`${action.color} hover:opacity-90 text-white p-4 h-auto flex flex-col items-center space-y-2 transition-all duration-200 hover:scale-105`}
+                className={`${action.color} text-white p-6 h-auto flex flex-col items-center space-y-2 hover:scale-105 transition-transform`}
               >
-                <action.icon className="h-6 w-6" />
+                <action.icon className="h-8 w-8" />
                 <div className="text-center">
                   <div className="font-medium">{action.title}</div>
-                  <div className="text-xs opacity-90">{action.description}</div>
+                  <div className="text-sm opacity-90">{action.description}</div>
                 </div>
               </Button>
             ))}
           </div>
         </div>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        {/* Recent Activity */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Recent Orders */}
-          <div className="bg-white rounded-lg shadow-md">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <Clock className="h-5 w-5 mr-2 text-naaz-green" />
-                  Recent Orders
-                </h2>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigate('/admin/orders')}
-                  className="flex items-center"
-                >
-                  <Eye className="h-4 w-4 mr-1" />
-                  View All
-                </Button>
-              </div>
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-gray-900">Recent Orders</h2>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/admin/orders')}
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                View All
+              </Button>
             </div>
-            <div className="p-6">
-              {recentOrders.length > 0 ? (
-                <div className="space-y-4">
-                  {recentOrders.map((order) => (
-                    <div key={order.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                      <div className="flex-1">
-                        <p className="font-medium text-gray-900">#{order.order_number}</p>
-                        <p className="text-sm text-gray-600">
-                          {new Date(order.created_at).toLocaleDateString()}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {order.order_items?.length || 0} items
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-semibold text-gray-900">₹{parseFloat(order.total.toString()).toLocaleString()}</p>
-                        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                          order.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                          order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                          order.status === 'processing' ? 'bg-blue-100 text-blue-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
-                          {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
+            <div className="space-y-3">
+              {stats?.recentOrders.slice(0, 5).map((order) => (
+                <div key={order.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div>
+                    <p className="font-medium">Order #{order.order_number || order.id.slice(0, 8)}</p>
+                    <p className="text-sm text-gray-600">
+                      {order.order_items?.length || 0} items
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium">₹{order.total.toFixed(2)}</p>
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                      order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                      order.status === 'processing' ? 'bg-blue-100 text-blue-800' :
+                      order.status === 'delivered' ? 'bg-green-100 text-green-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {order.status}
+                    </span>
+                  </div>
                 </div>
-              ) : (
-                <div className="text-center py-8">
-                  <ShoppingCart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">No recent orders</p>
-                  <p className="text-sm text-gray-400">Orders will appear here when customers place them</p>
-                </div>
-              )}
+              ))}
             </div>
           </div>
 
-          {/* Low Stock Products */}
-          <div className="bg-white rounded-lg shadow-md">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <AlertTriangle className="h-5 w-5 mr-2 text-red-500" />
-                  Low Stock Alert
-                </h2>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigate('/admin/products?filter=low-stock')}
-                  className="flex items-center"
-                >
-                  <Package className="h-4 w-4 mr-1" />
-                  Manage Stock
-                </Button>
-              </div>
+          {/* Low Stock Alert */}
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-gray-900 flex items-center">
+                <AlertTriangle className="h-5 w-5 text-orange-500 mr-2" />
+                Low Stock Alert
+              </h2>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/admin/products')}
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                View All
+              </Button>
             </div>
-            <div className="p-6">
-              {lowStockProducts.length > 0 ? (
-                <div className="space-y-4">
-                  {lowStockProducts.map((product) => (
-                    <div key={product.id} className="flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-100 hover:bg-red-100 transition-colors">
-                      <div className="flex items-center flex-1">
-                        <img
-                          src={product.images?.[0] || '/placeholder.svg'}
-                          alt={product.name}
-                          className="w-12 h-12 rounded object-cover mr-3"
-                        />
-                        <div className="flex-1">
-                          <p className="font-medium text-gray-900 truncate">{product.name}</p>
-                          <p className="text-sm text-gray-600">
-                            {product.categories?.name || 'Uncategorized'}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right ml-4">
-                        <span className="inline-flex items-center px-2 py-1 text-sm font-medium bg-red-100 text-red-800 rounded-full">
-                          {product.stock} left
-                        </span>
-                      </div>
-                    </div>
-                  ))}
+            <div className="space-y-3">
+              {stats?.lowStockProducts.slice(0, 5).map((product) => (
+                <div key={product.id} className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-900">{product.name}</p>
+                    <p className="text-sm text-gray-600">₹{product.price}</p>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-lg font-bold text-orange-600">
+                      {product.stock}
+                    </span>
+                    <p className="text-xs text-gray-500">in stock</p>
+                  </div>
                 </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Package className="h-12 w-12 text-green-400 mx-auto mb-4" />
-                  <p className="text-gray-500">All products are well stocked</p>
-                  <p className="text-sm text-gray-400">Great job maintaining inventory levels!</p>
-                </div>
-              )}
+              ))}
             </div>
           </div>
         </div>

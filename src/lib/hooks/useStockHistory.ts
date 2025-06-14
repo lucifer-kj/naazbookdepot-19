@@ -9,7 +9,7 @@ export type StockHistoryItem = Tables<'stock_history'> & {
   };
   profiles?: {
     name: string;
-  };
+  } | null;
 };
 
 export const useStockHistory = (productId?: string) => {
@@ -20,7 +20,7 @@ export const useStockHistory = (productId?: string) => {
         .from('stock_history')
         .select(`
           *,
-          products(name),
+          products!inner(name),
           profiles(name)
         `)
         .order('created_at', { ascending: false });
@@ -74,6 +74,7 @@ export const useUpdateStock = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
       queryClient.invalidateQueries({ queryKey: ['stock-history'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-products'] });
     },
   });
 };

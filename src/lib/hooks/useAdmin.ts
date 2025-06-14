@@ -6,6 +6,8 @@ import type { Tables } from '@/integrations/supabase/types';
 export type AdminProduct = Tables<'products'> & {
   categories?: Tables<'categories'>;
   variants?: Tables<'product_variants'>[];
+  average_rating?: number;
+  review_count?: number;
 };
 
 export type AdminOrder = Tables<'orders'> & {
@@ -14,7 +16,6 @@ export type AdminOrder = Tables<'orders'> & {
   })[];
 };
 
-export type StockHistory = Tables<'stock_history'>;
 export type PromoCode = Tables<'promo_codes'>;
 
 // Product Management Hooks
@@ -32,7 +33,24 @@ export const useAdminProducts = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as AdminProduct[];
+
+      // Get average ratings and review counts for each product
+      const productsWithReviews = await Promise.all(
+        data.map(async (product) => {
+          const [ratingResult, countResult] = await Promise.all([
+            supabase.rpc('get_product_average_rating', { product_uuid: product.id }),
+            supabase.rpc('get_product_review_count', { product_uuid: product.id })
+          ]);
+
+          return {
+            ...product,
+            average_rating: ratingResult.data || 0,
+            review_count: countResult.data || 0,
+          };
+        })
+      );
+
+      return productsWithReviews as AdminProduct[];
     },
   });
 };
@@ -95,88 +113,6 @@ export const useDeleteProduct = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
       queryClient.invalidateQueries({ queryKey: ['products'] });
-    },
-  });
-};
-
-// Stock Management Hooks
-export const useUpdateStock = () => {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: async ({ 
-      productId, 
-      newStock, 
-      changeType, 
-      reason 
-    }: {
-      productId: string;
-      newStock: number;
-      changeType: 'restock' | 'sale' | 'adjustment' | 'return';
-      reason?: string;
-    }) => {
-      // Get current stock
-      const { data: product, error: fetchError } = await supabase
-        .from('products')
-        .select('stock')
-        .eq('id', productId)
-        .single();
-
-      if (fetchError) throw fetchError;
-
-      const previousStock = product.stock;
-      const quantityChange = newStock - previousStock;
-
-      // Update product stock
-      const { error: updateError } = await supabase
-        .from('products')
-        .update({ stock: newStock })
-        .eq('id', productId);
-
-      if (updateError) throw updateError;
-
-      // Record stock history
-      const { error: historyError } = await supabase
-        .from('stock_history')
-        .insert({
-          product_id: productId,
-          change_type: changeType,
-          quantity_change: quantityChange,
-          previous_stock: previousStock,
-          new_stock: newStock,
-          reason: reason || `Stock ${changeType}`,
-        });
-
-      if (historyError) throw historyError;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-products'] });
-      queryClient.invalidateQueries({ queryKey: ['products'] });
-      queryClient.invalidateQueries({ queryKey: ['stock-history'] });
-    },
-  });
-};
-
-export const useStockHistory = (productId?: string) => {
-  return useQuery({
-    queryKey: ['stock-history', productId],
-    queryFn: async () => {
-      let query = supabase
-        .from('stock_history')
-        .select(`
-          *,
-          products(name)
-        `)
-        .order('created_at', { ascending: false });
-
-      if (productId) {
-        query = query.eq('product_id', productId);
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-      return data;
     },
   });
 };

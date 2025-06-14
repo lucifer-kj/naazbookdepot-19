@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAdminProducts, useCreateProduct, useUpdateProduct, useDeleteProduct, useUpdateStock } from '@/lib/hooks/useAdmin';
+import { useAdminProducts, useCreateProduct, useUpdateProduct, useDeleteProduct } from '@/lib/hooks/useAdmin';
 import { useCategories } from '@/lib/hooks/useCategories';
 import { useUpdateStock, useStockHistory } from '@/lib/hooks/useStockHistory';
 import AdminLayout from '@/components/admin/AdminLayout';

@@ -186,7 +186,7 @@ const Navbar = () => {
                   <User size={24} />
                   {isAuthenticated && user && (
                     <span className="hidden md:inline text-sm font-medium">
-                      {user.name.split(' ')[0]}
+                      {user.name ? user.name.split(' ')[0] : ''}
                     </span>
                   )}
                 </button>

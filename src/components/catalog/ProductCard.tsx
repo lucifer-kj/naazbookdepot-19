@@ -20,8 +20,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     addItem({
       productId: product.id,
       name: product.name,
-      price: Number(product.price),
-      image: Array.isArray(product.images) ? product.images[0] : product.images || '/placeholder.svg'
+      price: typeof product.price === 'string' ? Number(product.price) : product.price,
+      image: Array.isArray(product.images) ? String(product.images[0]) : String(product.images || '/placeholder.svg')
     });
   };
 

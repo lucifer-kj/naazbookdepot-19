@@ -1,16 +1,13 @@
 
 import React from "react";
+import { useNavigate } from 'react-router-dom';
 import { useAdminProducts, useAdminOrders } from '@/lib/hooks/useAdmin';
-import { Package, ShoppingCart, Users, TrendingUp, AlertTriangle, Clock } from 'lucide-react';
+import { Package, ShoppingCart, Users, TrendingUp, AlertTriangle, Clock, Plus, Eye, Settings } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import AdminLayout from '@/components/admin/AdminLayout';
 
 const DashboardSkeleton = () => (
   <div className="space-y-6 animate-pulse">
-    <div className="space-y-2">
-      <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-      <div className="h-4 bg-gray-200 rounded w-1/3"></div>
-    </div>
-
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       {[...Array(4)].map((_, i) => (
         <div key={i} className="bg-white rounded-lg shadow-md p-6">
@@ -24,37 +21,32 @@ const DashboardSkeleton = () => (
         </div>
       ))}
     </div>
-
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="h-6 bg-gray-200 rounded w-1/4 mb-4"></div>
-        <div className="space-y-4">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-12 bg-gray-200 rounded"></div>
-          ))}
-        </div>
-      </div>
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="h-6 bg-gray-200 rounded w-1/4 mb-4"></div>
-        <div className="space-y-4">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-12 bg-gray-200 rounded"></div>
-          ))}
-        </div>
-      </div>
-    </div>
   </div>
 );
 
-const StatsCard = ({ icon: Icon, title, value, change, color, bgColor }: {
+const StatsCard = ({ 
+  icon: Icon, 
+  title, 
+  value, 
+  change, 
+  color, 
+  bgColor, 
+  onClick 
+}: {
   icon: React.ComponentType<any>;
   title: string;
   value: number | string;
   change?: string;
   color: string;
   bgColor: string;
+  onClick?: () => void;
 }) => (
-  <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+  <div 
+    className={`bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-all duration-200 ${
+      onClick ? 'cursor-pointer hover:scale-105' : ''
+    }`}
+    onClick={onClick}
+  >
     <div className="flex items-center justify-between">
       <div className="flex items-center">
         <div className={`p-3 ${bgColor} rounded-lg`}>
@@ -73,6 +65,7 @@ const StatsCard = ({ icon: Icon, title, value, change, color, bgColor }: {
 );
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
   const { data: products, isLoading: productsLoading } = useAdminProducts();
   const { data: orders, isLoading: ordersLoading } = useAdminOrders();
 
@@ -102,6 +95,37 @@ const AdminDashboard = () => {
     products?.filter(product => product.stock < 5).slice(0, 5) || [], [products]
   );
 
+  const quickActions = [
+    {
+      title: 'Add Product',
+      description: 'Add new books to your catalog',
+      icon: Package,
+      color: 'bg-naaz-green',
+      action: () => navigate('/admin/products')
+    },
+    {
+      title: 'View Orders',
+      description: 'Manage customer orders',
+      icon: ShoppingCart,
+      color: 'bg-blue-500',
+      action: () => navigate('/admin/orders')
+    },
+    {
+      title: 'Manage Users',
+      description: 'View and manage users',
+      icon: Users,
+      color: 'bg-green-500',
+      action: () => navigate('/admin/users')
+    },
+    {
+      title: 'Promo Codes',
+      description: 'Create discount codes',
+      icon: Settings,
+      color: 'bg-purple-500',
+      action: () => navigate('/admin/promo-codes')
+    }
+  ];
+
   if (isLoading) {
     return (
       <AdminLayout>
@@ -112,17 +136,20 @@ const AdminDashboard = () => {
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
+      <div className="space-y-6 animate-fade-in">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 font-playfair">Dashboard</h1>
+            <h1 className="text-3xl font-bold text-gray-900 font-playfair">Dashboard</h1>
             <p className="text-gray-600 mt-1">Welcome to your Naaz Books admin panel</p>
           </div>
-          <div className="mt-4 sm:mt-0">
-            <span className="text-sm text-gray-500">
+          <div className="mt-4 sm:mt-0 text-right">
+            <p className="text-sm text-gray-500">
               Last updated: {new Date().toLocaleString()}
-            </span>
+            </p>
+            <p className="text-xs text-gray-400 mt-1">
+              Total Books: {stats.totalProducts} | Active Orders: {stats.totalOrders}
+            </p>
           </div>
         </div>
 
@@ -135,6 +162,7 @@ const AdminDashboard = () => {
             change="+2 this week"
             color="text-white"
             bgColor="bg-naaz-green"
+            onClick={() => navigate('/admin/products')}
           />
           <StatsCard
             icon={ShoppingCart}
@@ -143,6 +171,7 @@ const AdminDashboard = () => {
             change="+12% from last month"
             color="text-white"
             bgColor="bg-blue-500"
+            onClick={() => navigate('/admin/orders')}
           />
           <StatsCard
             icon={TrendingUp}
@@ -156,31 +185,68 @@ const AdminDashboard = () => {
             icon={AlertTriangle}
             title="Low Stock Alert"
             value={stats.lowStockProducts}
-            change="Needs attention"
+            change={stats.lowStockProducts > 0 ? "Needs attention" : "All good"}
             color="text-white"
-            bgColor="bg-red-500"
+            bgColor={stats.lowStockProducts > 0 ? "bg-red-500" : "bg-gray-500"}
           />
         </div>
 
+        {/* Quick Actions */}
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+            <Plus className="h-5 w-5 mr-2 text-naaz-green" />
+            Quick Actions
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {quickActions.map((action, index) => (
+              <Button
+                key={index}
+                onClick={action.action}
+                className={`${action.color} hover:opacity-90 text-white p-4 h-auto flex flex-col items-center space-y-2 transition-all duration-200 hover:scale-105`}
+              >
+                <action.icon className="h-6 w-6" />
+                <div className="text-center">
+                  <div className="font-medium">{action.title}</div>
+                  <div className="text-xs opacity-90">{action.description}</div>
+                </div>
+              </Button>
+            ))}
+          </div>
+        </div>
+
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           {/* Recent Orders */}
           <div className="bg-white rounded-lg shadow-md">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900">Recent Orders</h2>
-                <Clock className="h-5 w-5 text-gray-400" />
+                <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <Clock className="h-5 w-5 mr-2 text-naaz-green" />
+                  Recent Orders
+                </h2>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate('/admin/orders')}
+                  className="flex items-center"
+                >
+                  <Eye className="h-4 w-4 mr-1" />
+                  View All
+                </Button>
               </div>
             </div>
             <div className="p-6">
               {recentOrders.length > 0 ? (
                 <div className="space-y-4">
                   {recentOrders.map((order) => (
-                    <div key={order.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div key={order.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                       <div className="flex-1">
                         <p className="font-medium text-gray-900">#{order.order_number}</p>
                         <p className="text-sm text-gray-600">
                           {new Date(order.created_at).toLocaleDateString()}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {order.order_items?.length || 0} items
                         </p>
                       </div>
                       <div className="text-right">
@@ -191,14 +257,18 @@ const AdminDashboard = () => {
                           order.status === 'processing' ? 'bg-blue-100 text-blue-800' :
                           'bg-gray-100 text-gray-800'
                         }`}>
-                          {order.status}
+                          {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                         </span>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-500 text-center py-8">No recent orders</p>
+                <div className="text-center py-8">
+                  <ShoppingCart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500">No recent orders</p>
+                  <p className="text-sm text-gray-400">Orders will appear here when customers place them</p>
+                </div>
               )}
             </div>
           </div>
@@ -207,22 +277,40 @@ const AdminDashboard = () => {
           <div className="bg-white rounded-lg shadow-md">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900">Low Stock Alert</h2>
-                <AlertTriangle className="h-5 w-5 text-red-500" />
+                <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <AlertTriangle className="h-5 w-5 mr-2 text-red-500" />
+                  Low Stock Alert
+                </h2>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate('/admin/products?filter=low-stock')}
+                  className="flex items-center"
+                >
+                  <Package className="h-4 w-4 mr-1" />
+                  Manage Stock
+                </Button>
               </div>
             </div>
             <div className="p-6">
               {lowStockProducts.length > 0 ? (
                 <div className="space-y-4">
                   {lowStockProducts.map((product) => (
-                    <div key={product.id} className="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-100">
-                      <div className="flex-1">
-                        <p className="font-medium text-gray-900">{product.name}</p>
-                        <p className="text-sm text-gray-600">
-                          Category: {product.categories?.name || 'Uncategorized'}
-                        </p>
+                    <div key={product.id} className="flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-100 hover:bg-red-100 transition-colors">
+                      <div className="flex items-center flex-1">
+                        <img
+                          src={product.images?.[0] || '/placeholder.svg'}
+                          alt={product.name}
+                          className="w-12 h-12 rounded object-cover mr-3"
+                        />
+                        <div className="flex-1">
+                          <p className="font-medium text-gray-900 truncate">{product.name}</p>
+                          <p className="text-sm text-gray-600">
+                            {product.categories?.name || 'Uncategorized'}
+                          </p>
+                        </div>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right ml-4">
                         <span className="inline-flex items-center px-2 py-1 text-sm font-medium bg-red-100 text-red-800 rounded-full">
                           {product.stock} left
                         </span>
@@ -231,32 +319,13 @@ const AdminDashboard = () => {
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-500 text-center py-8">All products are well stocked</p>
+                <div className="text-center py-8">
+                  <Package className="h-12 w-12 text-green-400 mx-auto mb-4" />
+                  <p className="text-gray-500">All products are well stocked</p>
+                  <p className="text-sm text-gray-400">Great job maintaining inventory levels!</p>
+                </div>
               )}
             </div>
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <button className="flex items-center p-4 bg-naaz-green text-white rounded-lg hover:bg-naaz-green/90 transition-colors">
-              <Package className="h-5 w-5 mr-2" />
-              Add Product
-            </button>
-            <button className="flex items-center p-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
-              <ShoppingCart className="h-5 w-5 mr-2" />
-              View Orders
-            </button>
-            <button className="flex items-center p-4 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
-              <Users className="h-5 w-5 mr-2" />
-              Manage Users
-            </button>
-            <button className="flex items-center p-4 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors">
-              <TrendingUp className="h-5 w-5 mr-2" />
-              View Reports
-            </button>
           </div>
         </div>
       </div>

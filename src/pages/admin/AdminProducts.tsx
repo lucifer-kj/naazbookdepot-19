@@ -1,13 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAdminProducts, useCreateProduct, useUpdateProduct, useDeleteProduct } from '@/lib/hooks/useAdmin';
 import { useCategories } from '@/lib/hooks/useCategories';
 import { useUpdateStock, useStockHistory } from '@/lib/hooks/useStockHistory';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Edit, Trash2, Package, History } from 'lucide-react';
+import { Plus, Edit, Trash2, Package, History, Search, Filter } from 'lucide-react';
 
 const AdminProducts = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const searchQuery = searchParams.get('search') || '';
+  const filterType = searchParams.get('filter') || '';
+
   const { data: products, isLoading } = useAdminProducts();
   const { data: categories } = useCategories();
   const { data: stockHistory } = useStockHistory();
@@ -21,6 +26,8 @@ const AdminProducts = () => {
   const [stockUpdateId, setStockUpdateId] = useState<string | null>(null);
   const [newStock, setNewStock] = useState<number>(0);
   const [showStockHistory, setShowStockHistory] = useState(false);
+  const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
+  const [categoryFilter, setCategoryFilter] = useState('');
 
   const [formData, setFormData] = useState({
     name: '',
@@ -30,6 +37,36 @@ const AdminProducts = () => {
     category_id: '',
     images: [] as string[],
   });
+
+  useEffect(() => {
+    setLocalSearchQuery(searchQuery);
+  }, [searchQuery]);
+
+  const handleSearch = (query: string) => {
+    if (query !== searchQuery) {
+      setSearchParams(prev => {
+        if (query) {
+          prev.set('search', query);
+        } else {
+          prev.delete('search');
+        }
+        return prev;
+      });
+    }
+  };
+
+  const filteredProducts = products?.filter(product => {
+    const matchesSearch = !localSearchQuery || 
+      product.name.toLowerCase().includes(localSearchQuery.toLowerCase()) ||
+      product.description?.toLowerCase().includes(localSearchQuery.toLowerCase());
+    
+    const matchesCategory = !categoryFilter || product.category_id === categoryFilter;
+    
+    const matchesFilter = !filterType || 
+      (filterType === 'low-stock' && product.stock < 5);
+    
+    return matchesSearch && matchesCategory && matchesFilter;
+  }) || [];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -115,13 +152,13 @@ const AdminProducts = () => {
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
+      <div className="space-y-6 animate-fade-in">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-3xl font-playfair font-bold text-naaz-green">Products</h1>
-            <p className="text-gray-600">Manage your product catalog</p>
+            <p className="text-gray-600">Manage your product catalog ({filteredProducts.length} products)</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2 mt-4 sm:mt-0">
             <Button
               onClick={() => setShowStockHistory(!showStockHistory)}
               variant="outline"
@@ -151,10 +188,57 @@ const AdminProducts = () => {
           </div>
         </div>
 
+        {/* Search and Filters */}
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  type="text"
+                  placeholder="Search products by name or description..."
+                  value={localSearchQuery}
+                  onChange={(e) => {
+                    setLocalSearchQuery(e.target.value);
+                    handleSearch(e.target.value);
+                  }}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <select
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-naaz-green"
+              >
+                <option value="">All Categories</option>
+                {categories?.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setLocalSearchQuery('');
+                  setCategoryFilter('');
+                  setSearchParams({});
+                }}
+                className="flex items-center"
+              >
+                <Filter className="h-4 w-4 mr-2" />
+                Clear
+              </Button>
+            </div>
+          </div>
+        </div>
+
         {/* Stock History Panel */}
         {showStockHistory && (
           <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-semibold mb-4">Stock History</h2>
+            <h2 className="text-xl font-semibold mb-4">Recent Stock Changes</h2>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
@@ -324,20 +408,20 @@ const AdminProducts = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {products?.map((product) => (
-                  <tr key={product.id}>
+                {filteredProducts.map((product) => (
+                  <tr key={product.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10">
+                        <div className="flex-shrink-0 h-12 w-12">
                           <img
-                            className="h-10 w-10 rounded object-cover"
+                            className="h-12 w-12 rounded object-cover"
                             src={product.images?.[0] || '/placeholder.svg'}
                             alt={product.name}
                           />
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">{product.name}</div>
-                          <div className="text-sm text-gray-500 truncate max-w-xs">
+                          <div className="text-sm font-medium text-gray-900 line-clamp-1">{product.name}</div>
+                          <div className="text-sm text-gray-500 line-clamp-1">
                             {product.description}
                           </div>
                         </div>
@@ -422,6 +506,14 @@ const AdminProducts = () => {
               </tbody>
             </table>
           </div>
+
+          {filteredProducts.length === 0 && (
+            <div className="text-center py-12">
+              <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500">No products found</p>
+              <p className="text-sm text-gray-400">Try adjusting your search or filter criteria</p>
+            </div>
+          )}
         </div>
       </div>
     </AdminLayout>

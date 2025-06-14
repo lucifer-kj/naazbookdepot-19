@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navigate, Link } from 'react-router-dom';
 import { useAuth } from '@/lib/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -16,14 +16,22 @@ const AdminLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // If already authenticated and admin, redirect to dashboard
+  useEffect(() => {
+    if (!loading && isAuthenticated && isAdmin) {
+      // This will be handled by the Navigate component below
+    }
+  }, [loading, isAuthenticated, isAdmin]);
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-naaz-cream">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-naaz-green"></div>
       </div>
     );
   }
 
+  // Redirect authenticated admins to dashboard
   if (isAuthenticated && isAdmin) {
     return <Navigate to="/admin/dashboard" replace />;
   }
@@ -37,10 +45,11 @@ const AdminLogin = () => {
       const { error } = await login(formData.email, formData.password);
       
       if (error) {
-        setError(error.message || 'Login failed');
+        setError(error.message || 'Login failed. Please check your credentials.');
       }
+      // If successful, the useEffect above will handle the redirect
     } catch (err) {
-      setError('An unexpected error occurred');
+      setError('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -51,6 +60,10 @@ const AdminLogin = () => {
       ...prev,
       [e.target.name]: e.target.value
     }));
+    // Clear error when user starts typing
+    if (error) {
+      setError('');
+    }
   };
 
   return (
@@ -72,7 +85,7 @@ const AdminLogin = () => {
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
               {error}
             </div>
           )}
@@ -90,11 +103,13 @@ const AdminLogin = () => {
                   id="email"
                   name="email"
                   type="email"
+                  autoComplete="email"
                   required
                   value={formData.email}
                   onChange={handleChange}
                   className="pl-10"
                   placeholder="admin@example.com"
+                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -111,16 +126,19 @@ const AdminLogin = () => {
                   id="password"
                   name="password"
                   type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
                   required
                   value={formData.password}
                   onChange={handleChange}
                   className="pl-10 pr-10"
                   placeholder="Enter your password"
+                  disabled={isLoading}
                 />
                 <button
                   type="button"
                   className="absolute inset-y-0 right-0 pr-3 flex items-center"
                   onClick={() => setShowPassword(!showPassword)}
+                  disabled={isLoading}
                 >
                   {showPassword ? (
                     <EyeOff className="h-5 w-5 text-gray-400" />
@@ -135,15 +153,22 @@ const AdminLogin = () => {
           <Button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-naaz-green hover:bg-naaz-green/90"
+            className="w-full bg-naaz-green hover:bg-naaz-green/90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? 'Signing in...' : 'Sign In'}
+            {isLoading ? (
+              <div className="flex items-center">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                Signing in...
+              </div>
+            ) : (
+              'Sign In'
+            )}
           </Button>
 
           <div className="text-center">
             <Link 
               to="/" 
-              className="text-sm text-naaz-green hover:text-naaz-gold"
+              className="text-sm text-naaz-green hover:text-naaz-gold transition-colors"
             >
               ← Back to Website
             </Link>

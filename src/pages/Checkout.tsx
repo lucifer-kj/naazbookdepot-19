@@ -1,22 +1,19 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapPin, CreditCard, Shield } from 'lucide-react';
 import { useCartContext } from '@/lib/context/CartContext';
 import { useAuth } from '@/lib/context/AuthContext';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import CheckoutSteps from '@/components/checkout/CheckoutSteps';
-import ShippingForm from '@/components/checkout/ShippingForm';
+import OptimizedShippingForm from '@/components/checkout/OptimizedShippingForm';
 import OrderSummary from '@/components/checkout/OrderSummary';
 import CheckoutHeader from '@/components/checkout/CheckoutHeader';
-import OrderReview from '@/components/checkout/OrderReview';
 import EmptyCartMessage from '@/components/checkout/EmptyCartMessage';
 
 const Checkout = () => {
   const { cart } = useCartContext();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [shippingData, setShippingData] = useState(null);
 
   const shipping = cart.items.length > 0 ? 100 : 0;
   const gstRate = 0.12;
@@ -24,14 +21,11 @@ const Checkout = () => {
   const gstAmount = +(subtotal * gstRate).toFixed(2);
   const total = subtotal + shipping;
 
-  // When form is submitted, go straight to UPI payment page:
   const handleShippingComplete = (stepData: any) => {
-    setShippingData(stepData);
-    // Pass shipping, cart, and total as params
     const params = new URLSearchParams({
       total: total.toString(),
       shipping: JSON.stringify(stepData),
-      cart: JSON.stringify(cart), // full cart details
+      cart: JSON.stringify(cart),
       gst: gstAmount.toString()
     });
     navigate(`/upi-payment?${params.toString()}`);
@@ -56,15 +50,13 @@ const Checkout = () => {
         <div className="container mx-auto max-w-6xl">
           <CheckoutHeader onBackToCart={() => navigate('/cart')} />
 
-          <div className="grid lg:grid-cols-3 gap-8 mt-8">
+          <div className="grid lg:grid-cols-3 gap-6 lg:gap-8 mt-8">
             <div className="lg:col-span-2">
-              {/* Show only shipping form, pre-filled from user if possible */}
-              <ShippingForm
+              <OptimizedShippingForm
                 user={user}
                 onComplete={handleShippingComplete}
               />
             </div>
-            {/* Live summary on the right */}
             <OrderSummary cart={cart} />
           </div>
         </div>

@@ -64,27 +64,27 @@ const HeroSection = () => {
         </div>
       </div>
 
-      {/* Content */}
+      {/* Content - Restored left alignment */}
       <div className="relative z-10 container mx-auto px-4 h-full flex items-center">
-        <div className="max-w-3xl">
-          <h1 className="text-4xl md:text-6xl font-playfair font-bold text-white mb-6 animate-fade-in transform translate-x-0 opacity-100 transition-all duration-1000 drop-shadow-2xl">
+        <div className="max-w-3xl text-left">
+          <h1 className="text-4xl md:text-6xl font-playfair font-bold text-white mb-6 animate-fade-in transform translate-x-0 opacity-100 transition-all duration-1000 drop-shadow-2xl text-left">
             Naaz Book Depot
           </h1>
           
           {/* Typewriter effect */}
-          <div className="mb-8">
-            <p className="text-xl md:text-2xl text-white/95 font-playfair italic min-h-[2.5rem]">
+          <div className="mb-8 text-left">
+            <p className="text-xl md:text-2xl text-white/95 font-playfair italic min-h-[2.5rem] text-left">
               "{typewriterText}"
               <span className="animate-pulse ml-1 text-naaz-gold">|</span>
             </p>
           </div>
           
-          <p className="text-lg md:text-xl text-white/90 mb-8 leading-relaxed max-w-2xl">
+          <p className="text-lg md:text-xl text-white/90 mb-8 leading-relaxed max-w-2xl text-left">
             A pioneering publishing company since 1967, specializing in authentic Islamic literature 
             and the Qur'an in multiple languages, serving the global Muslim community.
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-4 animate-fade-in">
+          <div className="flex flex-col sm:flex-row gap-4 animate-fade-in justify-start">
             <Link to="/about" className="group bg-naaz-gold text-naaz-green px-8 py-4 rounded-xl font-bold hover:bg-naaz-gold/90 transition-all duration-300 text-center transform hover:scale-105 hover:shadow-2xl">
               <span className="flex items-center justify-center gap-2">
                 Discover Our Legacy

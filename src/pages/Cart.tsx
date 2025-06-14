@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Trash2, Loader2 } from 'lucide-react';
@@ -6,7 +7,7 @@ import { useCartContext } from '@/lib/context/CartContext';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import CartEmpty from '@/components/cart/CartEmpty';
-import CartItem from '@/components/cart/CartItem';
+import OptimizedCartItem from '@/components/cart/OptimizedCartItem';
 import CartSummary from '@/components/cart/CartSummary';
 import PromoCodeInput from '@/components/cart/PromoCodeInput';
 
@@ -15,7 +16,7 @@ const Cart = () => {
   const [appliedPromo, setAppliedPromo] = useState<string>('');
   const [promoDiscount, setPromoDiscount] = useState<number>(0);
 
-  // GST/Tax logic:
+  // GST/Tax logic for Indian eCommerce standards
   const subtotal = cart.subtotal;
   const gstRate = 0.12;
   const gstAmount = +(subtotal * gstRate).toFixed(2);
@@ -30,7 +31,6 @@ const Cart = () => {
       return;
     }
 
-    // Mock promo code logic - in real app, this would be an API call
     const validPromoCodes: Record<string, number> = {
       'SAVE10': subtotal * 0.1,
       'FIRSTORDER': 100,
@@ -41,7 +41,6 @@ const Cart = () => {
       setAppliedPromo(code.toUpperCase());
       setPromoDiscount(validPromoCodes[code.toUpperCase()]);
     } else {
-      // In real app, show error toast
       alert('Invalid promo code');
     }
   };
@@ -75,10 +74,10 @@ const Cart = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-grow py-16 px-4">
+      <main className="flex-grow py-8 md:py-16 px-4">
         <div className="container mx-auto">
           <motion.h1 
-            className="text-3xl md:text-4xl font-playfair font-bold text-naaz-green mb-10"
+            className="text-2xl md:text-4xl font-playfair font-bold text-naaz-green mb-6 md:mb-10"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
@@ -88,20 +87,20 @@ const Cart = () => {
           
           {cart.items.length > 0 ? (
             <motion.div 
-              className="grid lg:grid-cols-3 gap-10"
+              className="grid lg:grid-cols-3 gap-6 lg:gap-10"
               variants={containerVariants}
               initial="hidden"
               animate="visible"
             >
               <div className="lg:col-span-2">
-                <div className="bg-white rounded-lg shadow-md p-6">
+                <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
                   <div className="mb-6 pb-6 border-b border-gray-200">
-                    <div className="flex justify-between items-center mb-4">
-                      <h2 className="text-xl font-playfair font-semibold text-naaz-green">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
+                      <h2 className="text-lg md:text-xl font-playfair font-semibold text-naaz-green">
                         Cart Items ({cart.totalItems})
                       </h2>
                       <motion.button 
-                        className="text-naaz-burgundy hover:text-naaz-burgundy/80 flex items-center font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="text-naaz-burgundy hover:text-naaz-burgundy/80 flex items-center font-medium disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                         onClick={clearCart}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
@@ -113,9 +112,9 @@ const Cart = () => {
                     </div>
                   </div>
                   
-                  <div className="space-y-6">
+                  <div className="space-y-4 md:space-y-6">
                     {cart.items.map((item) => (
-                      <CartItem
+                      <OptimizedCartItem
                         key={`${item.productId}-${item.variationId || ''}`}
                         item={item}
                         onUpdateQuantity={updateQuantity}
@@ -133,7 +132,8 @@ const Cart = () => {
                     discount={promoDiscount}
                   />
                 </div>
-                {/* Transparent Price summary */}
+
+                {/* GST Breakdown for Indian eCommerce */}
                 <div className="mt-6 bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
                   <div className="flex justify-between text-gray-600">
                     <span>Item value (excl. GST):</span>

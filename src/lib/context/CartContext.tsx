@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import { useCart, useAddToCart, useUpdateCartItem, useRemoveFromCart, useClearCart } from '../hooks/useCart';
@@ -15,7 +16,7 @@ export interface Cart {
   items: CartItem[];
   totalItems: number;
   subtotal: number;
-  animationTrigger: number; // Add animation trigger
+  animationTrigger: number;
 }
 
 interface CartContextType {
@@ -74,7 +75,7 @@ const cartReducer = (state: Cart, action: CartAction): Cart => {
         items: updatedItems,
         totalItems: addTotalItems,
         subtotal: addSubtotal,
-        animationTrigger: Date.now() // Trigger animation
+        animationTrigger: Date.now()
       };
 
     case 'UPDATE_QUANTITY':
@@ -143,7 +144,6 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     animationTrigger: 0
   });
 
-  // Supabase cart hooks
   const { data: supabaseCartItems = [], isLoading } = useCart();
   const addToCartMutation = useAddToCart();
   const updateCartItemMutation = useUpdateCartItem();
@@ -253,19 +253,6 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       dispatch({ type: 'CLEAR_CART' });
     }
   };
-
-  // GST Calculation for Indian pricing norms (assume all prices are GST-inclusive, but show 0 if not set)
-  const getCartSummary = () => {
-    const subtotal = cart.items.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0);
-    const gstRate = 0.12; // example GST
-    const gstAmount = Math.round((subtotal * gstRate * 100)/100); // round to 2 decimals
-    const shipping = cart.items.length > 0 ? 100 : 0;
-    const total = subtotal + shipping;
-    return { subtotal, gstAmount, shipping, total };
-  };
-
-  // (Optional) export GST and totals for components to consume if needed
-  // You could also add this to context value
 
   return (
     <CartContext.Provider value={{ 

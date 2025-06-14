@@ -11,7 +11,8 @@ import {
   LogOut,
   Menu,
   X,
-  Search
+  Search,
+  ChevronLeft
 } from 'lucide-react';
 
 interface AdminLayoutProps {
@@ -23,6 +24,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleLogout = useCallback(async () => {
@@ -32,6 +34,10 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
   const toggleSidebar = useCallback(() => {
     setSidebarOpen(prev => !prev);
+  }, []);
+
+  const toggleSidebarCollapse = useCallback(() => {
+    setSidebarCollapsed(prev => !prev);
   }, []);
 
   const closeSidebar = useCallback(() => {
@@ -53,130 +59,175 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     { name: 'Promo Codes', href: '/admin/promo-codes', icon: Tag },
   ], []);
 
+  const currentPageTitle = useMemo(() => {
+    const currentNav = navigation.find(item => item.href === location.pathname);
+    return currentNav?.name || 'Admin Panel';
+  }, [location.pathname, navigation]);
+
   return (
-    <div className="min-h-screen bg-naaz-cream">
+    <div className="min-h-screen bg-gray-50 flex w-full">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div 
-          className="fixed inset-0 z-40 bg-gray-600 bg-opacity-75 lg:hidden"
+          className="fixed inset-0 z-50 bg-black/50 lg:hidden"
           onClick={closeSidebar}
         />
       )}
 
-      {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${
-        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      }`}>
-        <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
-          <Link to="/" className="flex items-center" onClick={closeSidebar}>
-            <img src="/lovable-uploads/logo.png" alt="Naaz Books" className="h-8 w-auto" />
-            <span className="ml-2 text-xl font-playfair font-bold text-naaz-green">Admin</span>
+      {/* Desktop & Mobile Sidebar */}
+      <div className={`
+        fixed inset-y-0 left-0 z-50 bg-white border-r border-gray-200 transition-all duration-300 ease-in-out
+        lg:relative lg:translate-x-0
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        ${sidebarCollapsed ? 'lg:w-16' : 'lg:w-64'}
+        w-64
+      `}>
+        {/* Sidebar Header */}
+        <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 bg-white">
+          <Link 
+            to="/" 
+            className={`flex items-center transition-opacity duration-300 ${sidebarCollapsed ? 'lg:opacity-0 lg:pointer-events-none' : ''}`}
+            onClick={closeSidebar}
+          >
+            <img src="/lovable-uploads/logo.png" alt="Naaz Books" className="h-8 w-auto flex-shrink-0" />
+            <span className="ml-3 text-lg font-playfair font-bold text-naaz-green truncate">
+              Admin
+            </span>
           </Link>
+          
+          {/* Mobile close button */}
           <button
             onClick={closeSidebar}
-            className="lg:hidden p-1 rounded-md text-gray-400 hover:text-gray-500 transition-colors"
+            className="lg:hidden p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
           >
-            <X className="h-6 w-6" />
+            <X className="h-5 w-5" />
+          </button>
+          
+          {/* Desktop collapse toggle */}
+          <button
+            onClick={toggleSidebarCollapse}
+            className={`hidden lg:flex p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all duration-300 ${sidebarCollapsed ? 'rotate-180' : ''}`}
+          >
+            <ChevronLeft className="h-4 w-4" />
           </button>
         </div>
 
-        <nav className="mt-6 px-3 flex-1">
-          <div className="space-y-1">
-            {navigation.map((item) => {
-              const Icon = item.icon;
-              const isActive = location.pathname === item.href;
-              
-              return (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
-                    isActive
-                      ? 'bg-naaz-green text-white shadow-md'
-                      : 'text-gray-600 hover:bg-naaz-cream hover:text-naaz-green hover:shadow-sm'
-                  }`}
-                  onClick={closeSidebar}
-                >
-                  <Icon className={`mr-3 h-5 w-5 transition-colors ${
-                    isActive ? 'text-white' : 'text-gray-400 group-hover:text-naaz-green'
-                  }`} />
+        {/* Navigation */}
+        <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
+          {navigation.map((item) => {
+            const Icon = item.icon;
+            const isActive = location.pathname === item.href;
+            
+            return (
+              <Link
+                key={item.name}
+                to={item.href}
+                className={`
+                  group flex items-center px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200
+                  ${isActive
+                    ? 'bg-naaz-green text-white shadow-sm'
+                    : 'text-gray-700 hover:bg-gray-100 hover:text-naaz-green'
+                  }
+                  ${sidebarCollapsed ? 'lg:justify-center lg:px-2' : ''}
+                `}
+                onClick={closeSidebar}
+                title={sidebarCollapsed ? item.name : undefined}
+              >
+                <Icon className={`
+                  h-5 w-5 flex-shrink-0 transition-colors
+                  ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-naaz-green'}
+                  ${sidebarCollapsed ? 'lg:mr-0' : 'mr-3'}
+                `} />
+                <span className={`truncate transition-opacity duration-300 ${sidebarCollapsed ? 'lg:opacity-0 lg:w-0 lg:overflow-hidden' : ''}`}>
                   {item.name}
-                </Link>
-              );
-            })}
-          </div>
+                </span>
+              </Link>
+            );
+          })}
         </nav>
 
-        <div className="absolute bottom-0 w-full p-4 border-t border-gray-200 bg-white">
-          <div className="flex items-center mb-4">
-            <div className="w-10 h-10 bg-naaz-green rounded-full flex items-center justify-center">
-              <span className="text-white font-medium">
+        {/* User Profile Section */}
+        <div className="border-t border-gray-200 p-4 bg-white">
+          <div className={`flex items-center mb-3 transition-all duration-300 ${sidebarCollapsed ? 'lg:justify-center' : ''}`}>
+            <div className="w-10 h-10 bg-naaz-green rounded-full flex items-center justify-center flex-shrink-0">
+              <span className="text-white font-medium text-sm">
                 {user?.email?.charAt(0).toUpperCase() || 'A'}
               </span>
             </div>
-            <div className="ml-3 flex-1 min-w-0">
+            <div className={`ml-3 flex-1 min-w-0 transition-opacity duration-300 ${sidebarCollapsed ? 'lg:opacity-0 lg:w-0 lg:overflow-hidden' : ''}`}>
               <p className="text-sm font-medium text-gray-900 truncate">
                 {user?.email}
               </p>
               <p className="text-xs text-gray-500">Administrator</p>
             </div>
           </div>
+          
           <button
             onClick={handleLogout}
-            className="flex items-center w-full px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-naaz-cream hover:text-naaz-green transition-colors"
+            className={`
+              flex items-center w-full px-3 py-2 text-sm font-medium text-gray-600 rounded-lg hover:bg-gray-100 hover:text-red-600 transition-colors
+              ${sidebarCollapsed ? 'lg:justify-center lg:px-2' : ''}
+            `}
+            title={sidebarCollapsed ? 'Sign out' : undefined}
           >
-            <LogOut className="mr-3 h-5 w-5 text-gray-400" />
-            Sign out
+            <LogOut className={`h-4 w-4 text-gray-400 ${sidebarCollapsed ? 'lg:mr-0' : 'mr-3'}`} />
+            <span className={`transition-opacity duration-300 ${sidebarCollapsed ? 'lg:opacity-0 lg:w-0 lg:overflow-hidden' : ''}`}>
+              Sign out
+            </span>
           </button>
         </div>
       </div>
 
-      {/* Main content */}
-      <div className="lg:pl-64 flex flex-col min-h-screen">
-        {/* Top bar */}
-        <div className="sticky top-0 z-30 bg-white shadow-sm border-b border-gray-200">
-          <div className="flex items-center justify-between h-16 px-4 lg:px-6">
-            <div className="flex items-center">
-              <button
-                onClick={toggleSidebar}
-                className="p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 transition-colors lg:hidden"
-              >
-                <Menu className="h-5 w-5" />
-              </button>
-              <h1 className="ml-4 lg:ml-0 text-lg font-medium text-gray-900 lg:hidden">
-                Admin Panel
-              </h1>
-            </div>
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-h-screen overflow-hidden">
+        {/* Top Header Bar */}
+        <header className="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-4 lg:px-6 flex-shrink-0 z-30">
+          <div className="flex items-center gap-4">
+            {/* Mobile menu button */}
+            <button
+              onClick={toggleSidebar}
+              className="lg:hidden p-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
             
-            {/* Search bar */}
-            <div className="hidden md:flex items-center max-w-md mx-auto flex-1">
-              <form onSubmit={handleSearch} className="relative w-full">
-                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                  <Search className="h-4 w-4 text-gray-400" />
-                </div>
+            {/* Page title */}
+            <h1 className="text-xl font-semibold text-gray-900 lg:text-2xl">
+              {currentPageTitle}
+            </h1>
+          </div>
+          
+          {/* Search bar - Desktop */}
+          <div className="hidden md:flex items-center max-w-md flex-1 mx-8">
+            <form onSubmit={handleSearch} className="w-full">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <input
                   type="text"
                   placeholder="Search products, orders..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md text-sm leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-naaz-green focus:border-naaz-green"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-naaz-green focus:border-transparent bg-gray-50"
                 />
-              </form>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <div className="w-8 h-8 bg-naaz-green rounded-full flex items-center justify-center">
-                <span className="text-white text-sm font-medium">
-                  {user?.email?.charAt(0).toUpperCase() || 'A'}
-                </span>
               </div>
+            </form>
+          </div>
+
+          {/* User avatar - Desktop */}
+          <div className="hidden md:flex items-center">
+            <div className="w-8 h-8 bg-naaz-green rounded-full flex items-center justify-center">
+              <span className="text-white text-sm font-medium">
+                {user?.email?.charAt(0).toUpperCase() || 'A'}
+              </span>
             </div>
           </div>
-        </div>
+        </header>
 
-        {/* Page content */}
-        <main className="flex-1 p-4 lg:p-6">
-          {children}
+        {/* Main Content */}
+        <main className="flex-1 overflow-auto bg-gray-50">
+          <div className="h-full p-4 lg:p-6">
+            {children}
+          </div>
         </main>
       </div>
     </div>

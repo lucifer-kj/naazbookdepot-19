@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, ShoppingCart, Star } from 'lucide-react';
@@ -20,7 +21,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     addItem({
       productId: product.id,
       name: product.name,
-      price: product.price,
+      price: Number(product.price),
       image: Array.isArray(product.images) ? product.images[0] : product.images || '/placeholder.svg'
     });
   };

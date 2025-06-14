@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Navigate, Link } from 'react-router-dom';
+import { Navigate, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,7 @@ import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
 
 const AdminLogin = () => {
   const { login, isAuthenticated, isAdmin, loading } = useAuth();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -19,9 +20,9 @@ const AdminLogin = () => {
   // If already authenticated and admin, redirect to dashboard
   useEffect(() => {
     if (!loading && isAuthenticated && isAdmin) {
-      // This will be handled by the Navigate component below
+      navigate('/admin/dashboard', { replace: true });
     }
-  }, [loading, isAuthenticated, isAdmin]);
+  }, [loading, isAuthenticated, isAdmin, navigate]);
 
   if (loading) {
     return (
@@ -42,13 +43,19 @@ const AdminLogin = () => {
     setError('');
 
     try {
-      const { error } = await login(formData.email, formData.password);
+      console.log('Attempting login with:', formData.email);
+      const { error: loginError } = await login(formData.email, formData.password);
       
-      if (error) {
-        setError(error.message || 'Login failed. Please check your credentials.');
+      if (loginError) {
+        console.error('Login error:', loginError);
+        setError(loginError.message || 'Login failed. Please check your credentials.');
+      } else {
+        console.log('Login successful, redirecting to admin dashboard...');
+        // Force immediate navigation on successful login
+        navigate('/admin/dashboard', { replace: true });
       }
-      // If successful, the useEffect above will handle the redirect
     } catch (err) {
+      console.error('Unexpected login error:', err);
       setError('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);
@@ -108,7 +115,7 @@ const AdminLogin = () => {
                   value={formData.email}
                   onChange={handleChange}
                   className="pl-10"
-                  placeholder="admin@example.com"
+                  placeholder="admin@naazbook.in"
                   disabled={isLoading}
                 />
               </div>

@@ -10,6 +10,8 @@ interface AdminRouteProps {
 const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
   const { isAuthenticated, isAdmin, loading } = useAuth();
 
+  console.log('AdminRoute check:', { isAuthenticated, isAdmin, loading });
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-naaz-cream">
@@ -22,10 +24,12 @@ const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
   }
 
   if (!isAuthenticated) {
+    console.log('User not authenticated, redirecting to admin login');
     return <Navigate to="/admin/login" replace />;
   }
 
   if (!isAdmin) {
+    console.log('User not admin, showing access denied');
     return (
       <div className="min-h-screen flex items-center justify-center bg-naaz-cream">
         <div className="text-center bg-white rounded-lg shadow-md p-8 max-w-md">
@@ -53,6 +57,7 @@ const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
     );
   }
 
+  console.log('Access granted to admin panel');
   return <>{children}</>;
 };
 

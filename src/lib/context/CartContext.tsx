@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import { useCart, useAddToCart, useUpdateCartItem, useRemoveFromCart, useClearCart } from '../hooks/useCart';
@@ -172,7 +171,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (isAuthenticated && supabaseCartItems) {
       const cartItems: CartItem[] = supabaseCartItems.map(item => ({
         productId: parseInt(item.product_id),
-        variationId: item.variation_id || undefined,
+        variationId: item.variationId || item.variation_id || undefined,
         name: item.products.name,
         price: item.products.price.toString(),
         image: item.products.images?.[0] || '/placeholder.svg',
@@ -207,7 +206,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const updateQuantity = async (productId: number, variationId: string | undefined, quantity: number) => {
     if (isAuthenticated) {
       const cartItem = supabaseCartItems?.find(
-        item => parseInt(item.product_id) === productId && item.variation_id === variationId
+        item => parseInt(item.product_id) === productId && item.variationId === variationId
       );
       
       if (cartItem) {
@@ -228,7 +227,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const removeItem = async (productId: number, variationId?: string) => {
     if (isAuthenticated) {
       const cartItem = supabaseCartItems?.find(
-        item => parseInt(item.product_id) === productId && item.variation_id === variationId
+        item => parseInt(item.product_id) === productId && item.variationId === variationId
       );
       
       if (cartItem) {
@@ -255,6 +254,19 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  // GST Calculation for Indian pricing norms (assume all prices are GST-inclusive, but show 0 if not set)
+  const getCartSummary = () => {
+    const subtotal = cart.items.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0);
+    const gstRate = 0.12; // example GST
+    const gstAmount = Math.round((subtotal * gstRate * 100)/100); // round to 2 decimals
+    const shipping = cart.items.length > 0 ? 100 : 0;
+    const total = subtotal + shipping;
+    return { subtotal, gstAmount, shipping, total };
+  };
+
+  // (Optional) export GST and totals for components to consume if needed
+  // You could also add this to context value
+
   return (
     <CartContext.Provider value={{ 
       cart, 
@@ -262,7 +274,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       updateQuantity, 
       removeItem, 
       clearCart,
-      isLoading 
+      isLoading
     }}>
       {children}
     </CartContext.Provider>

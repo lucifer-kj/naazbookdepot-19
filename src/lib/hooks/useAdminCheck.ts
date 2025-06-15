@@ -3,7 +3,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export const useAdminCheck = () => {
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdminState, setIsAdminState] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   const checkAdminStatus = useCallback(async (userId?: string): Promise<boolean> => {
@@ -31,9 +31,9 @@ export const useAdminCheck = () => {
       
       if (user) {
         const adminStatus = await checkAdminStatus(user.id);
-        setIsAdmin(adminStatus);
+        setIsAdminState(adminStatus);
       } else {
-        setIsAdmin(false);
+        setIsAdminState(false);
       }
       
       setIsLoading(false);
@@ -45,9 +45,9 @@ export const useAdminCheck = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
         const adminStatus = await checkAdminStatus(session.user.id);
-        setIsAdmin(adminStatus);
+        setIsAdminState(adminStatus);
       } else if (event === 'SIGNED_OUT') {
-        setIsAdmin(false);
+        setIsAdminState(false);
       }
       setIsLoading(false);
     });
@@ -56,7 +56,9 @@ export const useAdminCheck = () => {
   }, [checkAdminStatus]);
 
   return {
-    isAdmin,
+    isAdmin: isAdminState,
+    isAdminState,
+    setIsAdminState,
     isLoading,
     checkAdminStatus
   };

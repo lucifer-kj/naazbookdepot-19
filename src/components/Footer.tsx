@@ -36,12 +36,12 @@ const Footer = () => {
             <div>
               <h3 className="text-xl font-playfair font-bold mb-4">Naaz Book Depot</h3>
               <p className="text-white/80 mb-4">
-                Publishing the Light of Knowledge since 1967. Your trusted source for authentic Islamic literature, 
-                perfumes, and essentials in Kolkata, West Bengal.
+                Publishing the Light of Knowledge since 1967. Your trusted source for authentic Islamic literature 
+                in Kolkata, West Bengal. Over 2,000 Islamic books published under the guidance of MD Irfan.
               </p>
               <div className="text-sm text-white/70">
-                <p className="mb-1">🕌 Serving the Muslim community</p>
-                <p className="mb-1">📚 Authentic Islamic literature</p>
+                <p className="mb-1">🕌 Serving the Muslim Ummah</p>
+                <p className="mb-1">📚 2000+ Islamic titles published</p>
                 <p>🌟 Est. 1967 - Over 55 years of trust</p>
               </div>
             </div>
@@ -123,20 +123,23 @@ const Footer = () => {
                 <div className="flex items-start">
                   <MapPin className="text-naaz-gold mr-2 flex-shrink-0 mt-1" size={16} />
                   <div className="text-sm text-white/80">
-                    <p>123 Chowringhee Road</p>
-                    <p>Kolkata, West Bengal 700016</p>
+                    <p>1, Ismail Madani Lane</p>
+                    <p>Kolkata, West Bengal 700073</p>
                     <p>India</p>
                   </div>
                 </div>
                 
                 <div className="flex items-center">
                   <Phone className="text-naaz-gold mr-2" size={16} />
-                  <span className="text-sm text-white/80">+91 98765 43210</span>
+                  <div className="text-sm text-white/80">
+                    <p>+91 90510 85118</p>
+                    <p>033 2235 0051</p>
+                  </div>
                 </div>
                 
                 <div className="flex items-center">
                   <Mail className="text-naaz-gold mr-2" size={16} />
-                  <span className="text-sm text-white/80">info@naazbookdepot.com</span>
+                  <span className="text-sm text-white/80">naazgroupofficial@gmail.com</span>
                 </div>
               </div>
 

@@ -2,7 +2,7 @@
 import React from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { Mail, Phone, MapPin, Clock } from 'lucide-react';
+import { Mail, Phone, MapPin, Clock, MessageCircle } from 'lucide-react';
 
 const Contact = () => {
   return (
@@ -24,7 +24,7 @@ const Contact = () => {
           <div className="relative container mx-auto h-full flex flex-col justify-center px-4">
             <h1 className="text-4xl md:text-5xl font-playfair font-bold text-white mb-2">Contact Us</h1>
             <p className="text-white/90 max-w-xl">
-              We'd love to hear from you. Get in touch with our team.
+              Connect with Naaz Book Depot - Your trusted source for Islamic literature since 1967
             </p>
           </div>
         </div>
@@ -92,9 +92,9 @@ const Contact = () => {
                     <div className="flex items-start">
                       <MapPin className="text-naaz-gold mr-4 flex-shrink-0 mt-1" size={24} />
                       <div>
-                        <h3 className="font-semibold text-naaz-green mb-1">Our Locations</h3>
-                        <p className="text-gray-700 mb-2">123 Chowringhee Road, Kolkata</p>
-                        <p className="text-gray-700">456 Mohammad Ali Road, Mumbai</p>
+                        <h3 className="font-semibold text-naaz-green mb-1">Our Address</h3>
+                        <p className="text-gray-700 mb-1">1, Ismail Madani Lane</p>
+                        <p className="text-gray-700">Kolkata, West Bengal 700073, India</p>
                       </div>
                     </div>
                     
@@ -102,8 +102,18 @@ const Contact = () => {
                       <Phone className="text-naaz-gold mr-4 flex-shrink-0 mt-1" size={24} />
                       <div>
                         <h3 className="font-semibold text-naaz-green mb-1">Phone Numbers</h3>
-                        <p className="text-gray-700 mb-2">+91 98765 43210 (Kolkata)</p>
-                        <p className="text-gray-700">+91 98765 12345 (Mumbai)</p>
+                        <p className="text-gray-700 mb-1">+91 90510 85118</p>
+                        <p className="text-gray-700 mb-1">+91 91634 32935</p>
+                        <p className="text-gray-700 mb-1">033 2235 0051</p>
+                        <p className="text-gray-700">033 2233 0960</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start">
+                      <MessageCircle className="text-naaz-gold mr-4 flex-shrink-0 mt-1" size={24} />
+                      <div>
+                        <h3 className="font-semibold text-naaz-green mb-1">WhatsApp</h3>
+                        <p className="text-gray-700">+91 91634 32935</p>
                       </div>
                     </div>
                     
@@ -111,8 +121,7 @@ const Contact = () => {
                       <Mail className="text-naaz-gold mr-4 flex-shrink-0 mt-1" size={24} />
                       <div>
                         <h3 className="font-semibold text-naaz-green mb-1">Email Address</h3>
-                        <p className="text-gray-700">info@naazgroup.com</p>
-                        <p className="text-gray-700">support@naazgroup.com</p>
+                        <p className="text-gray-700">naazgroupofficial@gmail.com</p>
                       </div>
                     </div>
                     
@@ -163,7 +172,11 @@ const Contact = () => {
             <div className="bg-gray-200 h-96 rounded-lg overflow-hidden">
               {/* Replace with actual map component when available */}
               <div className="w-full h-full bg-naaz-green/20 flex items-center justify-center">
-                <span className="text-naaz-green font-semibold">Interactive Map Will Be Displayed Here</span>
+                <div className="text-center">
+                  <MapPin className="text-naaz-green mx-auto mb-2" size={48} />
+                  <span className="text-naaz-green font-semibold block">1, Ismail Madani Lane</span>
+                  <span className="text-naaz-green">Kolkata, West Bengal 700073</span>
+                </div>
               </div>
             </div>
           </div>

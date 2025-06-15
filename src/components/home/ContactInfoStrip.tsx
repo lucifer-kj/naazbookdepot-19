@@ -1,13 +1,15 @@
+
 import React from 'react';
 import { Phone, Mail } from 'lucide-react';
 
 const ContactInfoStrip = () => {
   const contactInfo = [
-    { icon: <Phone size={14} />, text: '033 22350051' },
-    { icon: <Phone size={14} />, text: '033 22350960' },
-    { icon: <Phone size={14} />, text: '+91 91634 31395' },
+    { icon: <Phone size={14} />, text: '+91 90510 85118' },
+    { icon: <Phone size={14} />, text: '+91 91634 32935' },
+    { icon: <Phone size={14} />, text: '033 2235 0051' },
+    { icon: <Phone size={14} />, text: '033 2233 0960' },
     { icon: <Mail size={14} />, text: 'naazgroupofficial@gmail.com' },
-    { icon: <Mail size={14} />, text: 'Visit us in Kolkata, West Bengal' }
+    { icon: <Mail size={14} />, text: '1, Ismail Madani Lane, Kolkata' }
   ];
 
   // Duplicate for seamless looping

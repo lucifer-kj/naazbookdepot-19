@@ -1,6 +1,6 @@
 
 import { useState, useMemo } from 'react';
-import { useCategories, Category } from './useCategories';
+import { useAllCategories, Category } from './useCategories';
 
 export interface CategoryOption {
   id: string;
@@ -11,35 +11,45 @@ export interface CategoryOption {
 }
 
 export const useCategoryManager = () => {
-  const { data: categories, isLoading, error } = useCategories();
+  const { data: categories, isLoading, error } = useAllCategories();
   const [searchQuery, setSearchQuery] = useState('');
 
   const flattenedCategories = useMemo(() => {
     if (!categories) return [];
 
-    const flattenCategories = (cats: Category[], level = 0): CategoryOption[] => {
+    // Build a map of all categories
+    const categoryMap = new Map<string, Category>();
+    categories.forEach(cat => {
+      categoryMap.set(cat.id, cat);
+    });
+
+    // Build hierarchy with proper levels
+    const buildHierarchy = (parentId: string | null = null, level = 0): CategoryOption[] => {
       const result: CategoryOption[] = [];
       
-      cats.forEach(category => {
-        const hasSubcategories = category.subcategories && category.subcategories.length > 0;
+      const childCategories = categories.filter(cat => cat.parent_id === parentId);
+      
+      childCategories.forEach(category => {
+        const hasChildren = categories.some(cat => cat.parent_id === category.id);
         
         result.push({
           id: category.id,
           name: category.name,
           level,
-          isParent: hasSubcategories,
-          parentId: category.parent_id || null
+          isParent: hasChildren,
+          parentId: category.parent_id
         });
 
-        if (hasSubcategories) {
-          result.push(...flattenCategories(category.subcategories, level + 1));
+        // Recursively add child categories
+        if (hasChildren) {
+          result.push(...buildHierarchy(category.id, level + 1));
         }
       });
 
       return result;
     };
 
-    return flattenCategories(categories);
+    return buildHierarchy();
   }, [categories]);
 
   const filteredCategories = useMemo(() => {

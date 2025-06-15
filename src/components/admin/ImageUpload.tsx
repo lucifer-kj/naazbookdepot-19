@@ -8,12 +8,14 @@ interface ImageUploadProps {
   images: string[];
   onImagesChange: (images: string[]) => void;
   maxImages?: number;
+  disabled?: boolean;
 }
 
 const ImageUpload: React.FC<ImageUploadProps> = ({ 
   images, 
   onImagesChange, 
-  maxImages = 5 
+  maxImages = 5,
+  disabled = false
 }) => {
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
@@ -36,6 +38,8 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   };
 
   const handleFileUpload = async (files: FileList) => {
+    if (disabled) return;
+    
     if (images.length + files.length > maxImages) {
       alert(`Maximum ${maxImages} images allowed`);
       return;
@@ -58,16 +62,20 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     e.preventDefault();
     setDragActive(false);
     
+    if (disabled) return;
+    
     const files = e.dataTransfer.files;
     if (files.length > 0) {
       handleFileUpload(files);
     }
-  }, [images, maxImages]);
+  }, [images, maxImages, disabled]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
-    setDragActive(true);
-  }, []);
+    if (!disabled) {
+      setDragActive(true);
+    }
+  }, [disabled]);
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -75,6 +83,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   }, []);
 
   const removeImage = (index: number) => {
+    if (disabled) return;
     const newImages = images.filter((_, i) => i !== index);
     onImagesChange(newImages);
   };
@@ -88,17 +97,19 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
       {/* Upload Area */}
       <div
         className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-          dragActive 
+          dragActive && !disabled
             ? 'border-naaz-green bg-green-50' 
+            : disabled
+            ? 'border-gray-200 bg-gray-50'
             : 'border-gray-300 hover:border-gray-400'
         }`}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
       >
-        <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-        <p className="text-sm text-gray-600 mb-2">
-          Drag and drop images here, or click to select
+        <Upload className={`h-8 w-8 mx-auto mb-2 ${disabled ? 'text-gray-300' : 'text-gray-400'}`} />
+        <p className={`text-sm mb-2 ${disabled ? 'text-gray-400' : 'text-gray-600'}`}>
+          {disabled ? 'Image upload disabled' : 'Drag and drop images here, or click to select'}
         </p>
         <input
           type="file"
@@ -107,13 +118,13 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
           onChange={(e) => e.target.files && handleFileUpload(e.target.files)}
           className="hidden"
           id="image-upload"
-          disabled={uploading || images.length >= maxImages}
+          disabled={uploading || images.length >= maxImages || disabled}
         />
         <Button
           type="button"
           variant="outline"
           onClick={() => document.getElementById('image-upload')?.click()}
-          disabled={uploading || images.length >= maxImages}
+          disabled={uploading || images.length >= maxImages || disabled}
         >
           {uploading ? 'Uploading...' : 'Select Images'}
         </Button>
@@ -129,13 +140,15 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
                 alt={`Product image ${index + 1}`}
                 className="w-full h-24 object-cover rounded border"
               />
-              <button
-                type="button"
-                onClick={() => removeImage(index)}
-                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <X className="h-3 w-3" />
-              </button>
+              {!disabled && (
+                <button
+                  type="button"
+                  onClick={() => removeImage(index)}
+                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              )}
             </div>
           ))}
         </div>

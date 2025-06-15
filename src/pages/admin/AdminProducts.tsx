@@ -269,7 +269,6 @@ const AdminProducts = () => {
           onSearchChange={handleSearch}
           categoryFilter={categoryFilter}
           onCategoryChange={setCategoryFilter}
-          categories={categories}
           onClearFilters={handleClearFilters}
         />
 

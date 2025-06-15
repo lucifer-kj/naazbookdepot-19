@@ -15,17 +15,28 @@ export const useCategoryManager = () => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const flattenedCategories = useMemo(() => {
-    if (!categories || categories.length === 0) return [];
+    if (!categories || categories.length === 0) {
+      console.log('No categories data available');
+      return [];
+    }
 
     console.log('Raw categories data:', categories);
+
+    // Create a map for quick lookup
+    const categoryMap = new Map<string, Category>();
+    categories.forEach(cat => {
+      categoryMap.set(cat.id, cat);
+    });
 
     // Build hierarchy with proper levels
     const buildHierarchy = (parentId: string | null = null, level = 0): CategoryOption[] => {
       const result: CategoryOption[] = [];
       
+      // Find all categories with the given parent_id
       const childCategories = categories.filter(cat => cat.parent_id === parentId);
       
       childCategories.forEach(category => {
+        // Check if this category has children
         const hasChildren = categories.some(cat => cat.parent_id === category.id);
         
         const categoryOption: CategoryOption = {
@@ -40,7 +51,8 @@ export const useCategoryManager = () => {
 
         // Recursively add child categories
         if (hasChildren) {
-          result.push(...buildHierarchy(category.id, level + 1));
+          const children = buildHierarchy(category.id, level + 1);
+          result.push(...children);
         }
       });
 
@@ -49,6 +61,21 @@ export const useCategoryManager = () => {
 
     const hierarchy = buildHierarchy();
     console.log('Built hierarchy:', hierarchy);
+    
+    // If hierarchy building fails, fall back to flat structure
+    if (hierarchy.length === 0) {
+      console.log('Hierarchy building failed, using flat structure');
+      const flatStructure = categories.map(category => ({
+        id: category.id,
+        name: category.name,
+        level: 0,
+        isParent: categories.some(cat => cat.parent_id === category.id),
+        parentId: category.parent_id
+      }));
+      console.log('Flat structure fallback:', flatStructure);
+      return flatStructure;
+    }
+    
     return hierarchy;
   }, [categories]);
 
@@ -61,7 +88,8 @@ export const useCategoryManager = () => {
   }, [flattenedCategories, searchQuery]);
 
   const selectableCategories = useMemo(() => {
-    // Return all categories for selection
+    // Return all categories for selection - both parents and children
+    console.log('Selectable categories:', filteredCategories);
     return filteredCategories;
   }, [filteredCategories]);
 

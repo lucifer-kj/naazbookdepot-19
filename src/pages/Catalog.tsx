@@ -19,7 +19,7 @@ interface Product {
   stock: number;
   average_rating: number;
   review_count: number;
-  categories: { id: string; name: string; };
+  categories: { id: string; name: string; parent_id: string; };
   images: string[];
 }
 
@@ -75,7 +75,8 @@ const products: ProductWithCategory[] = [
       id: '1', 
       name: 'Quran & Tafsir', 
       slug: 'quran-tafsir',
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      parent_id: null
     },
     images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
     category_id: '1',
@@ -94,7 +95,8 @@ const products: ProductWithCategory[] = [
       id: '2', 
       name: 'Hadith', 
       slug: 'hadith',
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      parent_id: null
     },
     images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
     category_id: '2',
@@ -113,7 +115,8 @@ const products: ProductWithCategory[] = [
       id: '4', 
       name: 'Seerah', 
       slug: 'seerah',
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      parent_id: null
     },
     images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
     category_id: '4',
@@ -132,7 +135,8 @@ const products: ProductWithCategory[] = [
       id: '3', 
       name: 'Fiqh', 
       slug: 'fiqh',
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      parent_id: null
     },
     images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
     category_id: '3',

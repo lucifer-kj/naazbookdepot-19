@@ -22,7 +22,8 @@ const books: ProductWithCategory[] = [
       id: '1', 
       name: 'Quran & Tafsir', 
       slug: 'quran-tafsir',
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      parent_id: null
     },
     images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
     description: 'The Noble Quran with translation and commentary.',
@@ -41,7 +42,8 @@ const books: ProductWithCategory[] = [
       id: '2', 
       name: 'Hadith', 
       slug: 'hadith',
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      parent_id: null
     },
     images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
     description: 'Complete collection of authentic Hadith.',
@@ -60,7 +62,8 @@ const books: ProductWithCategory[] = [
       id: '2', 
       name: 'Hadith', 
       slug: 'hadith',
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      parent_id: null
     },
     images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
     description: 'A collection of authentic hadith covering various aspects of life.',
@@ -79,7 +82,8 @@ const books: ProductWithCategory[] = [
       id: '4', 
       name: 'Seerah', 
       slug: 'seerah',
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      parent_id: null
     },
     images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
     description: 'Biography of Prophet Muhammad (PBUH).',
@@ -98,7 +102,8 @@ const books: ProductWithCategory[] = [
       id: '1', 
       name: 'Quran & Tafsir', 
       slug: 'quran-tafsir',
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      parent_id: null
     },
     images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
     description: 'Comprehensive Tafsir of the Quran.',
@@ -117,7 +122,8 @@ const books: ProductWithCategory[] = [
       id: '3', 
       name: 'Fiqh', 
       slug: 'fiqh',
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      parent_id: null
     },
     images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
     description: 'A beginner friendly guide to Islamic jurisprudence.',
@@ -136,7 +142,8 @@ const books: ProductWithCategory[] = [
       id: '5', 
       name: 'History', 
       slug: 'history',
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      parent_id: null
     },
     images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
     description: 'Stories of all the Prophets mentioned in the Quran.',
@@ -155,7 +162,8 @@ const books: ProductWithCategory[] = [
       id: '6', 
       name: 'Spirituality', 
       slug: 'spirituality',
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      parent_id: null
     },
     images: ['/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'],
     description: 'Guide to living according to Islamic principles.',

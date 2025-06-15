@@ -21,7 +21,7 @@ export interface Cart {
 
 interface CartContextType {
   cart: Cart;
-  addItem: (item: Omit<CartItem, 'quantity'>) => void;
+  addItem: (item: Omit<CartItem, 'quantity'>) => Promise<void>;
   updateQuantity: (productId: string, quantity: number) => void;
   removeItem: (productId: string) => void;
   clearCart: () => void;
@@ -85,7 +85,11 @@ const cartReducer = (state: Cart, action: CartAction): Cart => {
       
       if (itemIndex > -1) {
         const updatedItems = [...state.items];
-        updatedItems[itemIndex].quantity = action.quantity;
+        if (action.quantity <= 0) {
+          updatedItems.splice(itemIndex, 1);
+        } else {
+          updatedItems[itemIndex].quantity = action.quantity;
+        }
         
         const { totalItems: updateTotalItems, subtotal: updateSubtotal } = calculateTotals(updatedItems);
         
@@ -182,7 +186,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Save to localStorage when cart changes (for non-authenticated users)
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated && cart.items.length >= 0) {
       localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart.items));
     }
   }, [cart.items, isAuthenticated]);
@@ -202,7 +206,6 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           filter: `user_id=eq.${user.id}`
         },
         () => {
-          // Cart data will be automatically refetched by react-query
           console.log('Cart updated in real-time');
         }
       )
@@ -223,6 +226,8 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         dispatch({ type: 'TRIGGER_ANIMATION' });
       } catch (error) {
         console.error('Failed to add item to cart:', error);
+        // Fallback to local storage if Supabase fails
+        dispatch({ type: 'ADD_ITEM', item });
       }
     } else {
       dispatch({ type: 'ADD_ITEM', item });
@@ -248,6 +253,8 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           });
         } catch (error) {
           console.error('Failed to update cart item:', error);
+          // Fallback to local state
+          dispatch({ type: 'UPDATE_QUANTITY', productId, quantity });
         }
       }
     } else {
@@ -266,6 +273,8 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           await removeFromCartMutation.mutateAsync(cartItem.id);
         } catch (error) {
           console.error('Failed to remove cart item:', error);
+          // Fallback to local state
+          dispatch({ type: 'REMOVE_ITEM', productId });
         }
       }
     } else {
@@ -279,6 +288,8 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         await clearCartMutation.mutateAsync();
       } catch (error) {
         console.error('Failed to clear cart:', error);
+        // Fallback to local state
+        dispatch({ type: 'CLEAR_CART' });
       }
     } else {
       dispatch({ type: 'CLEAR_CART' });

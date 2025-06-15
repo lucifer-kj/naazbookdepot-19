@@ -8,7 +8,7 @@ import './App.css';
 
 // Pages
 import Home from './pages/Home';
-import Books from './pages/Books';
+import Products from './pages/Products';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import FAQ from './pages/FAQ';
@@ -20,8 +20,6 @@ import Checkout from './pages/Checkout';
 import UpiPayment from './pages/UpiPayment';
 import OrderConfirmation from './pages/OrderConfirmation';
 import ProductPage from './pages/ProductPage';
-import Catalog from './pages/Catalog';
-import EnhancedCatalog from './pages/EnhancedCatalog';
 import Account from './pages/Account';
 import Wishlist from './pages/Wishlist';
 import Blog from './pages/Blog';
@@ -40,13 +38,18 @@ import AdminRoute from './components/admin/AdminRoute';
 
 const queryClient = new QueryClient();
 
-// Component to handle auto-scroll to top on route changes
+// Enhanced ScrollToTop component that handles all navigation types
 const ScrollToTop = () => {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
+    // Scroll to top on route change with smooth behavior
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: 'smooth'
+    });
+  }, [pathname, search]);
   
   return null;
 };
@@ -60,7 +63,9 @@ function App() {
             <ScrollToTop />
             <Routes>
               <Route path="/" element={<Home />} />
-              <Route path="/books" element={<Books />} />
+              <Route path="/products" element={<Products />} />
+              <Route path="/books" element={<Products />} />
+              <Route path="/catalog" element={<Products />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/faq" element={<FAQ />} />
@@ -72,9 +77,8 @@ function App() {
               <Route path="/upi-payment" element={<UpiPayment />} />
               <Route path="/order-confirmation" element={<OrderConfirmation />} />
               <Route path="/product/:id" element={<ProductPage />} />
-              <Route path="/catalog" element={<Catalog />} />
-              <Route path="/enhanced-catalog" element={<EnhancedCatalog />} />
               <Route path="/account" element={<Account />} />
+              <Route path="/account/*" element={<Account />} />
               <Route path="/wishlist" element={<Wishlist />} />
               <Route path="/blog" element={<Blog />} />
               <Route path="/coming-soon" element={<ComingSoon section="perfumes" />} />

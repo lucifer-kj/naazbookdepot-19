@@ -71,23 +71,65 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [loading, setLoading] = useState(true);
   const [orders] = useState<Order[]>([]);
   const [addresses, setAddresses] = useState<Address[]>([]);
+  const [isAdminState, setIsAdminState] = useState(false);
+
+  const checkAdminStatus = async (userId: string): Promise<boolean> => {
+    try {
+      console.log('Checking admin status for user:', userId);
+      const { data: isAdminResult, error: adminError } = await supabase.rpc('is_admin');
+      
+      if (adminError) {
+        console.error('Error checking admin status:', adminError);
+        return false;
+      }
+      
+      console.log('Admin check result:', isAdminResult);
+      return isAdminResult || false;
+    } catch (error) {
+      console.error('Failed to check admin status:', error);
+      return false;
+    }
+  };
+
+  const fetchUserRole = async (userId: string): Promise<string | null> => {
+    try {
+      console.log('Fetching user role for:', userId);
+      const { data: roleResult, error: roleError } = await supabase.rpc('get_current_user_role');
+      
+      if (roleError) {
+        console.error('Error fetching user role:', roleError);
+        return null;
+      }
+      
+      console.log('User role result:', roleResult);
+      return roleResult;
+    } catch (error) {
+      console.error('Failed to fetch user role:', error);
+      return null;
+    }
+  };
 
   const fetchUserRoles = async (userId: string): Promise<UserRole[]> => {
     try {
-      const { data: roles, error } = await supabase
-        .from('user_roles')
-        .select('*')
-        .eq('user_id', userId);
-
-      if (error) {
-        console.error('Error fetching user roles:', error);
+      console.log('Fetching user roles for:', userId);
+      
+      // Get the current user's role using RPC
+      const role = await fetchUserRole(userId);
+      
+      if (!role) {
+        console.log('No role found for user');
         return [];
       }
 
-      return (roles || []).map(role => ({
-        ...role,
-        role: role.role as 'super_admin' | 'admin' | 'inventory_manager' | 'customer'
-      }));
+      // Create a UserRole object from the result
+      const userRole: UserRole = {
+        id: userId,
+        role: role as 'super_admin' | 'admin' | 'inventory_manager' | 'customer',
+        created_at: new Date().toISOString()
+      };
+
+      console.log('Mapped user roles:', [userRole]);
+      return [userRole];
     } catch (error) {
       console.error('Error in fetchUserRoles:', error);
       return [];
@@ -183,23 +225,34 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           };
           setUser(userData);
           
-          // Fetch roles in background with proper error handling
+          // Fetch roles and admin status in background
           setTimeout(async () => {
             if (!didCancel) {
               try {
+                console.log('Fetching roles and admin status for user:', session.user.id);
+                
+                // Check admin status using RPC
+                const adminStatus = await checkAdminStatus(session.user.id);
+                console.log('Admin status result:', adminStatus);
+                setIsAdminState(adminStatus);
+                
+                // Fetch user roles using RPC
                 const roles = await fetchUserRoles(session.user.id);
                 console.log('Fetched roles:', roles);
+                
                 if (!didCancel) {
                   setUser(prev => prev ? { ...prev, roles } : null);
                 }
               } catch (error) {
-                console.error('Failed to fetch user roles:', error);
+                console.error('Failed to fetch user roles or admin status:', error);
                 // Don't block the UI if role fetching fails
+                setIsAdminState(false);
               }
             }
           }, 0);
         } else {
           setUser(null);
+          setIsAdminState(false);
         }
         setLoading(false);
       }
@@ -220,18 +273,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         };
         setUser(userData);
         
-        // Fetch roles with proper error handling
+        // Fetch roles and admin status
         setTimeout(async () => {
           if (!didCancel) {
             try {
+              console.log('Initial fetch - roles and admin status for user:', session.user.id);
+              
+              const adminStatus = await checkAdminStatus(session.user.id);
+              console.log('Initial admin status result:', adminStatus);
+              setIsAdminState(adminStatus);
+              
               const roles = await fetchUserRoles(session.user.id);
               console.log('Initial roles fetch:', roles);
+              
               if (!didCancel) {
                 setUser(prev => prev ? { ...prev, roles } : null);
               }
             } catch (error) {
-              console.error('Failed to fetch initial user roles:', error);
-              // Don't block the UI if role fetching fails
+              console.error('Failed to fetch initial user roles or admin status:', error);
+              setIsAdminState(false);
             }
           }
         }, 0);
@@ -257,13 +317,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
   }, []);
 
-  const isAdmin = user?.roles?.some(role => 
+  // Use both the RPC-based admin check and the role-based fallback
+  const isAdmin = isAdminState || user?.roles?.some(role => 
     ['super_admin', 'admin', 'inventory_manager'].includes(role.role)
   ) || false;
 
   console.log('Auth context state:', { 
     user: !!user, 
     isAdmin, 
+    isAdminState,
     roles: user?.roles, 
     loading 
   });

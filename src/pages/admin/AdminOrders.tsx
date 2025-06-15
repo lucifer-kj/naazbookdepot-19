@@ -1,16 +1,18 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAdminOrders, useUpdateOrderStatus } from '@/lib/hooks/admin/useAdminOrders';
 import { supabase } from '@/integrations/supabase/client';
 import AdminLayout from '@/components/admin/AdminLayout';
+import OrderDetailsModal from '@/components/admin/OrderDetailsModal';
+import AdminPWAPrompt from '@/components/pwa/AdminPWAPrompt';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Bell, Filter, Search, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Bell, Filter, Search, CheckCircle, XCircle, Clock, Eye } from 'lucide-react';
 
 const AdminOrders = () => {
   const { data: orders, isLoading, refetch } = useAdminOrders();
   const updateOrderStatus = useUpdateOrderStatus();
   const [editingOrder, setEditingOrder] = useState<string | null>(null);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [newStatus, setNewStatus] = useState('');
   const [trackingNumber, setTrackingNumber] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -62,6 +64,19 @@ const AdminOrders = () => {
         status: newStatus as any,
         trackingNumber: trackingNumber || undefined,
       });
+      
+      // Send notification
+      try {
+        await supabase.functions.invoke('order-notifications', {
+          body: {
+            orderId,
+            eventType: 'status_updated'
+          }
+        });
+      } catch (notificationError) {
+        console.error('Error sending notification:', notificationError);
+      }
+      
       setEditingOrder(null);
       setNewStatus('');
       setTrackingNumber('');
@@ -81,10 +96,33 @@ const AdminOrders = () => {
         .eq('id', orderId);
 
       if (error) throw error;
+      
+      // Send notification for status change
+      if (verified) {
+        try {
+          await supabase.functions.invoke('order-notifications', {
+            body: {
+              orderId,
+              eventType: 'status_updated'
+            }
+          });
+        } catch (notificationError) {
+          console.error('Error sending notification:', notificationError);
+        }
+      }
+      
       refetch();
     } catch (error) {
       console.error('Error updating payment status:', error);
     }
+  };
+
+  const handleRowClick = (orderId: string, event: React.MouseEvent) => {
+    // Don't open modal if clicking on action buttons
+    if ((event.target as HTMLElement).closest('button')) {
+      return;
+    }
+    setSelectedOrderId(orderId);
   };
 
   const filteredOrders = orders?.filter(order => {
@@ -111,6 +149,7 @@ const AdminOrders = () => {
 
   return (
     <AdminLayout>
+      <AdminPWAPrompt />
       <div className="space-y-6">
         {/* Header with notification */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
@@ -211,19 +250,26 @@ const AdminOrders = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredOrders.map((order) => (
-                  <tr key={order.id} className="hover:bg-gray-50 transition-colors">
+                  <tr 
+                    key={order.id} 
+                    className="hover:bg-gray-50 transition-colors cursor-pointer"
+                    onClick={(e) => handleRowClick(order.id, e)}
+                  >
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {order.order_number || `#${order.id.slice(0, 8)}`}
-                        </div>
-                        {order.upi_reference_code && (
-                          <div className="text-xs text-gray-500">
-                            UPI Ref: {order.upi_reference_code}
+                      <div className="flex items-center">
+                        <div>
+                          <div className="text-sm font-medium text-gray-900 flex items-center">
+                            {order.order_number || `#${order.id.slice(0, 8)}`}
+                            <Eye className="h-3 w-3 ml-2 text-gray-400" />
                           </div>
-                        )}
-                        <div className="text-xs text-gray-500">
-                          {order.order_items?.length || 0} items
+                          {order.upi_reference_code && (
+                            <div className="text-xs text-gray-500">
+                              UPI Ref: {order.upi_reference_code}
+                            </div>
+                          )}
+                          <div className="text-xs text-gray-500">
+                            {order.order_items?.length || 0} items
+                          </div>
                         </div>
                       </div>
                     </td>
@@ -290,7 +336,10 @@ const AdminOrders = () => {
                           <div className="flex space-x-2">
                             <Button
                               size="sm"
-                              onClick={() => handlePaymentVerification(order.id, true)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handlePaymentVerification(order.id, true);
+                              }}
                               className="bg-green-600 hover:bg-green-700 text-xs px-2 py-1"
                             >
                               <CheckCircle size={12} className="mr-1" />
@@ -299,7 +348,10 @@ const AdminOrders = () => {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => handlePaymentVerification(order.id, false)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handlePaymentVerification(order.id, false);
+                              }}
                               className="text-red-600 border-red-600 hover:bg-red-50 text-xs px-2 py-1"
                             >
                               <XCircle size={12} className="mr-1" />
@@ -309,7 +361,7 @@ const AdminOrders = () => {
                         )}
                         
                         {editingOrder === order.id ? (
-                          <div className="space-y-2">
+                          <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
                             <Input
                               placeholder="Tracking Number (optional)"
                               value={trackingNumber}
@@ -319,7 +371,10 @@ const AdminOrders = () => {
                             <div className="flex space-x-2">
                               <Button
                                 size="sm"
-                                onClick={() => handleStatusUpdate(order.id)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleStatusUpdate(order.id);
+                                }}
                                 className="bg-green-600 hover:bg-green-700"
                               >
                                 Save
@@ -327,7 +382,8 @@ const AdminOrders = () => {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => {
+                                onClick={(e) => {
+                                  e.stopPropagation();
                                   setEditingOrder(null);
                                   setNewStatus('');
                                   setTrackingNumber('');
@@ -341,7 +397,8 @@ const AdminOrders = () => {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation();
                               setEditingOrder(order.id);
                               setNewStatus(order.status);
                               setTrackingNumber(order.tracking_number || '');
@@ -359,6 +416,15 @@ const AdminOrders = () => {
           </div>
         </div>
       </div>
+
+      {/* Order Details Modal */}
+      {selectedOrderId && (
+        <OrderDetailsModal
+          orderId={selectedOrderId}
+          isOpen={!!selectedOrderId}
+          onClose={() => setSelectedOrderId(null)}
+        />
+      )}
     </AdminLayout>
   );
 };

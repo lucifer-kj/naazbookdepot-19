@@ -143,6 +143,79 @@ export type Database = {
           },
         ]
       }
+      order_notes: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          is_internal: boolean | null
+          note: string
+          order_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_internal?: boolean | null
+          note: string
+          order_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_internal?: boolean | null
+          note?: string
+          order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_notes_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_status_history: {
+        Row: {
+          changed_by: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          order_id: string
+          previous_status: string | null
+          status: string
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          order_id: string
+          previous_status?: string | null
+          status: string
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          order_id?: string
+          previous_status?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_status_history_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
           billing_address: Json | null
@@ -288,6 +361,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           default_address: Json | null
+          email_notifications: Json | null
           id: string
           name: string | null
           role: string | null
@@ -296,6 +370,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           default_address?: Json | null
+          email_notifications?: Json | null
           id: string
           name?: string | null
           role?: string | null
@@ -304,6 +379,7 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           default_address?: Json | null
+          email_notifications?: Json | null
           id?: string
           name?: string | null
           role?: string | null
@@ -472,6 +548,53 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      webhook_logs: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          order_id: string
+          payload: Json | null
+          response_body: string | null
+          response_status: number | null
+          retry_count: number | null
+          success: boolean | null
+          webhook_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          order_id: string
+          payload?: Json | null
+          response_body?: string | null
+          response_status?: number | null
+          retry_count?: number | null
+          success?: boolean | null
+          webhook_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          order_id?: string
+          payload?: Json | null
+          response_body?: string | null
+          response_status?: number | null
+          retry_count?: number | null
+          success?: boolean | null
+          webhook_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_logs_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       wishlist_items: {
         Row: {

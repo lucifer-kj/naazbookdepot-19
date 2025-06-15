@@ -161,6 +161,19 @@ export const useCreateOrder = () => {
         if (clearCartError) throw clearCartError;
       }
 
+      // Send order confirmation notification
+      try {
+        await supabase.functions.invoke('order-notifications', {
+          body: {
+            orderId: order.id,
+            eventType: 'order_created'
+          }
+        });
+      } catch (notificationError) {
+        console.error('Error sending order confirmation:', notificationError);
+        // Don't fail the order creation if notification fails
+      }
+
       return order;
     },
     onSuccess: () => {

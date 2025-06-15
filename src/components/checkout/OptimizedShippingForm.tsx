@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { MapPin } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { DefaultAddress, isDefaultAddress } from '@/types/address';
 
 interface OptimizedShippingFormProps {
   user: any;
@@ -43,16 +44,18 @@ const OptimizedShippingForm: React.FC<OptimizedShippingFormProps> = ({ user, onC
           return;
         }
 
-        if (profile?.default_address) {
+        if (profile?.default_address && isDefaultAddress(profile.default_address)) {
+          const defaultAddress = profile.default_address as DefaultAddress;
+          
           setFormData(prev => ({
             ...prev,
             name: profile.name || prev.name,
-            phone: profile.default_address.phone || '',
-            address: profile.default_address.address || '',
-            city: profile.default_address.city || '',
-            state: profile.default_address.state || '',
-            pincode: profile.default_address.pincode || '',
-            landmark: profile.default_address.landmark || ''
+            phone: defaultAddress.phone || '',
+            address: defaultAddress.address || '',
+            city: defaultAddress.city || '',
+            state: defaultAddress.state || '',
+            pincode: defaultAddress.pincode || '',
+            landmark: defaultAddress.landmark || ''
           }));
         }
       } catch (error) {

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Mail, Phone, MapPin, Save } from 'lucide-react';
+import { DefaultAddress, isDefaultAddress } from '@/types/address';
 
 const ProfileSettings = () => {
   const { user } = useAuth();
@@ -36,16 +37,20 @@ const ProfileSettings = () => {
         }
 
         if (profile) {
+          const defaultAddress = profile.default_address && isDefaultAddress(profile.default_address) 
+            ? profile.default_address as DefaultAddress 
+            : null;
+
           setFormData(prev => ({
             ...prev,
             name: profile.name || prev.name,
-            ...(profile.default_address && {
-              phone: profile.default_address.phone || prev.phone,
-              address: profile.default_address.address || '',
-              city: profile.default_address.city || '',
-              state: profile.default_address.state || '',
-              pincode: profile.default_address.pincode || '',
-              landmark: profile.default_address.landmark || ''
+            ...(defaultAddress && {
+              phone: defaultAddress.phone || prev.phone,
+              address: defaultAddress.address || '',
+              city: defaultAddress.city || '',
+              state: defaultAddress.state || '',
+              pincode: defaultAddress.pincode || '',
+              landmark: defaultAddress.landmark || ''
             })
           }));
         }

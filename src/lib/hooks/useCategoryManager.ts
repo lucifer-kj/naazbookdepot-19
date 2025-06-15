@@ -51,8 +51,8 @@ export const useCategoryManager = () => {
   }, [flattenedCategories, searchQuery]);
 
   const selectableCategories = useMemo(() => {
-    // Only allow selection of leaf categories (subcategories without children)
-    return filteredCategories.filter(category => !category.isParent);
+    // Allow selection of all categories (both parent and child categories)
+    return filteredCategories;
   }, [filteredCategories]);
 
   const getCategoryById = (id: string): CategoryOption | undefined => {

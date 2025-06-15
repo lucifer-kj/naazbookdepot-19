@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { User, Package, Heart, MapPin, Settings, LogOut, ShoppingCart } from 'lucide-react';
@@ -7,12 +6,12 @@ import { useCartContext } from '@/lib/context/CartContext';
 import { supabase } from '@/integrations/supabase/client';
 
 const UserDashboard = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { cart } = useCartContext();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    await logout();
     navigate('/');
   };
 

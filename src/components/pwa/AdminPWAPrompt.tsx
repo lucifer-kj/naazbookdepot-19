@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { X, Download, Shield } from 'lucide-react';
-import { useAdminCheck } from '@/lib/hooks/useAdminCheck';
+import { useAuth } from '@/lib/context/AuthContext';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -10,7 +9,7 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 const AdminPWAPrompt = () => {
-  const { isAdmin, isLoading } = useAdminCheck();
+  const { isAdmin, loading: isLoading } = useAuth();
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);

@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
@@ -98,12 +97,18 @@ export const useDeleteProduct = () => {
         .from('products')
         .delete()
         .eq('id', id);
-
       if (error) throw error;
     },
     onSuccess: () => {
+      // Invalidate all possible product queries for real-time update
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
       queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['search-products'] });
+      // Remove all cached product lists with any categoryId
+      queryClient.invalidateQueries({ predicate: (query) => {
+        const key = Array.isArray(query.queryKey) ? query.queryKey : [];
+        return key[0] === 'products';
+      }});
     },
   });
 };

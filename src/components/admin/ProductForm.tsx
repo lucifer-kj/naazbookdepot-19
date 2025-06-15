@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import ImageUpload from './ImageUpload';
 import TagsInput from './TagsInput';
+import HierarchicalCategorySelect from './HierarchicalCategorySelect';
+import { Category } from '@/lib/hooks/useCategories';
 
 interface ProductFormData {
   name: string;
@@ -21,7 +23,7 @@ interface ProductFormProps {
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
   isEditing: boolean;
-  categories?: Array<{ id: string; name: string }>;
+  categories?: Category[];
 }
 
 const ProductForm: React.FC<ProductFormProps> = ({
@@ -54,19 +56,12 @@ const ProductForm: React.FC<ProductFormProps> = ({
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Category
             </label>
-            <select
+            <HierarchicalCategorySelect
+              categories={categories || []}
               value={formData.category_id}
-              onChange={(e) => onFormDataChange({ ...formData, category_id: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-naaz-green"
-              required
-            >
-              <option value="">Select Category</option>
-              {categories?.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
+              onChange={(categoryId) => onFormDataChange({ ...formData, category_id: categoryId })}
+              placeholder="Select Category"
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">

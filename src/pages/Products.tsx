@@ -6,7 +6,7 @@ import { useCategories } from '@/lib/hooks/useCategories';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ProductGrid from '@/components/common/ProductGrid';
-import CategorySidebar from '@/components/catalog/CategorySidebar';
+import EnhancedCategorySidebar from '@/components/catalog/EnhancedCategorySidebar';
 import SearchBar from '@/components/catalog/SearchBar';
 import AdvancedFilters from '@/components/catalog/AdvancedFilters';
 import ProductSort from '@/components/product/ProductSort';
@@ -60,11 +60,11 @@ const Products = () => {
     });
   };
 
-  const handleCategorySelect = (categoryId: string) => {
-    setActiveCategory(categoryId === activeCategory ? '' : categoryId);
+  const handleCategorySelect = (categorySlug: string) => {
+    setActiveCategory(categorySlug);
     setSearchParams(prev => {
-      if (categoryId && categoryId !== activeCategory) {
-        prev.set('category', categoryId);
+      if (categorySlug) {
+        prev.set('category', categorySlug);
       } else {
         prev.delete('category');
       }
@@ -110,13 +110,8 @@ const Products = () => {
 
           <div className="flex flex-col lg:flex-row gap-8">
             <div className="lg:w-64 space-y-6">
-              <CategorySidebar
-                categories={categories.map(cat => ({
-                  id: parseInt(cat.id),
-                  name: cat.name,
-                  slug: cat.slug,
-                  count: 0
-                }))}
+              <EnhancedCategorySidebar
+                categories={categories}
                 activeCategory={activeCategory}
                 onCategorySelect={handleCategorySelect}
               />

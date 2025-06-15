@@ -53,21 +53,32 @@ export type Database = {
           created_at: string | null
           id: string
           name: string
+          parent_id: string | null
           slug: string
         }
         Insert: {
           created_at?: string | null
           id?: string
           name: string
+          parent_id?: string | null
           slug: string
         }
         Update: {
           created_at?: string | null
           id?: string
           name?: string
+          parent_id?: string | null
           slug?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       newsletter_subscriptions: {
         Row: {

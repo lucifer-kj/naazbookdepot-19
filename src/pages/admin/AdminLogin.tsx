@@ -57,22 +57,17 @@ const AdminLogin = () => {
     try {
       console.log('Attempting admin login with:', formData.email);
       
-      const { error: loginError, user, session } = await login(formData.email, formData.password);
+      const result = await login(formData.email, formData.password);
       
-      if (loginError) {
-        console.error('Login error:', loginError);
-        setError(loginError.message || 'Login failed. Please check your credentials.');
+      if (result.error) {
+        console.error('Login error:', result.error);
+        setError(result.error.message || 'Login failed. Please check your credentials.');
         return;
       }
 
-      if (user && session) {
-        console.log('Login successful, checking admin status...');
-        
-        // Give a moment for the auth context to update
-        setTimeout(() => {
-          // The useEffect above will handle navigation when isAdmin becomes true
-          console.log('Login completed, waiting for admin verification...');
-        }, 100);
+      if (result.user && result.session) {
+        console.log('Login successful, waiting for admin verification...');
+        // The useEffect above will handle navigation when isAdmin becomes true
       } else {
         setError('Login failed. Please try again.');
       }

@@ -30,6 +30,8 @@ const AdminProducts = () => {
   const [showStockHistory, setShowStockHistory] = useState(false);
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
   const [categoryFilter, setCategoryFilter] = useState('');
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -76,8 +78,39 @@ const AdminProducts = () => {
     return matchesSearch && matchesCategory;
   }) || [];
 
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+    
+    if (!formData.name.trim()) {
+      newErrors.name = 'Product name is required';
+    }
+    
+    if (!formData.category_id) {
+      newErrors.category_id = 'Please select a category';
+    }
+    
+    if (!formData.price || parseFloat(formData.price) <= 0) {
+      newErrors.price = 'Price must be greater than 0';
+    }
+    
+    if (!formData.stock || parseInt(formData.stock) < 0) {
+      newErrors.stock = 'Stock must be 0 or greater';
+    }
+
+    return newErrors;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    const validationErrors = validateForm();
+    if (Object.keys(validationErrors).length > 0) {
+      setFormErrors(validationErrors);
+      return;
+    }
+
+    setFormErrors({});
+    setIsSubmitting(true);
     
     const productData = {
       name: formData.name,
@@ -109,6 +142,9 @@ const AdminProducts = () => {
       });
     } catch (error) {
       console.error('Error saving product:', error);
+      setFormErrors({ submit: 'Failed to save product. Please try again.' });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -164,6 +200,7 @@ const AdminProducts = () => {
   const handleCancel = () => {
     setShowCreateForm(false);
     setEditingProduct(null);
+    setFormErrors({});
     setFormData({
       name: '',
       description: '',
@@ -178,6 +215,7 @@ const AdminProducts = () => {
   const handleAddProduct = () => {
     setShowCreateForm(true);
     setEditingProduct(null);
+    setFormErrors({});
     setFormData({
       name: '',
       description: '',
@@ -244,7 +282,8 @@ const AdminProducts = () => {
             onSubmit={handleSubmit}
             onCancel={handleCancel}
             isEditing={!!editingProduct}
-            categories={categories}
+            errors={formErrors}
+            isSubmitting={isSubmitting}
           />
         )}
 

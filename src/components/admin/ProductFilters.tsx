@@ -3,15 +3,13 @@ import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search, Filter } from 'lucide-react';
-import HierarchicalCategorySelect from './HierarchicalCategorySelect';
-import { Category } from '@/lib/hooks/useCategories';
+import EnhancedCategorySelect from './EnhancedCategorySelect';
 
 interface ProductFiltersProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   categoryFilter: string;
   onCategoryChange: (categoryId: string) => void;
-  categories?: Category[];
   onClearFilters: () => void;
 }
 
@@ -20,7 +18,6 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
   onSearchChange,
   categoryFilter,
   onCategoryChange,
-  categories,
   onClearFilters,
 }) => {
   return (
@@ -40,8 +37,7 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
         </div>
         <div className="flex gap-2">
           <div className="min-w-48">
-            <HierarchicalCategorySelect
-              categories={categories || []}
+            <EnhancedCategorySelect
               value={categoryFilter}
               onChange={onCategoryChange}
               placeholder="All Categories"

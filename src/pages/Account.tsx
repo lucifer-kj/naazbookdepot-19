@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/context/AuthContext';
@@ -10,10 +9,10 @@ import OrderHistory from '@/components/account/OrderHistory';
 import LoginModal from '@/components/auth/LoginModal';
 
 const Account = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
   const location = useLocation();
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />
@@ -30,7 +29,7 @@ const Account = () => {
       <div className="min-h-screen flex flex-col">
         <Navbar />
         <div className="flex-grow flex items-center justify-center py-16 px-4">
-          <LoginModal />
+          <LoginModal isOpen={true} onClose={() => {}} />
         </div>
         <Footer />
       </div>

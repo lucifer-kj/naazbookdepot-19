@@ -10,13 +10,13 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 const AdminPWAPrompt = () => {
-  const { isAdmin } = useAdminCheck();
+  const { isAdmin, isLoading } = useAdminCheck();
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
 
   useEffect(() => {
-    if (!isAdmin) return;
+    if (!isAdmin || isLoading) return;
 
     // Check if already installed
     const checkIfInstalled = () => {
@@ -56,7 +56,7 @@ const AdminPWAPrompt = () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
-  }, [isAdmin]);
+  }, [isAdmin, isLoading]);
 
   const handleInstall = async () => {
     if (!deferredPrompt) return;
@@ -84,7 +84,7 @@ const AdminPWAPrompt = () => {
     }, 30 * 24 * 60 * 60 * 1000);
   };
 
-  if (!isAdmin || isInstalled || !showPrompt || !deferredPrompt) {
+  if (!isAdmin || isLoading || isInstalled || !showPrompt || !deferredPrompt) {
     return null;
   }
 

@@ -24,59 +24,83 @@ export const authOperations = {
   },
 
   register: async (userData: { email: string; password: string; name: string }) => {
-    const { data, error } = await supabase.auth.signUp({
-      email: userData.email,
-      password: userData.password,
-      options: {
-        data: {
-          name: userData.name,
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: userData.email,
+        password: userData.password,
+        options: {
+          data: {
+            name: userData.name,
+          },
+          emailRedirectTo: `${window.location.origin}/`,
         },
-        emailRedirectTo: `${window.location.origin}/`,
-      },
-    });
+      });
 
-    if (error) {
-      return { error };
+      if (error) {
+        console.error('Registration error:', error);
+        return { error };
+      }
+
+      return { error: null, data };
+    } catch (err) {
+      console.error('Registration exception:', err);
+      return { error: err };
     }
-
-    return { error: null };
   },
 
   logout: async () => {
     try {
       console.log('Logging out user...');
       
-      // Clear any cached admin status
-      sessionStorage.removeItem('admin-status');
-      sessionStorage.removeItem('admin-status-expiry');
-      localStorage.removeItem('admin-pwa-prompt-dismissed');
+      // Clear cached admin status and other auth-related data
+      try {
+        const keysToRemove = [];
+        for (let i = 0; i < sessionStorage.length; i++) {
+          const key = sessionStorage.key(i);
+          if (key && (key.includes('admin-status') || key.includes('admin-status-expiry'))) {
+            keysToRemove.push(key);
+          }
+        }
+        keysToRemove.forEach(key => sessionStorage.removeItem(key));
+        localStorage.removeItem('admin-pwa-prompt-dismissed');
+      } catch (cacheError) {
+        console.warn('Failed to clear cache:', cacheError);
+      }
       
       const { error } = await supabase.auth.signOut();
       
       if (error) {
-        console.error('Logout error:', error);
-        // Force logout even if there's an error
+        console.warn('Logout error:', error);
       }
       
-      // Force navigation to home page
-      window.location.href = '/';
+      console.log('Logout completed');
+      return { error };
       
     } catch (err) {
       console.error('Logout exception:', err);
-      // Force navigation even on exception
-      window.location.href = '/';
+      return { error: err };
     }
   },
 
   updateProfile: async (user: AuthUser | null, userData: Partial<AuthUser>) => {
-    if (!user) return;
+    if (!user) {
+      throw new Error('No user provided for profile update');
+    }
 
-    const { error } = await supabase.auth.updateUser({
-      data: userData,
-    });
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: userData,
+      });
 
-    if (error) {
-      console.error('Error updating profile:', error);
+      if (error) {
+        console.error('Error updating profile:', error);
+        throw error;
+      }
+
+      console.log('Profile updated successfully');
+    } catch (error) {
+      console.error('Failed to update profile:', error);
+      throw error;
     }
   }
 };

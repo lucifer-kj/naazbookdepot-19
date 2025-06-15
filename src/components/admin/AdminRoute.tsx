@@ -74,27 +74,29 @@ const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
 
   console.log('AdminRoute check:', authState);
 
-  // Always call hooks before any conditional returns
   const [showSkeleton, setShowSkeleton] = React.useState(true);
   
   React.useEffect(() => {
     if (!authState.loading) {
       setShowSkeleton(false);
     } else {
-      const timer = setTimeout(() => setShowSkeleton(false), 3000);
+      const timer = setTimeout(() => setShowSkeleton(false), 2000);
       return () => clearTimeout(timer);
     }
   }, [authState.loading]);
 
+  // Show loading skeleton briefly
   if (authState.loading && showSkeleton) {
     return <LoadingSkeleton />;
   }
 
+  // Redirect to login if not authenticated
   if (!authState.isAuthenticated) {
     console.log('User not authenticated, redirecting to admin login');
     return <Navigate to="/admin/login" replace />;
   }
 
+  // Show access denied if authenticated but not admin
   if (!authState.isAdmin) {
     console.log('User not admin, showing access denied');
     return <AccessDenied />;

@@ -4,16 +4,23 @@ import type { AuthUser } from '@/lib/types/auth';
 
 export const authOperations = {
   login: async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (error) {
-      return { error };
+      if (error) {
+        console.error('Login error:', error);
+        return { error, user: null, session: null };
+      }
+
+      console.log('Login successful:', { user: !!data.user, session: !!data.session });
+      return { error: null, user: data.user, session: data.session };
+    } catch (err) {
+      console.error('Login exception:', err);
+      return { error: err, user: null, session: null };
     }
-
-    return { error: null };
   },
 
   register: async (userData: { email: string; password: string; name: string }) => {
@@ -36,9 +43,28 @@ export const authOperations = {
   },
 
   logout: async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error('Error logging out:', error);
+    try {
+      console.log('Logging out user...');
+      
+      // Clear any cached admin status
+      sessionStorage.removeItem('admin-status');
+      sessionStorage.removeItem('admin-status-expiry');
+      localStorage.removeItem('admin-pwa-prompt-dismissed');
+      
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error('Logout error:', error);
+        // Force logout even if there's an error
+      }
+      
+      // Force navigation to home page
+      window.location.href = '/';
+      
+    } catch (err) {
+      console.error('Logout exception:', err);
+      // Force navigation even on exception
+      window.location.href = '/';
     }
   },
 

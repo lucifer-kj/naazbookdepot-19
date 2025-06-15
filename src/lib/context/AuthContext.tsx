@@ -21,13 +21,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const { addresses, addAddress, updateAddress, deleteAddress } = useAddressManagement();
 
   useEffect(() => {
-    let didCancel = false;
+    let isMounted = true;
     
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (didCancel) return;
+        if (!isMounted) return;
         
-        console.log('Auth state change:', event, !!session);
+        console.log('Auth context - Auth state change:', event, !!session);
         setSession(session);
         
         if (session?.user) {
@@ -38,90 +38,79 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           };
           setUser(userData);
           
-          setTimeout(async () => {
-            if (!didCancel) {
-              try {
-                console.log('Fetching roles and admin status for user:', session.user.id);
-                
-                const adminStatus = await checkAdminStatus(session.user.id);
-                console.log('Admin status result:', adminStatus);
-                setIsAdminState(adminStatus);
-                
-                const roles = await fetchUserRoles(session.user.id);
-                console.log('Fetched roles:', roles);
-                
-                if (!didCancel) {
-                  setUser(prev => prev ? { ...prev, roles } : null);
-                }
-              } catch (error) {
-                console.error('Failed to fetch user roles or admin status:', error);
-                setIsAdminState(false);
-              }
+          // Fetch roles immediately after setting user
+          try {
+            const roles = await fetchUserRoles(session.user.id);
+            if (isMounted) {
+              setUser(prev => prev ? { ...prev, roles } : null);
             }
-          }, 0);
+          } catch (error) {
+            console.error('Failed to fetch user roles:', error);
+          }
         } else {
           setUser(null);
           setIsAdminState(false);
         }
-        setLoading(false);
+        
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (didCancel) return;
-      
-      console.log('Initial session check:', !!session);
-      setSession(session);
-      
-      if (session?.user) {
-        const userData = { 
-          ...session.user, 
-          name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User', 
-          joinDate: session.user.created_at 
-        };
-        setUser(userData);
+    // Initialize session
+    const initializeAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
         
-        setTimeout(async () => {
-          if (!didCancel) {
-            try {
-              console.log('Initial fetch - roles and admin status for user:', session.user.id);
-              
-              const adminStatus = await checkAdminStatus(session.user.id);
-              console.log('Initial admin status result:', adminStatus);
-              setIsAdminState(adminStatus);
-              
-              const roles = await fetchUserRoles(session.user.id);
-              console.log('Initial roles fetch:', roles);
-              
-              if (!didCancel) {
-                setUser(prev => prev ? { ...prev, roles } : null);
-              }
-            } catch (error) {
-              console.error('Failed to fetch initial user roles or admin status:', error);
-              setIsAdminState(false);
+        if (!isMounted) return;
+        
+        console.log('Auth context - Initial session check:', !!session);
+        setSession(session);
+        
+        if (session?.user) {
+          const userData = { 
+            ...session.user, 
+            name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User', 
+            joinDate: session.user.created_at 
+          };
+          setUser(userData);
+          
+          // Fetch roles for initial session
+          try {
+            const roles = await fetchUserRoles(session.user.id);
+            if (isMounted) {
+              setUser(prev => prev ? { ...prev, roles } : null);
             }
+          } catch (error) {
+            console.error('Failed to fetch initial user roles:', error);
           }
-        }, 0);
+        }
+      } catch (error) {
+        console.error('Session initialization error:', error);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
       }
-      setLoading(false);
-    }).catch((error) => {
-      console.error('Session check error:', error);
-      setLoading(false);
-    });
+    };
 
+    initializeAuth();
+
+    // Failsafe timeout
     const timeout = setTimeout(() => {
-      if (!didCancel) {
-        console.log('Loading timeout reached, setting loading to false');
+      if (isMounted) {
+        console.log('Auth context - Loading timeout reached, setting loading to false');
         setLoading(false);
       }
     }, 3000);
 
     return () => {
-      didCancel = true;
+      isMounted = false;
       clearTimeout(timeout);
       subscription.unsubscribe();
     };
-  }, [checkAdminStatus, fetchUserRoles, setIsAdminState]);
+  }, [fetchUserRoles, setIsAdminState]);
 
   const isAdmin = isAdminState || user?.roles?.some(role => 
     ['super_admin', 'admin', 'inventory_manager'].includes(role.role)

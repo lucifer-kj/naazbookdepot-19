@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Navigate, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/context/AuthContext';
@@ -16,19 +17,23 @@ const AdminLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // If already authenticated and admin, redirect to dashboard
+  // Handle redirection when user becomes authenticated admin
   useEffect(() => {
     if (!loading && isAuthenticated && isAdmin) {
+      console.log('Admin authenticated, redirecting to dashboard');
       navigate('/admin/dashboard', { replace: true });
     }
   }, [loading, isAuthenticated, isAdmin, navigate]);
 
-  // Show spinner only if loading, but fallback after 3s
+  // Show loading state only briefly
   const [showSpinner, setShowSpinner] = useState(true);
   useEffect(() => {
-    if (!loading) setShowSpinner(false);
-    const t = setTimeout(() => setShowSpinner(false), 3000);
-    return () => clearTimeout(t);
+    if (!loading) {
+      setShowSpinner(false);
+    } else {
+      const timer = setTimeout(() => setShowSpinner(false), 2000);
+      return () => clearTimeout(timer);
+    }
   }, [loading]);
 
   if (showSpinner) {
@@ -39,7 +44,7 @@ const AdminLogin = () => {
     );
   }
 
-  // Redirect authenticated admins to dashboard
+  // Redirect authenticated admins immediately
   if (isAuthenticated && isAdmin) {
     return <Navigate to="/admin/dashboard" replace />;
   }
@@ -50,16 +55,26 @@ const AdminLogin = () => {
     setError('');
 
     try {
-      console.log('Attempting login with:', formData.email);
-      const { error: loginError } = await login(formData.email, formData.password);
+      console.log('Attempting admin login with:', formData.email);
+      
+      const { error: loginError, user, session } = await login(formData.email, formData.password);
       
       if (loginError) {
         console.error('Login error:', loginError);
         setError(loginError.message || 'Login failed. Please check your credentials.');
+        return;
+      }
+
+      if (user && session) {
+        console.log('Login successful, checking admin status...');
+        
+        // Give a moment for the auth context to update
+        setTimeout(() => {
+          // The useEffect above will handle navigation when isAdmin becomes true
+          console.log('Login completed, waiting for admin verification...');
+        }, 100);
       } else {
-        console.log('Login successful, redirecting to admin dashboard...');
-        // Force immediate navigation on successful login
-        navigate('/admin/dashboard', { replace: true });
+        setError('Login failed. Please try again.');
       }
     } catch (err) {
       console.error('Unexpected login error:', err);
@@ -74,7 +89,6 @@ const AdminLogin = () => {
       ...prev,
       [e.target.name]: e.target.value
     }));
-    // Clear error when user starts typing
     if (error) {
       setError('');
     }

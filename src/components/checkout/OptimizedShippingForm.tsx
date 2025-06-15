@@ -1,6 +1,7 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MapPin } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface OptimizedShippingFormProps {
   user: any;
@@ -9,7 +10,7 @@ interface OptimizedShippingFormProps {
 
 const OptimizedShippingForm: React.FC<OptimizedShippingFormProps> = ({ user, onComplete }) => {
   const [formData, setFormData] = useState({
-    name: user?.name || '',
+    name: user?.user_metadata?.name || user?.name || '',
     email: user?.email || '',
     phone: '',
     address: '',
@@ -22,6 +23,42 @@ const OptimizedShippingForm: React.FC<OptimizedShippingFormProps> = ({ user, onC
   });
 
   const [shippingOption] = useState('standard');
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Load saved address for returning customers
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      if (!user) return;
+      
+      setIsLoading(true);
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('name, default_address')
+          .eq('id', user.id)
+          .single();
+
+        if (profile?.default_address) {
+          setFormData(prev => ({
+            ...prev,
+            name: profile.name || prev.name,
+            phone: profile.default_address.phone || '',
+            address: profile.default_address.address || '',
+            city: profile.default_address.city || '',
+            state: profile.default_address.state || '',
+            pincode: profile.default_address.pincode || '',
+            landmark: profile.default_address.landmark || ''
+          }));
+        }
+      } catch (error) {
+        console.error('Error loading user profile:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadUserProfile();
+  }, [user]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,17 +72,32 @@ const OptimizedShippingForm: React.FC<OptimizedShippingFormProps> = ({ user, onC
     }));
   };
 
+  if (isLoading) {
+    return (
+      <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
+        <div className="animate-pulse">
+          <div className="h-6 bg-gray-200 rounded mb-4"></div>
+          <div className="space-y-4">
+            <div className="h-10 bg-gray-200 rounded"></div>
+            <div className="h-10 bg-gray-200 rounded"></div>
+            <div className="h-20 bg-gray-200 rounded"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
-      <div className="flex items-center mb-6">
-        <MapPin className="text-naaz-green mr-3" size={24} />
-        <h2 className="text-lg md:text-xl font-playfair font-semibold text-naaz-green">
+      <div className="flex items-center mb-4 md:mb-6">
+        <MapPin className="text-naaz-green mr-2 md:mr-3" size={20} />
+        <h2 className="text-base md:text-xl font-playfair font-semibold text-naaz-green">
           Shipping Information
         </h2>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Full Name *
@@ -97,7 +149,7 @@ const OptimizedShippingForm: React.FC<OptimizedShippingFormProps> = ({ user, onC
             value={formData.address}
             onChange={handleInputChange}
             rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-naaz-green text-sm md:text-base"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-naaz-green text-sm md:text-base resize-none"
             required
           />
         </div>
@@ -157,8 +209,8 @@ const OptimizedShippingForm: React.FC<OptimizedShippingFormProps> = ({ user, onC
           />
         </div>
 
-        <div className="bg-naaz-green/5 p-4 rounded-lg">
-          <div className="flex items-center justify-between">
+        <div className="bg-naaz-green/5 p-3 md:p-4 rounded-lg">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
             <div>
               <div className="font-medium text-naaz-green text-sm md:text-base">
                 Standard Delivery
@@ -170,7 +222,7 @@ const OptimizedShippingForm: React.FC<OptimizedShippingFormProps> = ({ user, onC
                 May Allah ease your journey of knowledge
               </div>
             </div>
-            <div className="text-lg font-semibold text-naaz-gold">
+            <div className="text-base md:text-lg font-semibold text-naaz-gold">
               ₹100
             </div>
           </div>
@@ -178,7 +230,7 @@ const OptimizedShippingForm: React.FC<OptimizedShippingFormProps> = ({ user, onC
 
         <button
           type="submit"
-          className="w-full bg-naaz-green text-white py-3 rounded-lg hover:bg-naaz-green/90 transition-colors font-medium text-sm md:text-base"
+          className="w-full bg-naaz-green text-white py-2 md:py-3 rounded-lg hover:bg-naaz-green/90 transition-colors font-medium text-sm md:text-base"
         >
           Continue to Payment
         </button>

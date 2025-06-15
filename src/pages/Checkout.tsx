@@ -35,7 +35,7 @@ const Checkout = () => {
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />
-        <main className="flex-grow flex items-center justify-center py-16 px-4">
+        <main className="flex-grow flex items-center justify-center py-8 md:py-16 px-4">
           <EmptyCartMessage onBrowseBooks={() => navigate('/books')} />
         </main>
         <Footer />
@@ -46,18 +46,22 @@ const Checkout = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-grow py-8 px-4 bg-naaz-cream">
-        <div className="container mx-auto max-w-6xl">
+      <main className="flex-grow py-4 md:py-8 px-4 bg-naaz-cream">
+        <div className="container mx-auto max-w-7xl">
           <CheckoutHeader onBackToCart={() => navigate('/cart')} />
 
-          <div className="grid lg:grid-cols-3 gap-6 lg:gap-8 mt-8">
-            <div className="lg:col-span-2">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8 mt-6 md:mt-8">
+            <div className="lg:col-span-2 order-2 lg:order-1">
               <OptimizedShippingForm
                 user={user}
                 onComplete={handleShippingComplete}
               />
             </div>
-            <OrderSummary cart={cart} />
+            <div className="order-1 lg:order-2">
+              <div className="sticky top-4">
+                <OrderSummary cart={cart} />
+              </div>
+            </div>
           </div>
         </div>
       </main>

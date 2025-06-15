@@ -15,13 +15,9 @@ export const useCategoryManager = () => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const flattenedCategories = useMemo(() => {
-    if (!categories) return [];
+    if (!categories || categories.length === 0) return [];
 
-    // Build a map of all categories
-    const categoryMap = new Map<string, Category>();
-    categories.forEach(cat => {
-      categoryMap.set(cat.id, cat);
-    });
+    console.log('Raw categories data:', categories);
 
     // Build hierarchy with proper levels
     const buildHierarchy = (parentId: string | null = null, level = 0): CategoryOption[] => {
@@ -32,13 +28,15 @@ export const useCategoryManager = () => {
       childCategories.forEach(category => {
         const hasChildren = categories.some(cat => cat.parent_id === category.id);
         
-        result.push({
+        const categoryOption: CategoryOption = {
           id: category.id,
           name: category.name,
           level,
           isParent: hasChildren,
           parentId: category.parent_id
-        });
+        };
+        
+        result.push(categoryOption);
 
         // Recursively add child categories
         if (hasChildren) {
@@ -49,7 +47,9 @@ export const useCategoryManager = () => {
       return result;
     };
 
-    return buildHierarchy();
+    const hierarchy = buildHierarchy();
+    console.log('Built hierarchy:', hierarchy);
+    return hierarchy;
   }, [categories]);
 
   const filteredCategories = useMemo(() => {
@@ -61,7 +61,7 @@ export const useCategoryManager = () => {
   }, [flattenedCategories, searchQuery]);
 
   const selectableCategories = useMemo(() => {
-    // Allow selection of all categories (both parent and child categories)
+    // Return all categories for selection
     return filteredCategories;
   }, [filteredCategories]);
 

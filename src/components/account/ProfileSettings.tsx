@@ -24,11 +24,16 @@ const ProfileSettings = () => {
       if (!user) return;
 
       try {
-        const { data: profile } = await supabase
+        const { data: profile, error } = await supabase
           .from('profiles')
           .select('name, default_address')
           .eq('id', user.id)
           .single();
+
+        if (error) {
+          console.error('Error loading profile:', error);
+          return;
+        }
 
         if (profile) {
           setFormData(prev => ({

@@ -32,11 +32,16 @@ const OptimizedShippingForm: React.FC<OptimizedShippingFormProps> = ({ user, onC
       
       setIsLoading(true);
       try {
-        const { data: profile } = await supabase
+        const { data: profile, error } = await supabase
           .from('profiles')
           .select('name, default_address')
           .eq('id', user.id)
           .single();
+
+        if (error) {
+          console.error('Error loading user profile:', error);
+          return;
+        }
 
         if (profile?.default_address) {
           setFormData(prev => ({

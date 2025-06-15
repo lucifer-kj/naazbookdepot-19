@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { User, Session } from '@supabase/supabase-js';
@@ -72,20 +73,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [addresses, setAddresses] = useState<Address[]>([]);
 
   const fetchUserRoles = async (userId: string): Promise<UserRole[]> => {
-    const { data: roles, error } = await supabase
-      .from('user_roles')
-      .select('*')
-      .eq('user_id', userId);
+    try {
+      const { data: roles, error } = await supabase
+        .from('user_roles')
+        .select('*')
+        .eq('user_id', userId);
 
-    if (error) {
-      console.error('Error fetching user roles:', error);
+      if (error) {
+        console.error('Error fetching user roles:', error);
+        return [];
+      }
+
+      return (roles || []).map(role => ({
+        ...role,
+        role: role.role as 'super_admin' | 'admin' | 'inventory_manager' | 'customer'
+      }));
+    } catch (error) {
+      console.error('Error in fetchUserRoles:', error);
       return [];
     }
-
-    return (roles || []).map(role => ({
-      ...role,
-      role: role.role as 'super_admin' | 'admin' | 'inventory_manager' | 'customer'
-    }));
   };
 
   const login = async (email: string, password: string) => {
@@ -159,20 +165,39 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   useEffect(() => {
     let didCancel = false;
+    
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (didCancel) return;
+        
+        console.log('Auth state change:', event, !!session);
         setSession(session);
+        
         if (session?.user) {
           // Set user immediately for faster UI response
-          setUser({ ...session.user });
-          // Fetch roles in background and update user when ready
-          fetchUserRoles(session.user.id).then(roles => {
+          const userData = { 
+            ...session.user, 
+            name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User', 
+            joinDate: session.user.created_at 
+          };
+          setUser(userData);
+          
+          // Fetch roles in background with proper error handling
+          setTimeout(async () => {
             if (!didCancel) {
-              setUser(prev => prev ? { ...prev, roles, name: prev.user_metadata?.name || prev.email?.split('@')[0] || 'User', joinDate: prev.created_at } : null);
+              try {
+                const roles = await fetchUserRoles(session.user.id);
+                console.log('Fetched roles:', roles);
+                if (!didCancel) {
+                  setUser(prev => prev ? { ...prev, roles } : null);
+                }
+              } catch (error) {
+                console.error('Failed to fetch user roles:', error);
+                // Don't block the UI if role fetching fails
+              }
             }
-          });
+          }, 0);
         } else {
           setUser(null);
         }
@@ -183,21 +208,46 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (didCancel) return;
+      
+      console.log('Initial session check:', !!session);
       setSession(session);
+      
       if (session?.user) {
-        setUser({ ...session.user });
-        fetchUserRoles(session.user.id).then(roles => {
+        const userData = { 
+          ...session.user, 
+          name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User', 
+          joinDate: session.user.created_at 
+        };
+        setUser(userData);
+        
+        // Fetch roles with proper error handling
+        setTimeout(async () => {
           if (!didCancel) {
-            setUser(prev => prev ? { ...prev, roles, name: prev.user_metadata?.name || prev.email?.split('@')[0] || 'User', joinDate: prev.created_at } : null);
+            try {
+              const roles = await fetchUserRoles(session.user.id);
+              console.log('Initial roles fetch:', roles);
+              if (!didCancel) {
+                setUser(prev => prev ? { ...prev, roles } : null);
+              }
+            } catch (error) {
+              console.error('Failed to fetch initial user roles:', error);
+              // Don't block the UI if role fetching fails
+            }
           }
-        });
+        }, 0);
       }
       setLoading(false);
-    }).catch(() => setLoading(false));
+    }).catch((error) => {
+      console.error('Session check error:', error);
+      setLoading(false);
+    });
 
     // Always resolve loading after 3 seconds max (fallback)
     const timeout = setTimeout(() => {
-      if (!didCancel) setLoading(false);
+      if (!didCancel) {
+        console.log('Loading timeout reached, setting loading to false');
+        setLoading(false);
+      }
     }, 3000);
 
     return () => {
@@ -210,6 +260,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const isAdmin = user?.roles?.some(role => 
     ['super_admin', 'admin', 'inventory_manager'].includes(role.role)
   ) || false;
+
+  console.log('Auth context state:', { 
+    user: !!user, 
+    isAdmin, 
+    roles: user?.roles, 
+    loading 
+  });
 
   const value: AuthContextType = {
     user,

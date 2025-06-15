@@ -508,6 +508,10 @@ export type Database = {
         Args: { order_id_param: string }
         Returns: string
       }
+      get_current_user_role: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_product_average_rating: {
         Args: { product_uuid: string }
         Returns: number
@@ -515,6 +519,10 @@ export type Database = {
       get_product_review_count: {
         Args: { product_uuid: string }
         Returns: number
+      }
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
       }
       search_products: {
         Args: { search_query: string }

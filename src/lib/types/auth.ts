@@ -44,12 +44,18 @@ export interface Order {
   trackingNumber?: string;
 }
 
+export interface LoginResult {
+  error?: any;
+  user: User | null;
+  session: Session | null;
+}
+
 export interface AuthContextType {
   user: AuthUser | null;
   session: Session | null;
   isAuthenticated: boolean;
   isAdmin: boolean;
-  login: (email: string, password: string) => Promise<{ error?: any }>;
+  login: (email: string, password: string) => Promise<LoginResult>;
   register: (userData: any) => Promise<{ error?: any }>;
   logout: () => Promise<void>;
   updateProfile: (userData: Partial<AuthUser>) => Promise<void>;

@@ -2,6 +2,29 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { AuthUser } from '@/lib/types/auth';
 
+const ADMIN_CACHE_KEY = 'admin-status';
+const ADMIN_CACHE_EXPIRY_KEY = 'admin-status-expiry';
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+export const clearAuthCache = () => {
+  try {
+    // Clear all admin cache entries
+    const keysToRemove = [];
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const key = sessionStorage.key(i);
+      if (key && (key.includes(ADMIN_CACHE_KEY) || key.includes(ADMIN_CACHE_EXPIRY_KEY))) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach(key => sessionStorage.removeItem(key));
+    
+    // Clear localStorage admin entries
+    localStorage.removeItem('admin-pwa-prompt-dismissed');
+  } catch (error) {
+    console.warn('Failed to clear auth cache:', error);
+  }
+};
+
 export const authOperations = {
   login: async (email: string, password: string) => {
     try {
@@ -53,19 +76,7 @@ export const authOperations = {
       console.log('Logging out user...');
       
       // Clear cached admin status and other auth-related data
-      try {
-        const keysToRemove = [];
-        for (let i = 0; i < sessionStorage.length; i++) {
-          const key = sessionStorage.key(i);
-          if (key && (key.includes('admin-status') || key.includes('admin-status-expiry'))) {
-            keysToRemove.push(key);
-          }
-        }
-        keysToRemove.forEach(key => sessionStorage.removeItem(key));
-        localStorage.removeItem('admin-pwa-prompt-dismissed');
-      } catch (cacheError) {
-        console.warn('Failed to clear cache:', cacheError);
-      }
+      clearAuthCache();
       
       const { error } = await supabase.auth.signOut();
       

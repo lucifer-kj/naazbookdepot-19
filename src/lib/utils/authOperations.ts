@@ -71,28 +71,6 @@ export const authOperations = {
     }
   },
 
-  logout: async () => {
-    try {
-      console.log('Logging out user...');
-      
-      // Clear cached admin status and other auth-related data
-      clearAuthCache();
-      
-      const { error } = await supabase.auth.signOut();
-      
-      if (error) {
-        console.warn('Logout error:', error);
-      }
-      
-      console.log('Logout completed');
-      return { error };
-      
-    } catch (err) {
-      console.error('Logout exception:', err);
-      return { error: err };
-    }
-  },
-
   updateProfile: async (user: AuthUser | null, userData: Partial<AuthUser>) => {
     if (!user) {
       throw new Error('No user provided for profile update');

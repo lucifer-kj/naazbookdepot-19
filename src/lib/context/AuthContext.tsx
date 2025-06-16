@@ -4,8 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Session } from '@supabase/supabase-js';
 import { useRoleFetch } from '@/lib/hooks/useRoleFetch';
 import { useAddressManagement } from '@/lib/hooks/useAddressManagement';
-import { authOperations } from '@/lib/utils/authOperations';
-import type { AuthUser, AuthContextType, Order } from '@/lib/types/auth';
+import { clearAuthCache } from '@/lib/utils/authOperations';
+import type { AuthUser, AuthContextType, Order, LoginResult } from '@/lib/types/auth';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -32,25 +32,6 @@ function setCachedAdminStatus(userId: string, isAdmin: boolean) {
     sessionStorage.setItem(`${ADMIN_CACHE_EXPIRY_KEY}-${userId}`, (Date.now() + CACHE_DURATION).toString());
   } catch (error) {
     console.warn('Failed to cache admin status:', error);
-  }
-}
-
-function clearAuthCache() {
-  try {
-    // Clear all admin cache entries
-    const keysToRemove = [];
-    for (let i = 0; i < sessionStorage.length; i++) {
-      const key = sessionStorage.key(i);
-      if (key && (key.includes(ADMIN_CACHE_KEY) || key.includes(ADMIN_CACHE_EXPIRY_KEY))) {
-        keysToRemove.push(key);
-      }
-    }
-    keysToRemove.forEach(key => sessionStorage.removeItem(key));
-    
-    // Clear localStorage admin entries
-    localStorage.removeItem('admin-pwa-prompt-dismissed');
-  } catch (error) {
-    console.warn('Failed to clear auth cache:', error);
   }
 }
 
@@ -167,6 +148,51 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
   }, [fetchUserRoles]);
 
+  const login = async (email: string, password: string): Promise<LoginResult> => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        console.error('Login error:', error);
+        return { error, user: null, session: null };
+      }
+
+      console.log('Login successful:', { user: !!data.user, session: !!data.session });
+      return { error: null, user: data.user, session: data.session };
+    } catch (err) {
+      console.error('Login exception:', err);
+      return { error: err, user: null, session: null };
+    }
+  };
+
+  const register = async (userData: { email: string; password: string; name: string }) => {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: userData.email,
+        password: userData.password,
+        options: {
+          data: {
+            name: userData.name,
+          },
+          emailRedirectTo: `${window.location.origin}/`,
+        },
+      });
+
+      if (error) {
+        console.error('Registration error:', error);
+        return { error };
+      }
+
+      return { error: null, data };
+    } catch (err) {
+      console.error('Registration exception:', err);
+      return { error: err };
+    }
+  };
+
   const logout = async () => {
     try {
       console.log('Logging out user...');
@@ -231,8 +257,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     session,
     isAuthenticated: !!user,
     isAdmin,
-    login: authOperations.login,
-    register: authOperations.register,
+    login,
+    register,
     logout,
     updateProfile,
     orders,

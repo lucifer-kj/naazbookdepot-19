@@ -1,182 +1,155 @@
+import React, { Suspense, lazy } from 'react';
+import { Loader2 } from 'lucide-react';
 
-import React, { useState } from 'react';
-import { Heart, Star, Share2, ShoppingCart, Plus, Minus } from 'lucide-react';
-import { useAddToCart } from '@/lib/hooks/useCart';
-import { useAddToWishlist, useRemoveFromWishlist, useCheckWishlistStatus } from '@/lib/hooks/useWishlist';
-import { useAuth } from '@/lib/hooks/useAuth';
-import { Button } from '@/components/ui/button';
-import ProductReviews from './ProductReviews';
-import type { Tables } from '@/integrations/supabase/types';
+// Lazy load components for better performance
+const LazyProductGrid = lazy(() => import('./ProductGrid'));
+const LazyAdvancedFilters = lazy(() => import('./AdvancedFilters'));
 
-interface ProductDisplayProps {
-  product: Tables<'products'> & {
-    categories?: Tables<'categories'>;
-    average_rating?: number;
-    review_count?: number;
-  };
+interface Product {
+  id: string;
+  title: string;
+  price: number;
+  image_url?: string;
+  category?: string;
+  author?: string;
+  stock_quantity?: number;
+  description?: string;
 }
 
-const ProductDisplay: React.FC<ProductDisplayProps> = ({ product }) => {
-  const addToCart = useAddToCart();
-  const addToWishlist = useAddToWishlist();
-  const removeFromWishlist = useRemoveFromWishlist();
-  const { data: isInWishlist } = useCheckWishlistStatus(product.id);
-  const { user } = useAuth();
-  const [quantity, setQuantity] = useState(1);
-  const [selectedImage, setSelectedImage] = useState(0);
-  
-  const averageRating = Number(product.average_rating) || 0;
-  const reviewCount = Number(product.review_count) || 0;
+interface ProductDisplayProps {
+  products: Product[];
+  loading?: boolean;
+  error?: string;
+  onProductClick?: (product: Product) => void;
+  showFilters?: boolean;
+  onFiltersChange?: (filters: any) => void;
+}
 
-  const handleAddToCart = () => {
-    if (user) {
-      addToCart.mutate({
-        productId: product.id,
-        quantity,
-      });
-    }
-  };
-
-  const handleWishlistToggle = () => {
-    if (!user) return;
-    
-    if (isInWishlist) {
-      removeFromWishlist.mutate(product.id);
-    } else {
-      addToWishlist.mutate({ productId: product.id });
-    }
-  };
-
-  return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Product Images */}
-        <div className="space-y-4">
-          <div className="aspect-square overflow-hidden rounded-lg">
-            <img
-              src={product.images?.[selectedImage] || '/placeholder.svg'}
-              alt={product.name}
-              className="w-full h-full object-cover"
-            />
-          </div>
-          
-          {product.images && product.images.length > 1 && (
-            <div className="flex space-x-2">
-              {product.images.map((image, index) => (
-                <button
-                  key={index}
-                  onClick={() => setSelectedImage(index)}
-                  className={`w-20 h-20 rounded-lg overflow-hidden border-2 ${
-                    selectedImage === index ? 'border-naaz-green' : 'border-gray-200'
-                  }`}
-                >
-                  <img
-                    src={image}
-                    alt={`${product.name} ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Product Details */}
-        <div className="space-y-6">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              {product.name}
-            </h1>
-            
-            <div className="flex items-center space-x-4 mb-4">
-              <div className="flex items-center">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    className={`h-5 w-5 ${
-                      i < Math.floor(averageRating)
-                        ? 'text-yellow-400 fill-current'
-                        : 'text-gray-300'
-                    }`}
-                  />
-                ))}
-              </div>
-              <span className="text-gray-600">
-                ({reviewCount} reviews)
-              </span>
-            </div>
-            
-            <p className="text-3xl font-bold text-naaz-green mb-4">
-              ₹{product.price}
-            </p>
-            
-            <p className="text-gray-700 leading-relaxed">
-              {product.description}
-            </p>
-          </div>
-
-          {/* Quantity and Actions */}
-          <div className="space-y-4">
-            <div className="flex items-center space-x-4">
-              <label className="text-sm font-medium text-gray-700">
-                Quantity:
-              </label>
-              <select
-                value={quantity}
-                onChange={(e) => setQuantity(Number(e.target.value))}
-                className="border border-gray-300 rounded-md px-3 py-2"
-              >
-                {[...Array(Math.min(10, product.stock))].map((_, i) => (
-                  <option key={i + 1} value={i + 1}>
-                    {i + 1}
-                  </option>
-                ))}
-              </select>
-              
-              <span className="text-sm text-gray-600">
-                {product.stock} in stock
-              </span>
-            </div>
-
-            <div className="flex space-x-4">
-              <Button
-                onClick={handleAddToCart}
-                className="flex-1 bg-naaz-green hover:bg-naaz-green/90"
-                disabled={product.stock === 0 || !user}
-              >
-                <ShoppingCart className="h-5 w-5 mr-2" />
-                Add to Cart
-              </Button>
-              
-              <Button
-                onClick={handleWishlistToggle}
-                variant="outline"
-                className={isInWishlist ? 'text-red-500 border-red-500' : ''}
-                disabled={!user}
-              >
-                <Heart className={`h-5 w-5 ${isInWishlist ? 'fill-current' : ''}`} />
-              </Button>
-              
-              <Button variant="outline">
-                <Share2 className="h-5 w-5" />
-              </Button>
-            </div>
-          </div>
-
-          {product.stock === 0 && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <p className="text-red-700 font-medium">Out of Stock</p>
-              <p className="text-red-600 text-sm">
-                This item is currently unavailable.
-              </p>
-            </div>
-          )}
+// Loading skeleton component
+const ProductSkeleton = () => (
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    {Array.from({ length: 8 }).map((_, index) => (
+      <div key={index} className="bg-white rounded-lg shadow-sm overflow-hidden animate-pulse">
+        <div className="w-full h-48 bg-gray-200"></div>
+        <div className="p-4">
+          <div className="h-4 bg-gray-200 rounded mb-2"></div>
+          <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+          <div className="h-6 bg-gray-200 rounded w-1/2"></div>
         </div>
       </div>
+    ))}
+  </div>
+);
 
-      {/* Product Reviews */}
-      <div className="mt-12">
-        <ProductReviews productId={product.id} />
+// Error component
+const ErrorDisplay = ({ error, onRetry }: { error: string; onRetry?: () => void }) => (
+  <div className="text-center py-16">
+    <div className="text-red-500 mb-4">
+      <svg className="w-16 h-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    </div>
+    <h3 className="text-xl font-semibold text-gray-900 mb-2">Something went wrong</h3>
+    <p className="text-gray-600 mb-4">{error}</p>
+    {onRetry && (
+      <button
+        onClick={onRetry}
+        className="bg-naaz-green text-white px-6 py-2 rounded-lg hover:bg-green-600 transition-colors"
+      >
+        Try Again
+      </button>
+    )}
+  </div>
+);
+
+// Empty state component
+const EmptyState = () => (
+  <div className="text-center py-16">
+    <div className="text-gray-400 mb-4">
+      <svg className="w-16 h-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+      </svg>
+    </div>
+    <h3 className="text-xl font-semibold text-gray-900 mb-2">No products found</h3>
+    <p className="text-gray-600">Try adjusting your search or filter criteria.</p>
+  </div>
+);
+
+const ProductDisplay: React.FC<ProductDisplayProps> = ({
+  products = [],
+  loading = false,
+  error,
+  onProductClick,
+  showFilters = false,
+  onFiltersChange
+}) => {
+  // Loading state
+  if (loading) {
+    return (
+      <div className="bg-white">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-center mb-8">
+            <Loader2 className="w-8 h-8 animate-spin text-naaz-green mr-3" />
+            <span className="text-lg text-gray-600">Loading products...</span>
+          </div>
+          <ProductSkeleton />
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="bg-white">
+        <div className="container mx-auto px-4 py-8">
+          <ErrorDisplay error={error} />
+        </div>
+      </div>
+    );
+  }
+
+  // Empty state
+  if (!products || products.length === 0) {
+    return (
+      <div className="bg-white">
+        <div className="container mx-auto px-4 py-8">
+          <EmptyState />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white">
+      <div className="container mx-auto px-4 py-8">
+        {/* Filters Section */}
+        {showFilters && (
+          <div className="mb-8">
+            <Suspense fallback={
+              <div className="flex items-center justify-center py-4">
+                <Loader2 className="w-6 h-6 animate-spin text-naaz-green" />
+              </div>
+            }>
+              <LazyAdvancedFilters onFiltersChange={onFiltersChange} />
+            </Suspense>
+          </div>
+        )}
+
+        {/* Products Count */}
+        <div className="mb-6">
+          <p className="text-gray-600">
+            Showing {products.length} product{products.length !== 1 ? 's' : ''}
+          </p>
+        </div>
+
+        {/* Products Grid */}
+        <Suspense fallback={<ProductSkeleton />}>
+          <LazyProductGrid 
+            products={products} 
+            onProductClick={onProductClick}
+          />
+        </Suspense>
       </div>
     </div>
   );

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Phone, Mail } from 'lucide-react';
 
@@ -21,7 +20,7 @@ const ContactInfoStrip = () => {
         {/* Desktop: normal flex, Mobile: horizontal scroll + animation */}
         <div className="hidden md:flex flex-wrap items-center justify-center gap-4 md:gap-8">
           {contactInfo.map((info, index) => (
-            <React.Fragment key={index}>
+            <div key={index} className="flex items-center">
               <div className="flex items-center gap-2 whitespace-nowrap">
                 <span>{info.icon}</span>
                 <span className="text-sm font-medium">{info.text}</span>
@@ -29,7 +28,7 @@ const ContactInfoStrip = () => {
               {index !== contactInfo.length - 1 && (
                 <span className="mx-2 text-naaz-gold font-bold">|</span>
               )}
-            </React.Fragment>
+            </div>
           ))}
         </div>
         <div className="md:hidden relative w-full overflow-x-hidden">
@@ -40,7 +39,7 @@ const ContactInfoStrip = () => {
             onMouseLeave={e => (e.currentTarget.style.animationPlayState = 'running')}
           >
             {loopedInfo.map((info, index) => (
-              <React.Fragment key={index}>
+              <div key={index} className="flex items-center">
                 <div className="flex items-center gap-2 whitespace-nowrap">
                   <span>{info.icon}</span>
                   <span className="text-sm font-medium">{info.text}</span>
@@ -48,7 +47,7 @@ const ContactInfoStrip = () => {
                 {index !== loopedInfo.length - 1 && (
                   <span className="mx-2 text-naaz-gold font-bold">|</span>
                 )}
-              </React.Fragment>
+              </div>
             ))}
           </div>
         </div>

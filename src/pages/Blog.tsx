@@ -1,239 +1,321 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { Calendar, User, Tag, Clock, ArrowRight, Search } from 'lucide-react';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Textarea } from '../components/ui/textarea';
+import { Badge } from '../components/ui/badge';
+import { Search, Calendar, User, Tag, ArrowRight, BookOpen, Clock } from 'lucide-react';
+import { supabase } from '../integrations/supabase/client';
+
+interface BlogPost {
+  id: string;
+  title: string;
+  excerpt: string;
+  content: string;
+  author: string;
+  published_date: string;
+  category: string;
+  tags: string[];
+  featured_image?: string;
+  read_time: number;
+}
 
 const Blog = () => {
-  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const postsPerPage = 6;
 
-  const categories = ['All', 'Book Reviews', 'Islamic History', 'Author Interviews', 'Reading Guides', 'Islamic Literature'];
+  const categories = ['all', 'education', 'literature', 'reviews', 'author-interviews', 'reading-tips'];
 
-  const blogPosts = [
+  // Mock blog posts for demonstration
+  const mockPosts: BlogPost[] = [
     {
-      id: 1,
-      title: 'Understanding the Tafsir of Ibn Kathir: A Comprehensive Guide',
-      excerpt: 'Explore the rich commentary traditions of the Quran through one of Islam\'s most respected scholars.',
-      author: 'Dr. Mohammed Farooq',
-      date: '2024-01-15',
-      category: 'Reading Guides',
-      readTime: '8 min',
-      image: '/lovable-uploads/61ad7a88-c8e2-42f6-b3b1-567415b3c17e.png',
-      featured: true
+      id: '1',
+      title: 'The Art of Speed Reading: Techniques for Better Comprehension',
+      excerpt: 'Discover proven techniques to increase your reading speed while maintaining comprehension. Learn from experts and transform your reading habits.',
+      content: 'Full article content here...',
+      author: 'Dr. Sarah Johnson',
+      published_date: '2024-01-15',
+      category: 'reading-tips',
+      tags: ['reading', 'productivity', 'education'],
+      featured_image: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=600&q=80',
+      read_time: 5
     },
     {
-      id: 2,
-      title: 'The Golden Age of Islamic Literature: Books That Shaped Civilization',
-      excerpt: 'Journey through the classical works that influenced Islamic thought and global knowledge.',
-      author: 'Amina Khatun',
-      date: '2024-01-10',
-      category: 'Islamic History',
-      readTime: '12 min',
-      image: '/lovable-uploads/a8c77a1e-70d0-4c8f-8218-bbff0885a682.png'
+      id: '2',
+      title: 'Top 10 Must-Read Books for Personal Development',
+      excerpt: 'A curated list of transformative books that will help you grow personally and professionally. Each book offers unique insights and practical wisdom.',
+      content: 'Full article content here...',
+      author: 'Mohammed Naaz',
+      published_date: '2024-01-10',
+      category: 'reviews',
+      tags: ['personal-development', 'self-help', 'recommendations'],
+      featured_image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=80',
+      read_time: 8
     },
     {
-      id: 3,
-      title: 'Interview with Contemporary Islamic Author Dr. Tariq Ramadan',
-      excerpt: 'Insights on modern Islamic scholarship and the role of literature in today\'s world.',
-      author: 'Editorial Team',
-      date: '2024-01-05',
-      category: 'Author Interviews',
-      readTime: '15 min',
-      image: '/lovable-uploads/35ff87ed-b986-45b1-9c00-555f9d78c627.png'
+      id: '3',
+      title: 'The Digital Revolution in Education: How E-books Are Changing Learning',
+      excerpt: 'Explore how digital books and e-learning platforms are revolutionizing education and making knowledge more accessible than ever before.',
+      content: 'Full article content here...',
+      author: 'Prof. Rajesh Kumar',
+      published_date: '2024-01-05',
+      category: 'education',
+      tags: ['technology', 'e-learning', 'digital-books'],
+      featured_image: 'https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=600&q=80',
+      read_time: 6
     },
     {
-      id: 4,
-      title: 'Sahih Al-Bukhari: The Most Authentic Collection of Hadith',
-      excerpt: 'Deep dive into the methodology and significance of Imam Bukhari\'s hadith collection.',
-      author: 'Imam Syed Hassan',
-      date: '2024-01-01',
-      category: 'Book Reviews',
-      readTime: '10 min',
-      image: '/lovable-uploads/62fd92cc-0660-4c44-a99d-c69c5be673cb.png'
+      id: '4',
+      title: 'Interview with Bestselling Author: The Writing Process Revealed',
+      excerpt: 'An exclusive interview with a bestselling author discussing their writing process, inspiration, and advice for aspiring writers.',
+      content: 'Full article content here...',
+      author: 'Literary Team',
+      published_date: '2024-01-01',
+      category: 'author-interviews',
+      tags: ['interview', 'writing', 'authors'],
+      featured_image: 'https://images.unsplash.com/photo-1455390582262-044cdead277a?w=600&q=80',
+      read_time: 10
     },
     {
-      id: 5,
-      title: 'Building an Islamic Library: Essential Books for Every Muslim Home',
-      excerpt: 'Curated recommendations for creating a comprehensive Islamic book collection.',
-      author: 'Dr. Mohammed Farooq',
-      date: '2023-12-28',
-      category: 'Reading Guides',
-      readTime: '7 min',
-      image: '/lovable-uploads/32ec431a-75d3-4c97-bc76-64ac1f937b4f.png'
+      id: '5',
+      title: 'Classic Literature in Modern Times: Why Old Books Still Matter',
+      excerpt: 'Discover why classic literature remains relevant today and how these timeless works continue to offer valuable insights into human nature.',
+      content: 'Full article content here...',
+      author: 'Dr. Priya Sharma',
+      published_date: '2023-12-28',
+      category: 'literature',
+      tags: ['classics', 'literature', 'analysis'],
+      featured_image: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600&q=80',
+      read_time: 7
     },
     {
-      id: 6,
-      title: 'The Art of Islamic Calligraphy in Manuscript Tradition',
-      excerpt: 'Exploring the beautiful intersection of art and literature in Islamic manuscripts.',
-      author: 'Amina Khatun',
-      date: '2023-12-25',
-      category: 'Islamic Literature',
-      readTime: '9 min',
-      image: '/lovable-uploads/61ad7a88-c8e2-42f6-b3b1-567415b3c17e.png'
+      id: '6',
+      title: 'Building a Home Library: Essential Books for Every Collection',
+      excerpt: 'Learn how to curate a diverse and meaningful home library that reflects your interests and provides lasting value for you and your family.',
+      content: 'Full article content here...',
+      author: 'Book Curator Team',
+      published_date: '2023-12-25',
+      category: 'reviews',
+      tags: ['home-library', 'collection', 'recommendations'],
+      featured_image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=80',
+      read_time: 9
     }
   ];
 
-  const filteredPosts = selectedCategory === 'All' 
-    ? blogPosts 
-    : blogPosts.filter(post => post.category === selectedCategory);
+  useEffect(() => {
+    // In a real app, this would fetch from Supabase
+    // For now, we'll use mock data
+    setTimeout(() => {
+      setPosts(mockPosts);
+      setLoading(false);
+    }, 1000);
+  }, []);
 
-  const featuredPost = blogPosts.find(post => post.featured);
-  const regularPosts = blogPosts.filter(post => !post.featured);
+  const filteredPosts = posts.filter(post => {
+    const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         post.excerpt.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         post.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesCategory = selectedCategory === 'all' || post.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
+  const currentPosts = filteredPosts.slice(
+    (currentPage - 1) * postsPerPage,
+    currentPage * postsPerPage
+  );
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  const getCategoryLabel = (category: string) => {
+    return category.split('-').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white">
+        <Navbar />
+        <div className="container mx-auto px-4 py-16">
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-naaz-green"></div>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen bg-white">
       <Navbar />
-      <main className="flex-grow">
-        {/* Hero Section */}
-        <div className="bg-naaz-green text-white py-16 px-4">
-          <div className="container mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-playfair font-bold mb-4">Islamic Knowledge Hub</h1>
-            <p className="text-xl text-white/90 max-w-2xl mx-auto mb-8">
-              Discover insights, reviews, and guidance from Islamic literature and scholars
-            </p>
-            <div className="max-w-md mx-auto flex">
-              <input
+      
+      {/* Hero Section */}
+      <section className="bg-gradient-to-r from-naaz-green to-green-600 text-white py-16">
+        <div className="container mx-auto px-4 text-center">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4">Naaz Blog</h1>
+          <p className="text-xl mb-8 max-w-2xl mx-auto">
+            Insights, reviews, and stories from the world of books and learning
+          </p>
+        </div>
+      </section>
+
+      <div className="container mx-auto px-4 py-12">
+        {/* Search and Filters */}
+        <div className="mb-8">
+          <div className="flex flex-col md:flex-row gap-4 mb-6">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input
                 type="text"
                 placeholder="Search articles..."
-                className="flex-1 px-4 py-3 rounded-l-lg text-gray-800 outline-none"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
               />
-              <button className="bg-naaz-gold hover:bg-naaz-gold/90 px-6 py-3 rounded-r-lg transition-colors">
-                <Search size={20} />
-              </button>
             </div>
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-naaz-green focus:border-transparent"
+            >
+              {categories.map(category => (
+                <option key={category} value={category}>
+                  {getCategoryLabel(category)}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
-        {/* Featured Post */}
-        {featuredPost && (
-          <section className="py-16 px-4 bg-white">
-            <div className="container mx-auto">
-              <h2 className="text-2xl font-playfair font-bold text-naaz-green mb-8 text-center">Featured Article</h2>
-              <div className="max-w-4xl mx-auto">
-                <div className="grid md:grid-cols-2 gap-8 items-center">
-                  <div>
-                    <img 
-                      src={featuredPost.image} 
-                      alt={featuredPost.title}
-                      className="w-full h-64 object-cover rounded-lg shadow-lg"
-                    />
-                  </div>
-                  <div>
-                    <div className="flex items-center text-sm text-gray-600 mb-3">
-                      <Tag className="mr-1" size={16} />
-                      <span className="bg-naaz-gold/20 text-naaz-gold px-2 py-1 rounded mr-3">
-                        {featuredPost.category}
-                      </span>
-                      <Clock className="mr-1" size={16} />
-                      <span>{featuredPost.readTime} read</span>
-                    </div>
-                    <h3 className="text-2xl font-playfair font-bold text-naaz-green mb-4">
-                      {featuredPost.title}
-                    </h3>
-                    <p className="text-gray-700 mb-4">{featuredPost.excerpt}</p>
-                    <div className="flex items-center text-sm text-gray-600 mb-4">
-                      <User className="mr-1" size={16} />
-                      <span className="mr-4">{featuredPost.author}</span>
-                      <Calendar className="mr-1" size={16} />
-                      <span>{new Date(featuredPost.date).toLocaleDateString()}</span>
-                    </div>
-                    <button className="bg-naaz-green hover:bg-naaz-green/90 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center">
-                      Read Article
-                      <ArrowRight className="ml-2" size={16} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* Categories */}
-        <section className="py-8 px-4 bg-naaz-cream">
-          <div className="container mx-auto">
-            <div className="flex flex-wrap justify-center gap-3">
-              {categories.map((category) => (
-                <button
-                  key={category}
-                  onClick={() => setSelectedCategory(category)}
-                  className={`px-4 py-2 rounded-full font-medium transition-colors ${
-                    selectedCategory === category
-                      ? 'bg-naaz-green text-white'
-                      : 'bg-white text-naaz-green hover:bg-naaz-green hover:text-white'
-                  }`}
-                >
-                  {category}
-                </button>
-              ))}
-            </div>
-          </div>
-        </section>
-
         {/* Blog Posts Grid */}
-        <section className="py-16 px-4 bg-white">
-          <div className="container mx-auto">
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredPosts.filter(post => !post.featured).map((post) => (
+        {currentPosts.length > 0 ? (
+          <>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+              {currentPosts.map((post) => (
                 <article key={post.id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-                  <img 
-                    src={post.image} 
-                    alt={post.title}
-                    className="w-full h-48 object-cover"
-                  />
+                  <div className="relative">
+                    <img
+                      src={post.featured_image}
+                      alt={post.title}
+                      className="w-full h-48 object-cover"
+                    />
+                    <div className="absolute top-4 left-4">
+                      <Badge variant="secondary" className="bg-naaz-green text-white">
+                        {getCategoryLabel(post.category)}
+                      </Badge>
+                    </div>
+                  </div>
+                  
                   <div className="p-6">
-                    <div className="flex items-center text-sm text-gray-600 mb-3">
-                      <Tag className="mr-1" size={14} />
-                      <span className="bg-naaz-gold/20 text-naaz-gold px-2 py-1 rounded text-xs mr-3">
-                        {post.category}
-                      </span>
-                      <Clock className="mr-1" size={14} />
-                      <span>{post.readTime}</span>
+                    <div className="flex items-center text-sm text-gray-500 mb-3">
+                      <User className="w-4 h-4 mr-1" />
+                      <span className="mr-4">{post.author}</span>
+                      <Calendar className="w-4 h-4 mr-1" />
+                      <span className="mr-4">{formatDate(post.published_date)}</span>
+                      <Clock className="w-4 h-4 mr-1" />
+                      <span>{post.read_time} min read</span>
                     </div>
-                    <h3 className="text-lg font-playfair font-semibold text-naaz-green mb-3 line-clamp-2">
+                    
+                    <h2 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2">
                       {post.title}
-                    </h3>
-                    <p className="text-gray-700 text-sm mb-4 line-clamp-3">{post.excerpt}</p>
-                    <div className="flex items-center justify-between text-xs text-gray-500">
-                      <div className="flex items-center">
-                        <User className="mr-1" size={12} />
-                        <span>{post.author}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <Calendar className="mr-1" size={12} />
-                        <span>{new Date(post.date).toLocaleDateString()}</span>
-                      </div>
+                    </h2>
+                    
+                    <p className="text-gray-600 mb-4 line-clamp-3">
+                      {post.excerpt}
+                    </p>
+                    
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {post.tags.slice(0, 3).map((tag) => (
+                        <Badge key={tag} variant="outline" className="text-xs">
+                          <Tag className="w-3 h-3 mr-1" />
+                          {tag}
+                        </Badge>
+                      ))}
                     </div>
-                    <button className="mt-4 text-naaz-green hover:text-naaz-gold font-medium text-sm flex items-center">
+                    
+                    <Button variant="outline" className="w-full group">
                       Read More
-                      <ArrowRight className="ml-1" size={14} />
-                    </button>
+                      <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                    </Button>
                   </div>
                 </article>
               ))}
             </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center space-x-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </Button>
+                
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                  <Button
+                    key={page}
+                    variant={currentPage === page ? "default" : "outline"}
+                    onClick={() => setCurrentPage(page)}
+                    className={currentPage === page ? "bg-naaz-green hover:bg-green-600" : ""}
+                  >
+                    {page}
+                  </Button>
+                ))}
+                
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </Button>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="text-center py-16">
+            <BookOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-600 mb-2">No articles found</h3>
+            <p className="text-gray-500">Try adjusting your search or filter criteria.</p>
           </div>
-        </section>
+        )}
 
         {/* Newsletter Signup */}
-        <section className="py-16 px-4 bg-naaz-green text-white">
-          <div className="container mx-auto text-center">
-            <h2 className="text-3xl font-playfair font-bold mb-4">Stay Updated</h2>
-            <p className="text-white/90 mb-8 max-w-2xl mx-auto">
-              Subscribe to our newsletter for the latest articles, book reviews, and Islamic knowledge updates.
+        <section className="bg-gray-50 rounded-lg p-8 mt-16">
+          <div className="text-center max-w-2xl mx-auto">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Stay Updated</h2>
+            <p className="text-gray-600 mb-6">
+              Subscribe to our newsletter to get the latest articles and book recommendations delivered to your inbox.
             </p>
-            <div className="flex flex-col sm:flex-row max-w-md mx-auto gap-3">
-              <input
+            <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+              <Input
                 type="email"
                 placeholder="Enter your email"
-                className="flex-1 px-4 py-3 rounded-lg text-gray-800 outline-none"
+                className="flex-1"
               />
-              <button className="bg-naaz-gold hover:bg-naaz-gold/90 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+              <Button className="bg-naaz-green hover:bg-green-600">
                 Subscribe
-              </button>
+              </Button>
             </div>
           </div>
         </section>
-      </main>
+      </div>
+      
       <Footer />
     </div>
   );

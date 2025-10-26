@@ -1,189 +1,197 @@
-
 import React from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { Link } from 'react-router-dom';
-import { Book, Award, Users, Heart, Calendar, MapPin, Phone, Mail } from 'lucide-react';
+import { Users, Award, Heart, Globe } from 'lucide-react';
 
 const About = () => {
- 
+  const stats = [
+    { number: '10+', label: 'Years of Excellence' },
+    { number: '50K+', label: 'Happy Customers' },
+    { number: '1000+', label: 'Books Available' },
+    { number: '24/7', label: 'Customer Support' }
+  ];
+
+  const values = [
+    {
+      icon: <Heart className="w-8 h-8 text-naaz-green" />,
+      title: 'Quality First',
+      description: 'We carefully curate every book to ensure the highest quality content for our readers.'
+    },
+    {
+      icon: <Users className="w-8 h-8 text-naaz-green" />,
+      title: 'Community Focused',
+      description: 'Building a community of knowledge seekers and lifelong learners across the globe.'
+    },
+    {
+      icon: <Award className="w-8 h-8 text-naaz-green" />,
+      title: 'Excellence',
+      description: 'Committed to excellence in every aspect of our service and customer experience.'
+    },
+    {
+      icon: <Globe className="w-8 h-8 text-naaz-green" />,
+      title: 'Global Reach',
+      description: 'Serving customers worldwide with fast shipping and reliable service.'
+    }
+  ];
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen bg-white">
       <Navbar />
-      <main className="flex-grow">
-        {/* Hero Banner */}
-        <div className="relative h-64 overflow-hidden">
-          <div 
-            className="absolute inset-0"
-            style={{
-              backgroundImage: "url('/lovable-uploads/alt-bg.png')",
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              filter: 'brightness(0.7)'
-            }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-naaz-green/90 to-transparent" />
-          <div className="relative container mx-auto h-full flex flex-col justify-center px-4">
-            <h1 className="text-4xl md:text-6xl font-playfair font-bold text-white mb-4">About Naaz Book Depot</h1>
-            <p className="text-xl text-white/90 max-w-2xl font-arabic">
-              بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم
-            </p>
-            <p className="text-lg text-white/90 max-w-2xl mt-2">
-              "Jazakum Allahu Khayran" - May Allah reward you with goodness
-            </p>
+      
+      {/* Hero Section */}
+      <section className="bg-gradient-to-r from-naaz-green to-green-600 text-white py-20">
+        <div className="container mx-auto px-4 text-center">
+          <h1 className="text-4xl md:text-6xl font-bold mb-6">About Naaz Group</h1>
+          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
+            Your trusted partner in knowledge and learning since 2014
+          </p>
+        </div>
+      </section>
+
+      {/* Story Section */}
+      <section className="py-16">
+        <div className="container mx-auto px-4">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div>
+              <h2 className="text-3xl font-bold text-gray-900 mb-6">Our Story</h2>
+              <p className="text-gray-600 mb-4">
+                Founded in 2014, Naaz Group began as a small bookstore with a big dream - to make quality books accessible to everyone. What started as a passion project has grown into a trusted name in the book industry.
+              </p>
+              <p className="text-gray-600 mb-4">
+                We specialize in educational books, literature, and professional development materials. Our commitment to quality and customer satisfaction has helped us build lasting relationships with readers, students, and professionals worldwide.
+              </p>
+              <p className="text-gray-600">
+                Today, we continue to expand our collection and improve our services, always keeping our customers' needs at the heart of everything we do.
+              </p>
+            </div>
+            <div className="relative">
+              <img 
+                src="https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=600&q=80" 
+                alt="Bookstore interior" 
+                className="rounded-lg shadow-lg"
+              />
+            </div>
           </div>
         </div>
+      </section>
 
-        {/* Company Story */}
-        <section className="py-16 px-4 bg-white">
-          <div className="container mx-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center max-w-6xl mx-auto">
-              <div>
-                <h2 className="text-4xl md:text-5xl font-playfair font-bold text-naaz-green mb-6">
-                  A Legendary Legacy Since 1967
-                </h2>
-                <div className="w-24 h-1 bg-naaz-gold mb-6"></div>
-                <p className="text-gray-700 mb-6 leading-relaxed text-lg">
-                  Founded in the heart of Kolkata in 1967, Naaz Book Depot has served as a beacon of Islamic knowledge for over five decades. What started as a humble mission has evolved into a legendary legacy in the Islamic publishing community.
-                </p>
-        
-                <p className="text-gray-700 mb-6 leading-relaxed text-lg">
-                  At the core of this mission stands <strong>MD Irfan</strong>, the esteemed Director of Naaz Book Depot. With over 60 years of experience in Islamic publishing, he has personally overseen the publication of <strong>more than 2,000 Islamic titles</strong>, including Qur'ans, Tafsir, Duas, Rukyas, and other essential texts.
-                </p>
-
-                <p className="text-gray-700 mb-8 leading-relaxed text-lg">
-                  Known throughout India for his unwavering commitment to Islamic knowledge, MD Irfan has transformed Naaz Book Depot into a vital source of authentic Islamic literature, serving the Ummah with dedication and Islamic principles.
-                </p>
-              </div>
-              
-              <div className="bg-gradient-to-br from-naaz-cream to-white p-8 rounded-2xl shadow-lg border border-naaz-gold/20">
-                <img
-                  src="lovable-uploads/Owner.jpg"
-                  alt="MD Irfan, Director of Naaz Book Depot"
-                  className="w-full h-auto rounded-lg shadow-md"
-                  loading="lazy"
-                />
-                <div className="mt-6 text-center">
-                  <p className="text-lg text-gray-700 font-semibold">
-                    MD Irfan
-                  </p>
-                  <p className="text-sm text-naaz-gold font-semibold mt-1">
-                    Director, Naaz Book Depot
-                  </p>
-                  <p className="text-xs text-gray-600 mt-2">
-                    A lifelong contributor to Qur'anic knowledge
-                  </p>
+      {/* Stats Section */}
+      <section className="bg-gray-50 py-16">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            {stats.map((stat, index) => (
+              <div key={index} className="text-center">
+                <div className="text-3xl md:text-4xl font-bold text-naaz-green mb-2">
+                  {stat.number}
                 </div>
-              </div>  
+                <div className="text-gray-600 font-medium">{stat.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Values Section */}
+      <section className="py-16">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Our Values</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              These core values guide everything we do and help us serve our customers better every day.
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {values.map((value, index) => (
+              <div key={index} className="text-center p-6 rounded-lg hover:shadow-lg transition-shadow">
+                <div className="flex justify-center mb-4">
+                  {value.icon}
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">{value.title}</h3>
+                <p className="text-gray-600">{value.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Team Section */}
+      <section className="bg-gray-50 py-16">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Meet Our Team</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Our dedicated team works tirelessly to bring you the best books and service.
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+            <div className="text-center">
+              <img 
+                src="https://api.dicebear.com/7.x/avataaars/svg?seed=founder" 
+                alt="Founder" 
+                className="w-32 h-32 rounded-full mx-auto mb-4"
+              />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Mohammed Naaz</h3>
+              <p className="text-naaz-green font-medium mb-2">Founder & CEO</p>
+              <p className="text-gray-600 text-sm">
+                Passionate about books and education, leading the vision of making knowledge accessible to all.
+              </p>
+            </div>
+            
+            <div className="text-center">
+              <img 
+                src="https://api.dicebear.com/7.x/avataaars/svg?seed=manager" 
+                alt="Operations Manager" 
+                className="w-32 h-32 rounded-full mx-auto mb-4"
+              />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Sarah Ahmed</h3>
+              <p className="text-naaz-green font-medium mb-2">Operations Manager</p>
+              <p className="text-gray-600 text-sm">
+                Ensures smooth operations and exceptional customer service across all channels.
+              </p>
+            </div>
+            
+            <div className="text-center">
+              <img 
+                src="https://api.dicebear.com/7.x/avataaars/svg?seed=curator" 
+                alt="Book Curator" 
+                className="w-32 h-32 rounded-full mx-auto mb-4"
+              />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Dr. Rajesh Kumar</h3>
+              <p className="text-naaz-green font-medium mb-2">Chief Book Curator</p>
+              <p className="text-gray-600 text-sm">
+                Expert in literature and education, carefully selecting books that inspire and educate.
+              </p>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Mission & Values */}
-        <section className="py-16 px-4 bg-naaz-cream">
-          <div className="container mx-auto">
-            <div className="grid md:grid-cols-2 gap-12 items-center">
-              <div>
-                <h2 className="text-3xl font-playfair font-bold text-naaz-green mb-6">Our Mission & Values</h2>
-                <div className="space-y-6">
-                  <div className="flex items-start">
-                    <Heart className="text-naaz-gold mr-4 flex-shrink-0 mt-1" size={24} />
-                    <div>
-                      <h3 className="font-semibold text-naaz-green mb-2">Authentic Islamic Knowledge</h3>
-                      <p className="text-gray-700">We are committed to publishing only authentic Islamic literature, verified by qualified scholars and rooted in traditional Islamic teachings.</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start">
-                    <Book className="text-naaz-gold mr-4 flex-shrink-0 mt-1" size={24} />
-                    <div>
-                      <h3 className="font-semibold text-naaz-green mb-2">Educational Excellence</h3>
-                      <p className="text-gray-700">Making Islamic education accessible through quality publications in multiple languages - Arabic, Urdu, Bengali, and English.</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start">
-                    <Users className="text-naaz-gold mr-4 flex-shrink-0 mt-1" size={24} />
-                    <div>
-                      <h3 className="font-semibold text-naaz-green mb-2">Serving the Ummah</h3>
-                      <p className="text-gray-700">Selflessly serving the Muslim community worldwide with dedication, integrity, and Islamic principles for over 60 years.</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-white p-8 rounded-lg shadow-lg flex flex-col gap-6">
-                <h3 className="text-xl font-playfair font-semibold text-naaz-green mb-4">Testimonials About Our Work</h3>
-                <div className="space-y-4">
-                  <blockquote className="border-l-4 border-naaz-gold pl-4 text-gray-700 italic">
-                    "Your dedication to publishing authentic Islamic literature is a source of immense benefit to the Ummah."
-                  </blockquote>
-                  <blockquote className="border-l-4 border-naaz-gold pl-4 text-gray-700 italic">
-                    "May Allah bless your efforts in spreading knowledge and making Islamic teachings accessible to all."
-                  </blockquote>
-                  <blockquote className="border-l-4 border-naaz-gold pl-4 text-gray-700 italic">
-                    "Your work in publishing Qur'ans and Islamic books is a true form of Sadaqah Jariyah (continuous charity), benefiting generations to come."
-                  </blockquote>
-                </div>
-                <div className="mt-4 p-4 bg-naaz-cream rounded-lg">
-                  <p className="text-center text-naaz-green font-semibold">
-                    📚 Over 2,000 Islamic Books Published
-                  </p>
-                  <p className="text-center text-sm text-gray-600 mt-1">
-                    Including Qur'ans, Tafsir, Hadith, Duas, and Educational Materials
-                  </p>
-                </div>
-              </div>
-            </div>
+      {/* Contact CTA */}
+      <section className="py-16">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">Get in Touch</h2>
+          <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
+            Have questions about our books or services? We'd love to hear from you.
+          </p>
+          <div className="space-y-4 md:space-y-0 md:space-x-4 md:flex md:justify-center">
+            <a 
+              href="/contact" 
+              className="inline-block bg-naaz-green text-white px-8 py-3 rounded-lg font-semibold hover:bg-green-600 transition-colors"
+            >
+              Contact Us
+            </a>
+            <a 
+              href="/products" 
+              className="inline-block border border-naaz-green text-naaz-green px-8 py-3 rounded-lg font-semibold hover:bg-naaz-green hover:text-white transition-colors"
+            >
+              Browse Books
+            </a>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Divisions */}
-        <section className="py-16 px-4 bg-white">
-          <div className="container mx-auto">
-            <h2 className="text-3xl md:text-4xl font-playfair font-bold text-naaz-green text-center mb-12">Our Divisions</h2>
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="bg-naaz-cream p-8 rounded-lg shadow-lg">
-                <Book className="text-naaz-gold mb-4" size={48} />
-                <h3 className="text-xl font-playfair font-semibold text-naaz-green mb-4">Naaz Book Depot</h3>
-                <p className="text-gray-700 mb-4">
-                  Our flagship division publishing authentic Islamic literature, Quran translations, 
-                  Hadith collections, and educational materials in English, Arabic, Urdu, and Bengali. 
-                  Specializing in commercial color printing services for Islamic institutions.
-                </p>
-                <Link to="/books" className="text-naaz-gold hover:text-naaz-green font-medium">
-                  Explore Books →
-                </Link>
-              </div>
-              
-              <div className="bg-naaz-cream p-8 rounded-lg shadow-lg relative">
-                <div className="absolute top-4 right-4 bg-naaz-gold text-white px-2 py-1 rounded text-xs">
-                  Coming Soon
-                </div>
-                <div className="text-naaz-gold mb-4" style={{fontSize: '48px'}}>🌸</div>
-                <h3 className="text-xl font-playfair font-semibold text-naaz-green mb-4">Naaz Perfumes</h3>
-                <p className="text-gray-700 mb-4">
-                  Premium alcohol-free Islamic perfumes and attars, crafted with natural ingredients 
-                  following traditional methods and Islamic principles.
-                </p>
-                <span className="text-gray-500">Launching Soon</span>
-              </div>
-              
-              <div className="bg-naaz-cream p-8 rounded-lg shadow-lg relative">
-                <div className="absolute top-4 right-4 bg-naaz-gold text-white px-2 py-1 rounded text-xs">
-                  Coming Soon
-                </div>
-                <div className="text-naaz-gold mb-4" style={{fontSize: '48px'}}>🕌</div>
-                <h3 className="text-xl font-playfair font-semibold text-naaz-green mb-4">Naaz Essentials</h3>
-                <p className="text-gray-700 mb-4">
-                  Islamic lifestyle products including prayer rugs, tasbih, Islamic home decor, 
-                  and essential items for Muslim households.
-                </p>
-                <span className="text-gray-500">Launching Soon</span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-      </main>
       <Footer />
     </div>
   );

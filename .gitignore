@@ -7,17 +7,34 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
 dist
 dist-ssr
+
+# Environment files
 *.local
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Project specific
 **/tempobook/dynamic/
 **/tempobook/storyboards/
+/supabase/.temp
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
 .idea
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
 .DS_Store
 *.suo
 *.ntvs*

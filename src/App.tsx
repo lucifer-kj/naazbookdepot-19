@@ -5,35 +5,59 @@ import { CartProvider } from './lib/context/CartContext';
 import { useEffect } from 'react';
 import { Toaster } from 'sonner';
 import ErrorBoundary from './components/ErrorBoundary';
+import { logError } from './lib/utils/errorLogging';
+import { testDatabaseConnection, validateData } from './utils/databaseTest';
+import { EnvChecker } from './components/debug/EnvChecker';
 import './App.css';
 
-// Pages
-import Home from './pages/Home';
-import Products from './pages/Products';
-import About from './pages/About';
-import Contact from './pages/Contact';
-import FAQ from './pages/FAQ';
-import Terms from './pages/Terms';
-import Privacy from './pages/Privacy';
-import Shipping from './pages/Shipping';
-import Cart from './pages/Cart';
-import Checkout from './pages/Checkout';
-import UpiPayment from './pages/UpiPayment';
-import OrderConfirmation from './pages/OrderConfirmation';
-import ProductPage from './pages/ProductPage';
-import Account from './pages/Account';
-import Wishlist from './pages/Wishlist';
-import Blog from './pages/Blog';
-import ComingSoon from './pages/ComingSoon';
-import NotFound from './pages/NotFound';
+// Log environment variables status
+console.log('Environment Variables Check:', {
+  SUPABASE_URL: !!import.meta.env.VITE_SUPABASE_URL,
+  NODE_ENV: import.meta.env.VITE_NODE_ENV,
+  API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
+});
+
+// Test database connection on startup
+testDatabaseConnection().then((success) => {
+  if (success) {
+    validateData().then((counts) => {
+      console.log('Data validation results:', counts);
+    }).catch((error) => {
+      console.error('Data validation failed:', error);
+    });
+  }
+});
+
+import { lazy, Suspense } from 'react';
+import { LoadingBar } from './components/common/LoadingBar';
+
+// Core Pages
+const Home = lazy(() => import('./pages/Home'));
+const Products = lazy(() => import('./pages/Products'));
+const About = lazy(() => import('./pages/About'));
+const Contact = lazy(() => import('./pages/Contact'));
+const FAQ = lazy(() => import('./pages/FAQ'));
+const Terms = lazy(() => import('./pages/Terms'));
+const Privacy = lazy(() => import('./pages/Privacy'));
+const Shipping = lazy(() => import('./pages/Shipping'));
+const Cart = lazy(() => import('./pages/Cart'));
+const Checkout = lazy(() => import('./pages/Checkout'));
+const UpiPayment = lazy(() => import('./pages/UpiPayment'));
+const OrderConfirmation = lazy(() => import('./pages/OrderConfirmation'));
+const ProductPage = lazy(() => import('./pages/ProductPage'));
+const Account = lazy(() => import('./pages/Account'));
+const Wishlist = lazy(() => import('./pages/Wishlist'));
+const Blog = lazy(() => import('./pages/Blog'));
+const ComingSoon = lazy(() => import('./pages/ComingSoon'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 
 // Admin Pages
-import AdminLogin from './pages/admin/AdminLogin';
-import AdminDashboard from './pages/admin/AdminDashboard';
-import AdminProducts from './pages/admin/AdminProducts';
-import AdminOrders from './pages/admin/AdminOrders';
-import AdminUsers from './pages/admin/AdminUsers';
-import AdminPromoCodes from './pages/admin/AdminPromoCodes';
+const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'));
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
+const AdminProducts = lazy(() => import('./pages/admin/AdminProducts'));
+const AdminOrders = lazy(() => import('./pages/admin/AdminOrders'));
+const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
+const AdminPromoCodes = lazy(() => import('./pages/admin/AdminPromoCodes'));
 
 // Components
 import AdminRoute from './components/admin/AdminRoute';
@@ -41,20 +65,17 @@ import AdminRoute from './components/admin/AdminRoute';
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
+      gcTime: 30 * 60 * 1000, // Cache garbage collection after 30 minutes
       retry: (failureCount, error: any) => {
         // Don't retry on 4xx errors
         if (error?.status >= 400 && error?.status < 500) {
           return false;
         }
-        return failureCount < 3;
+        return failureCount < 2;
       },
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      refetchOnWindowFocus: false,
-    },
-    mutations: {
-      retry: 1,
-    },
-  },
+      networkMode: 'offlineFirst'
+    }
+  }
 });
 
 // Enhanced ScrollToTop component that handles all navigation types
@@ -121,6 +142,7 @@ function App() {
                 {/* 404 Route - Must be last */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              {import.meta.env.DEV && <EnvChecker />}
             </Router>
           </CartProvider>
         </AuthProvider>

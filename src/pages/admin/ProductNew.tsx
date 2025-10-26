@@ -4,6 +4,7 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import ProductForm from '@/components/admin/ProductForm';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
+import { useCreateProduct } from '@/lib/hooks/admin/useAdminProducts';
 
 interface ProductFormData {
   name: string;
@@ -29,6 +30,8 @@ export default function AdminProductNew() {
     tags: []
   });
 
+  const createProduct = useCreateProduct();
+
   const handleCancel = () => {
     navigate('/admin/products');
   };
@@ -37,10 +40,22 @@ export default function AdminProductNew() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      // TODO: Implement product creation
-      // const product = await createProduct(formData);
-      // navigate(`/admin/products/${product.id}`);
-      navigate('/admin/products');
+      const productPayload = {
+        name: formData.name,
+        description: formData.description,
+        price: parseFloat(formData.price || '0'),
+        stock: parseInt(formData.stock || '0', 10),
+        category_id: formData.category_id,
+        images: formData.images,
+        tags: formData.tags,
+      };
+
+      const product = await createProduct.mutateAsync(productPayload as any);
+      if (product?.id) {
+        navigate(`/admin/products/${product.id}/edit`);
+      } else {
+        navigate('/admin/products');
+      }
     } catch (error) {
       console.error('Error creating product:', error);
       setErrors({

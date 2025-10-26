@@ -64,12 +64,10 @@ export default function AdminProducts() {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-semibold tracking-tight">Products</h1>
-          <Link to="/admin/products/new">
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Product
-            </Button>
-          </Link>
+          <Button onClick={() => navigate('/admin/products/new')}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Product
+          </Button>
         </div>
 
         <ProductFilters

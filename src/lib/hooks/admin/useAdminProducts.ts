@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
+import { toast } from 'sonner';
 
 export type AdminProduct = Tables<'products'> & {
   categories?: Tables<'categories'>;
@@ -62,7 +63,12 @@ export const useCreateProduct = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
       queryClient.invalidateQueries({ queryKey: ['products'] });
+      toast.success('Product created');
     },
+    onError: (error) => {
+      console.error('Create product error:', error);
+      toast.error('Failed to create product');
+    }
   });
 };
 
@@ -84,7 +90,12 @@ export const useUpdateProduct = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
       queryClient.invalidateQueries({ queryKey: ['products'] });
+      toast.success('Product updated');
     },
+    onError: (error) => {
+      console.error('Update product error:', error);
+      toast.error('Failed to update product');
+    }
   });
 };
 
@@ -109,6 +120,11 @@ export const useDeleteProduct = () => {
         const key = Array.isArray(query.queryKey) ? query.queryKey : [];
         return key[0] === 'products';
       }});
+      toast.success('Product deleted');
     },
+    onError: (error) => {
+      console.error('Delete product error:', error);
+      toast.error('Failed to delete product');
+    }
   });
 };

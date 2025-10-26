@@ -5,6 +5,7 @@ import { Search, User, Menu, X, LogOut, ChevronDown } from 'lucide-react';
 import { useAuth } from '@/lib/context/AuthContext';
 import LoginModal from '@/components/auth/LoginModal';
 import AnimatedCartIcon from '@/components/ui/AnimatedCartIcon';
+import { MobileDrawer } from '@/components/ui/mobile-drawer';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -264,36 +265,36 @@ const Navbar = () => {
             </div>
           </div>
 
-          {/* Mobile Navigation */}
-          {isMenuOpen && (
-            <div className="lg:hidden mt-4 pt-4 border-t border-gray-200 animate-slide-down">
-              <div className="flex flex-col space-y-4">
-                {/* Mobile Search */}
-                <div className="flex items-center bg-white rounded-lg shadow-sm border border-gray-200 px-3 py-2">
-                  <Search className="text-gray-400 mr-2" size={18} />
-                  <input 
-                    type="text" 
-                    placeholder="Search Islamic books..." 
-                    className="flex-1 outline-none text-sm" 
-                  />
-                </div>
-                
-                {/* Mobile Menu Links */}
-                <Link to="/" className="text-naaz-green hover:text-naaz-gold transition-colors font-medium py-2">
+          {/* Mobile Navigation (drawer) */}
+          <MobileDrawer isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} className="lg:hidden">
+            <div className="p-4">
+              {/* Mobile Search */}
+              <div className="flex items-center bg-white rounded-lg shadow-sm border border-gray-200 px-3 py-2 mb-4">
+                <Search className="text-gray-400 mr-2" size={18} />
+                <input 
+                  type="text" 
+                  placeholder="Search Islamic books..." 
+                  className="flex-1 outline-none text-sm" 
+                />
+              </div>
+
+              {/* Mobile Menu Links */}
+              <div className="flex flex-col space-y-3">
+                <Link to="/" className="text-naaz-green hover:text-naaz-gold transition-colors font-medium py-2" onClick={() => setIsMenuOpen(false)}>
                   Home
                 </Link>
-                <Link to="/books" className="text-naaz-green hover:text-naaz-gold transition-colors font-medium py-2">
+                <Link to="/books" className="text-naaz-green hover:text-naaz-gold transition-colors font-medium py-2" onClick={() => setIsMenuOpen(false)}>
                   Products
                 </Link>
-                <Link to="/about" className="text-naaz-green hover:text-naaz-gold transition-colors font-medium py-2">
+                <Link to="/about" className="text-naaz-green hover:text-naaz-gold transition-colors font-medium py-2" onClick={() => setIsMenuOpen(false)}>
                   About
                 </Link>
-                <Link to="/contact" className="text-naaz-green hover:text-naaz-gold transition-colors font-medium py-2">
+                <Link to="/contact" className="text-naaz-green hover:text-naaz-gold transition-colors font-medium py-2" onClick={() => setIsMenuOpen(false)}>
                   Contact
                 </Link>
               </div>
             </div>
-          )}
+          </MobileDrawer>
         </nav>
       </header>
 

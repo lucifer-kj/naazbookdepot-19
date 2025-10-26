@@ -2,6 +2,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/context/AuthContext';
+import { ResponsiveContainer } from '@/components/ui/responsive-container';
 import { 
   LayoutDashboard, 
   Package, 
@@ -12,7 +13,10 @@ import {
   Menu,
   X,
   Search,
-  ChevronLeft
+  ChevronLeft,
+  Layers,
+  Star,
+  User
 } from 'lucide-react';
 
 interface AdminLayoutProps {
@@ -55,7 +59,10 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
     { name: 'Products', href: '/admin/products', icon: Package },
     { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
+    { name: 'Inventory', href: '/admin/inventory', icon: Layers },
+    { name: 'Reviews', href: '/admin/reviews', icon: Star },
     { name: 'Users', href: '/admin/users', icon: Users },
+    { name: 'User Profiles', href: '/admin/user-profiles', icon: User },
     { name: 'Promo Codes', href: '/admin/promo-codes', icon: Tag },
   ], []);
 
@@ -197,9 +204,9 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             </h1>
           </div>
           
-          {/* Search bar - Desktop */}
-          <div className="hidden md:flex items-center max-w-md flex-1 mx-8">
-            <form onSubmit={handleSearch} className="w-full">
+          {/* Search bar */}
+          <ResponsiveContainer size="sm" className="hidden md:block">
+            <form onSubmit={handleSearch} className="w-full max-w-md mx-auto">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <input
@@ -211,7 +218,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                 />
               </div>
             </form>
-          </div>
+          </ResponsiveContainer>
 
           {/* User avatar - Desktop */}
           <div className="hidden md:flex items-center">
@@ -225,9 +232,9 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
         {/* Main Content */}
         <main className="flex-1 overflow-auto bg-gray-50">
-          <div className="h-full p-4 lg:p-6">
+          <ResponsiveContainer size="xl" className="h-full py-4 lg:py-6">
             {children}
-          </div>
+          </ResponsiveContainer>
         </main>
       </div>
     </div>

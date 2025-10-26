@@ -3,6 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Edit, Trash2, Package, Tag } from 'lucide-react';
+import { ProductStockIndicator } from '@/components/product/ProductStockIndicator';
 
 interface Product {
   id: string;
@@ -114,45 +115,45 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                   ₹{product.price}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center space-x-2">
-                    <span className={`text-sm ${
-                      product.stock < 5 ? 'text-red-600 font-medium' : 'text-gray-900'
-                    }`}>
-                      {product.stock}
-                    </span>
-                    {stockUpdateId === product.id ? (
-                      <div className="flex items-center space-x-2">
-                        <Input
-                          type="number"
-                          value={newStock}
-                          onChange={(e) => onNewStockChange(parseInt(e.target.value))}
-                          className="w-20"
-                          min="0"
-                        />
-                        <Button
-                          size="sm"
-                          onClick={() => onStockUpdate(product.id)}
-                          className="bg-green-600 hover:bg-green-700"
-                        >
-                          Save
-                        </Button>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <ProductStockIndicator productId={product.id} />
+                    </div>
+                    <div>
+                      {stockUpdateId === product.id ? (
+                        <div className="flex items-center space-x-2">
+                          <Input
+                            type="number"
+                            value={newStock}
+                            onChange={(e) => onNewStockChange(parseInt(e.target.value))}
+                            className="w-20"
+                            min="0"
+                          />
+                          <Button
+                            size="sm"
+                            onClick={() => onStockUpdate(product.id)}
+                            className="bg-green-600 hover:bg-green-700"
+                          >
+                            Save
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={onStockEditCancel}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      ) : (
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={onStockEditCancel}
+                          onClick={() => onStockEditStart(product.id, product.stock)}
                         >
-                          Cancel
+                          <Package className="h-3 w-3" />
                         </Button>
-                      </div>
-                    ) : (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => onStockEditStart(product.id, product.stock)}
-                      >
-                        <Package className="h-3 w-3" />
-                      </Button>
-                    )}
+                      )}
+                    </div>
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './lib/context/AuthContext';
 import { CartProvider } from './lib/context/CartContext';
 import { useEffect } from 'react';
-import { Toaster } from 'sonner';
+import { ToastProvider } from '@/components/ui/toaster';
 import ErrorBoundary from './components/ErrorBoundary';
 import { logError } from './lib/utils/errorLogging';
 import { testDatabaseConnection, validateData } from './utils/databaseTest';
@@ -107,12 +107,7 @@ function App() {
           <CartProvider>
             <Router>
               <ScrollToTop />
-              <Toaster 
-                position="top-right" 
-                richColors 
-                closeButton
-                duration={4000}
-              />
+              <ToastProvider />
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/products" element={<Products />} />

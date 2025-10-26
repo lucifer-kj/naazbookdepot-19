@@ -359,6 +359,14 @@ export type Database = {
       }
       profiles: {
         Row: {
+          created_at(created_at: (created_at: any) => import("react").ReactNode): string | number | readonly string[]
+          is_active: any
+          is_active: any
+          email: string | number | readonly string[]
+          created_at(created_at: any): import("react").ReactNode
+          is_active: any
+          is_active: any
+          email: ReactNode
           avatar_url: string | null
           default_address: Json | null
           email_notifications: Json | null

@@ -54,10 +54,15 @@ const NotFound = lazy(() => import('./pages/NotFound'));
 // Admin Pages
 const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'));
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
-const AdminProducts = lazy(() => import('./pages/admin/AdminProducts'));
+const AdminProducts = lazy(() => import('./pages/admin/Products'));
+const ProductNew = lazy(() => import('./pages/admin/ProductNew'));
+const ProductEdit = lazy(() => import('./pages/admin/ProductEdit'));
 const AdminOrders = lazy(() => import('./pages/admin/AdminOrders'));
 const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
-const AdminPromoCodes = lazy(() => import('./pages/admin/AdminPromoCodes'));
+const AdminUserProfiles = lazy(() => import('./pages/admin/UserProfiles'));
+const AdminInventory = lazy(() => import('./pages/admin/Inventory'));
+const AdminReviews = lazy(() => import('./pages/admin/Reviews'));
+const AdminPromoCodes = lazy(() => import('./pages/admin/PromoCodes'));
 
 // Components
 import AdminRoute from './components/admin/AdminRoute';
@@ -135,8 +140,13 @@ function App() {
                 <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
                 <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
                 <Route path="/admin/products" element={<AdminRoute><AdminProducts /></AdminRoute>} />
+                <Route path="/admin/products/new" element={<AdminRoute><ProductNew /></AdminRoute>} />
+                <Route path="/admin/products/:id/edit" element={<AdminRoute><ProductEdit /></AdminRoute>} />
                 <Route path="/admin/orders" element={<AdminRoute><AdminOrders /></AdminRoute>} />
                 <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
+                <Route path="/admin/user-profiles" element={<AdminRoute><AdminUserProfiles /></AdminRoute>} />
+                <Route path="/admin/inventory" element={<AdminRoute><AdminInventory /></AdminRoute>} />
+                <Route path="/admin/reviews" element={<AdminRoute><AdminReviews /></AdminRoute>} />
                 <Route path="/admin/promo-codes" element={<AdminRoute><AdminPromoCodes /></AdminRoute>} />
                 
                 {/* 404 Route - Must be last */}

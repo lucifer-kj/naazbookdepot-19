@@ -5,6 +5,7 @@ import { Smartphone, Clock, CheckCircle, RefreshCw } from 'lucide-react';
 import { useCreateOrder } from '@/lib/hooks/useOrders';
 import { useCartContext } from '@/lib/context/CartContext';
 import { useAuth } from '@/lib/context/AuthContext';
+import { supabase } from '@/lib/supabase';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import brandLogo from '/lovable-uploads/logo.png';
@@ -76,12 +77,12 @@ const UpiPayment = () => {
       const order = await createOrder.mutateAsync(orderData);
       
       // Update order with UPI details for admin verification
-      await fetch(`https://ihxtvfuqodvodrutvvcp.supabase.co/rest/v1/orders?id=eq.${order.id}`, {
+      await fetch(`https://tyjnywhsynuwgclpehtx.supabase.co/rest/v1/orders?id=eq.${order.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImloeHR2ZnVxb2R2b2RydXR2dmNwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk2OTk4NjgsImV4cCI6MjA2NTI3NTg2OH0.cAjvbp2C5rMvvWVpRHG0LNfu4pa4sQp2agIKfq0ZtFw`,
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImloeHR2ZnVxb2R2b2RydXR2dmNwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk2OTk4NjgsImV4cCI6MjA2NTI3NTg2OH0.cAjvbp2C5rMvvWVpRHG0LNfu4pa4sQp2agIKfq0ZtFw',
+          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5am55d2hzeW51d2djbHBlaHR4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE0MTAwODMsImV4cCI6MjA3Njk4NjA4M30.opDu5zS7aQh17B-Mf7awqNo4DayPZx_fA4e3-SDXzqw`,
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5am55d2hzeW51d2djbHBlaHR4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE0MTAwODMsImV4cCI6MjA3Njk4NjA4M30.opDu5zS7aQh17B-Mf7awqNo4DayPZx_fA4e3-SDXzqw',
         },
         body: JSON.stringify({
           payment_method: 'upi',
@@ -94,7 +95,7 @@ const UpiPayment = () => {
       // Save user address for future orders if signed in
       if (user && shippingData) {
         try {
-          await fetch(`https://ihxtvfuqodvodrutvvcp.supabase.co/rest/v1/profiles`, {
+          await fetch(`https://tyjnywhsynuwgclpehtx.supabase.co/rest/v1/profiles`, {
             method: 'UPSERT',
             headers: {
               'Content-Type': 'application/json',

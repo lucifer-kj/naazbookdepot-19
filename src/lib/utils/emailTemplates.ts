@@ -1,6 +1,25 @@
 
-export const generateOrderConfirmationEmail = (order: any, customer: any) => {
-  const orderItems = order.order_items?.map((item: any) => `
+interface OrderItem {
+  quantity: number;
+  products?: {
+    name: string;
+    price: number;
+  };
+}
+
+interface Order {
+  id: string;
+  total: number;
+  order_items?: OrderItem[];
+}
+
+interface Customer {
+  name?: string;
+  email?: string;
+}
+
+export const generateOrderConfirmationEmail = (order: Order, customer: Customer) => {
+  const orderItems = order.order_items?.map((item: OrderItem) => `
     <tr>
       <td style="padding: 10px; border-bottom: 1px solid #eee;">
         ${item.products?.name || 'Product'}
@@ -81,7 +100,7 @@ export const generateOrderConfirmationEmail = (order: any, customer: any) => {
   `;
 };
 
-export const generateOrderStatusUpdateEmail = (order: any, customer: any, newStatus: string) => {
+export const generateOrderStatusUpdateEmail = (order: Order, customer: Customer, newStatus: string) => {
   const statusMessages = {
     processing: 'Your order is being processed',
     shipped: 'Your order has been shipped',
@@ -131,7 +150,7 @@ export const generateOrderStatusUpdateEmail = (order: any, customer: any, newSta
   `;
 };
 
-export const generateWelcomeEmail = (customer: any) => {
+export const generateWelcomeEmail = (customer: Customer) => {
   return `
     <!DOCTYPE html>
     <html>

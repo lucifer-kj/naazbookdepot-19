@@ -61,7 +61,7 @@ const AdminOrders = () => {
     try {
       await updateOrderStatus.mutateAsync({
         orderId,
-        status: newStatus as any,
+        status: newStatus,
         trackingNumber: trackingNumber || undefined,
       });
       

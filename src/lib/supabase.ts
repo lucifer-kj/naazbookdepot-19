@@ -1,17 +1,17 @@
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '../types/supabase';
+import { apiErrorHandler } from './services/apiErrorHandler';
+import sentryService from './services/sentryService';
+import { getSupabaseConfig, validateRequiredEnvVars, env } from './config/env';
 
-if (!import.meta.env.VITE_SUPABASE_URL) {
-  throw new Error('Missing Supabase URL');
-}
+// Validate required environment variables
+validateRequiredEnvVars(['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY']);
 
-if (!import.meta.env.VITE_SUPABASE_ANON_KEY) {
-  throw new Error('Missing Supabase Anon Key');
-}
+const config = getSupabaseConfig();
 
 export const supabase = createClient<Database>(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY,
+  config.url,
+  config.anonKey,
   {
     auth: {
       autoRefreshToken: true,
@@ -20,77 +20,135 @@ export const supabase = createClient<Database>(
     },
     global: {
       headers: {
-        'x-application-name': 'naazbookdepot'
+        'x-application-name': 'naazbookdepot',
+        'x-app-version': env.VITE_APP_VERSION
+      }
+    },
+    realtime: {
+      params: {
+        eventsPerSecond: 10
       }
     }
   }
 );
 
-// Helper function to handle Supabase errors
-export const handleSupabaseError = (error: Error) => {
-  console.error('Supabase Error:', error.message);
-  throw error;
+// Enhanced Supabase error handler
+export const handleSupabaseError = (error: any, operation: string, context?: any) => {
+  return apiErrorHandler.handleSupabaseError(error, operation, {
+    component: 'supabase',
+    additionalData: context
+  });
 };
 
-// Authentication helpers
+// Enhanced authentication helpers with error handling
 export const signUp = async (email: string, password: string, fullName: string) => {
-  try {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: fullName
+  return apiErrorHandler.handleApiCall(
+    async () => {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName
+          }
         }
+      });
+
+      if (error) {
+        throw error;
       }
-    });
 
-    if (error) {
-      throw error;
+      sentryService.addBreadcrumb(
+        'User signed up successfully',
+        'auth',
+        'info',
+        { email }
+      );
+
+      return data;
+    },
+    'auth/signup',
+    'POST',
+    {
+      action: 'user_signup',
+      additionalData: { email }
     }
-
-    return data;
-  } catch (error) {
-    handleSupabaseError(error as Error);
-  }
+  );
 };
 
 export const signIn = async (email: string, password: string) => {
-  try {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
+  return apiErrorHandler.handleApiCall(
+    async () => {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
 
-    if (error) {
-      throw error;
+      if (error) {
+        throw error;
+      }
+
+      sentryService.addBreadcrumb(
+        'User signed in successfully',
+        'auth',
+        'info',
+        { email }
+      );
+
+      // Set user context in Sentry
+      if (data.user) {
+        sentryService.setUserContext(data.user.id, data.user.email);
+      }
+
+      return data;
+    },
+    'auth/signin',
+    'POST',
+    {
+      action: 'user_signin',
+      additionalData: { email }
     }
-
-    return data;
-  } catch (error) {
-    handleSupabaseError(error as Error);
-  }
+  );
 };
 
 export const signOut = async () => {
-  try {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      throw error;
+  return apiErrorHandler.handleApiCall(
+    async () => {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        throw error;
+      }
+
+      sentryService.addBreadcrumb(
+        'User signed out successfully',
+        'auth',
+        'info'
+      );
+
+      // Clear user context in Sentry
+      sentryService.clearUserContext();
+    },
+    'auth/signout',
+    'POST',
+    {
+      action: 'user_signout'
     }
-  } catch (error) {
-    handleSupabaseError(error as Error);
-  }
+  );
 };
 
 export const getCurrentUser = async () => {
-  try {
-    const { data: { session }, error } = await supabase.auth.getSession();
-    if (error) {
-      throw error;
+  return apiErrorHandler.handleApiCall(
+    async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) {
+        throw error;
+      }
+      return session?.user;
+    },
+    'auth/session',
+    'GET',
+    {
+      action: 'get_current_user'
     }
-    return session?.user;
-  } catch (error) {
-    handleSupabaseError(error as Error);
-  }
+  );
 };

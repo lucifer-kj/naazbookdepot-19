@@ -4,11 +4,17 @@ import { AuthProvider } from './lib/context/AuthContext';
 import { CartProvider } from './lib/context/CartContext';
 import { useEffect } from 'react';
 import { ToastProvider } from '@/components/ui/toaster';
-import ErrorBoundary from './components/ErrorBoundary';
-import { logError } from './lib/utils/errorLogging';
+import GlobalErrorBoundary from './components/GlobalErrorBoundary';
 import { testDatabaseConnection, validateData } from './utils/databaseTest';
 import { EnvChecker } from './components/debug/EnvChecker';
+import './lib/utils/consoleErrorFixes'; // Initialize error fixes
 import './App.css';
+
+// Type for API errors
+interface ApiError {
+  status?: number;
+  message?: string;
+}
 
 // Log environment variables status
 console.log('Environment Variables Check:', {
@@ -71,12 +77,24 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       gcTime: 30 * 60 * 1000, // Cache garbage collection after 30 minutes
-      retry: (failureCount, error: any) => {
-        // Don't retry on 4xx errors
-        if (error?.status >= 400 && error?.status < 500) {
-          return false;
+      staleTime: 5 * 60 * 1000, // Consider data stale after 5 minutes
+      retry: (failureCount, error: ApiError) => {
+        // Don't retry on 4xx errors except timeout and rate limit
+        if (error?.status && error.status >= 400 && error.status < 500) {
+          return error.status === 408 || error.status === 429;
         }
         return failureCount < 2;
+      },
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      networkMode: 'offlineFirst'
+    },
+    mutations: {
+      retry: (failureCount, error: ApiError) => {
+        // Don't retry mutations on client errors
+        if (error?.status && error.status >= 400 && error.status < 500) {
+          return false;
+        }
+        return failureCount < 1; // Only retry once for mutations
       },
       networkMode: 'offlineFirst'
     }
@@ -101,14 +119,15 @@ const ScrollToTop = () => {
 
 function App() {
   return (
-    <ErrorBoundary>
+    <GlobalErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <CartProvider>
             <Router>
               <ScrollToTop />
               <ToastProvider />
-              <Routes>
+              <Suspense fallback={<LoadingBar />}>
+                <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/products" element={<Products />} />
                 <Route path="/books" element={<Products />} />
@@ -146,13 +165,14 @@ function App() {
                 
                 {/* 404 Route - Must be last */}
                 <Route path="*" element={<NotFound />} />
-              </Routes>
+                </Routes>
+              </Suspense>
               {import.meta.env.DEV && <EnvChecker />}
             </Router>
           </CartProvider>
         </AuthProvider>
       </QueryClientProvider>
-    </ErrorBoundary>
+    </GlobalErrorBoundary>
   );
 }
 

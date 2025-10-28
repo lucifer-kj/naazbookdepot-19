@@ -7,7 +7,8 @@ import Footer from '../components/Footer';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
-import { Loader2, CreditCard, Truck, Shield, ArrowLeft } from 'lucide-react';
+import { Loader2, Truck, Shield, ArrowLeft, CheckCircle } from 'lucide-react';
+import { UnifiedPayment } from '../components/payment/UnifiedPayment';
 import { supabase } from '../integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -37,8 +38,9 @@ const Checkout = () => {
     pincode: '',
     country: 'India'
   });
-  const [paymentMethod, setPaymentMethod] = useState<'cod' | 'upi'>('cod');
   const [specialInstructions, setSpecialInstructions] = useState('');
+  const [currentStep, setCurrentStep] = useState<'shipping' | 'payment' | 'confirmation'>('shipping');
+  const [orderCreated, setOrderCreated] = useState(false);
 
   useEffect(() => {
     if (cart.length === 0) {
@@ -86,18 +88,22 @@ const Checkout = () => {
     return true;
   };
 
-  const handlePlaceOrder = async () => {
+  const handleContinueToPayment = () => {
     if (!validateForm()) return;
-    
+    setCurrentStep('payment');
+  };
+
+  const handlePaymentSuccess = async (transactionId: string, paymentMethod: string) => {
     setLoading(true);
     
     try {
       const orderData = {
         user_id: user?.id || null,
-        total_amount: getTotalPrice(),
+        total_amount: finalTotal,
         status: 'pending',
         payment_method: paymentMethod,
-        payment_status: paymentMethod === 'cod' ? 'pending' : 'pending',
+        payment_status: paymentMethod === 'cod' ? 'pending' : 'completed',
+        transaction_id: transactionId,
         shipping_address: shippingAddress,
         special_instructions: specialInstructions || null,
         items: cart.map(item => ({
@@ -143,31 +149,33 @@ const Checkout = () => {
       }
 
       clearCart();
+      setOrderCreated(true);
+      setCurrentStep('confirmation');
       
-      if (paymentMethod === 'upi') {
-        navigate('/upi-payment', { 
-          state: { 
-            orderId: order.id, 
-            amount: getTotalPrice(),
-            orderData: order
-          } 
-        });
-      } else {
+      toast.success('Order placed successfully!');
+      
+      // Redirect to order confirmation after a short delay
+      setTimeout(() => {
         navigate('/order-confirmation', { 
           state: { 
             orderId: order.id,
-            orderData: order
+            orderData: order,
+            transactionId,
+            paymentMethod
           } 
         });
-      }
-      
-      toast.success('Order placed successfully!');
+      }, 2000);
     } catch (error) {
       console.error('Order placement error:', error);
       toast.error('Failed to place order. Please try again.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePaymentFailure = (error: string) => {
+    toast.error(`Payment failed: ${error}`);
+    setCurrentStep('payment');
   };
 
   const shippingCost = getTotalPrice() >= 500 ? 0 : 50;
@@ -184,126 +192,171 @@ const Checkout = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="mb-6">
           <button
-            onClick={() => navigate('/cart')}
+            onClick={() => {
+              if (currentStep === 'payment') {
+                setCurrentStep('shipping');
+              } else {
+                navigate('/cart');
+              }
+            }}
             className="flex items-center text-naaz-green hover:text-green-600 transition-colors"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Cart
+            {currentStep === 'payment' ? 'Back to Shipping' : 'Back to Cart'}
           </button>
         </div>
 
+        {/* Progress Indicator */}
+        <div className="mb-8">
+          <div className="flex items-center justify-center space-x-4">
+            <div className={`flex items-center ${currentStep === 'shipping' ? 'text-naaz-green' : currentStep === 'payment' || currentStep === 'confirmation' ? 'text-green-600' : 'text-gray-400'}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep === 'shipping' ? 'bg-naaz-green text-white' : currentStep === 'payment' || currentStep === 'confirmation' ? 'bg-green-600 text-white' : 'bg-gray-200'}`}>
+                1
+              </div>
+              <span className="ml-2 font-medium">Shipping</span>
+            </div>
+            <div className={`w-16 h-0.5 ${currentStep === 'payment' || currentStep === 'confirmation' ? 'bg-green-600' : 'bg-gray-200'}`}></div>
+            <div className={`flex items-center ${currentStep === 'payment' ? 'text-naaz-green' : currentStep === 'confirmation' ? 'text-green-600' : 'text-gray-400'}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep === 'payment' ? 'bg-naaz-green text-white' : currentStep === 'confirmation' ? 'bg-green-600 text-white' : 'bg-gray-200'}`}>
+                2
+              </div>
+              <span className="ml-2 font-medium">Payment</span>
+            </div>
+            <div className={`w-16 h-0.5 ${currentStep === 'confirmation' ? 'bg-green-600' : 'bg-gray-200'}`}></div>
+            <div className={`flex items-center ${currentStep === 'confirmation' ? 'text-green-600' : 'text-gray-400'}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep === 'confirmation' ? 'bg-green-600 text-white' : 'bg-gray-200'}`}>
+                3
+              </div>
+              <span className="ml-2 font-medium">Confirmation</span>
+            </div>
+          </div>
+        </div>
+
         <div className="grid lg:grid-cols-3 gap-8">
-          {/* Checkout Form */}
+          {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Shipping Address */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <div className="flex items-center mb-4">
-                <Truck className="w-5 h-5 text-naaz-green mr-2" />
-                <h2 className="text-xl font-semibold">Shipping Address</h2>
-              </div>
-              
-              <div className="grid md:grid-cols-2 gap-4">
-                <Input
-                  placeholder="Full Name *"
-                  value={shippingAddress.fullName}
-                  onChange={(e) => handleInputChange('fullName', e.target.value)}
-                />
-                <Input
-                  type="email"
-                  placeholder="Email Address *"
-                  value={shippingAddress.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
-                />
-                <Input
-                  type="tel"
-                  placeholder="Phone Number *"
-                  value={shippingAddress.phone}
-                  onChange={(e) => handleInputChange('phone', e.target.value)}
-                />
-                <Input
-                  placeholder="Pincode *"
-                  value={shippingAddress.pincode}
-                  onChange={(e) => handleInputChange('pincode', e.target.value)}
-                />
-              </div>
-              
-              <div className="mt-4">
-                <Textarea
-                  placeholder="Complete Address *"
-                  value={shippingAddress.address}
-                  onChange={(e) => handleInputChange('address', e.target.value)}
-                  className="mb-4"
-                />
-              </div>
-              
-              <div className="grid md:grid-cols-3 gap-4">
-                <Input
-                  placeholder="City *"
-                  value={shippingAddress.city}
-                  onChange={(e) => handleInputChange('city', e.target.value)}
-                />
-                <Input
-                  placeholder="State *"
-                  value={shippingAddress.state}
-                  onChange={(e) => handleInputChange('state', e.target.value)}
-                />
-                <Input
-                  placeholder="Country"
-                  value={shippingAddress.country}
-                  onChange={(e) => handleInputChange('country', e.target.value)}
-                />
-              </div>
-            </div>
-
-            {/* Payment Method */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <div className="flex items-center mb-4">
-                <CreditCard className="w-5 h-5 text-naaz-green mr-2" />
-                <h2 className="text-xl font-semibold">Payment Method</h2>
-              </div>
-              
-              <div className="space-y-3">
-                <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
-                  <input
-                    type="radio"
-                    name="payment"
-                    value="cod"
-                    checked={paymentMethod === 'cod'}
-                    onChange={(e) => setPaymentMethod(e.target.value as 'cod')}
-                    className="mr-3"
-                  />
-                  <div>
-                    <div className="font-medium">Cash on Delivery</div>
-                    <div className="text-sm text-gray-600">Pay when you receive your order</div>
+            {/* Shipping Step */}
+            {currentStep === 'shipping' && (
+              <>
+                <div className="bg-white rounded-lg shadow-sm p-6">
+                  <div className="flex items-center mb-4">
+                    <Truck className="w-5 h-5 text-naaz-green mr-2" />
+                    <h2 className="text-xl font-semibold">Shipping Address</h2>
                   </div>
-                </label>
-                
-                <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
-                  <input
-                    type="radio"
-                    name="payment"
-                    value="upi"
-                    checked={paymentMethod === 'upi'}
-                    onChange={(e) => setPaymentMethod(e.target.value as 'upi')}
-                    className="mr-3"
-                  />
-                  <div>
-                    <div className="font-medium">UPI Payment</div>
-                    <div className="text-sm text-gray-600">Pay instantly using UPI</div>
+                  
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <Input
+                      placeholder="Full Name *"
+                      value={shippingAddress.fullName}
+                      onChange={(e) => handleInputChange('fullName', e.target.value)}
+                    />
+                    <Input
+                      type="email"
+                      placeholder="Email Address *"
+                      value={shippingAddress.email}
+                      onChange={(e) => handleInputChange('email', e.target.value)}
+                    />
+                    <Input
+                      type="tel"
+                      placeholder="Phone Number *"
+                      value={shippingAddress.phone}
+                      onChange={(e) => handleInputChange('phone', e.target.value)}
+                    />
+                    <Input
+                      placeholder="Pincode *"
+                      value={shippingAddress.pincode}
+                      onChange={(e) => handleInputChange('pincode', e.target.value)}
+                    />
                   </div>
-                </label>
-              </div>
-            </div>
+                  
+                  <div className="mt-4">
+                    <Textarea
+                      placeholder="Complete Address *"
+                      value={shippingAddress.address}
+                      onChange={(e) => handleInputChange('address', e.target.value)}
+                      className="mb-4"
+                    />
+                  </div>
+                  
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <Input
+                      placeholder="City *"
+                      value={shippingAddress.city}
+                      onChange={(e) => handleInputChange('city', e.target.value)}
+                    />
+                    <Input
+                      placeholder="State *"
+                      value={shippingAddress.state}
+                      onChange={(e) => handleInputChange('state', e.target.value)}
+                    />
+                    <Input
+                      placeholder="Country"
+                      value={shippingAddress.country}
+                      onChange={(e) => handleInputChange('country', e.target.value)}
+                    />
+                  </div>
+                </div>
 
-            {/* Special Instructions */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-xl font-semibold mb-4">Special Instructions (Optional)</h2>
-              <Textarea
-                placeholder="Any special delivery instructions..."
-                value={specialInstructions}
-                onChange={(e) => setSpecialInstructions(e.target.value)}
+                <div className="bg-white rounded-lg shadow-sm p-6">
+                  <h2 className="text-xl font-semibold mb-4">Special Instructions (Optional)</h2>
+                  <Textarea
+                    placeholder="Any special delivery instructions..."
+                    value={specialInstructions}
+                    onChange={(e) => setSpecialInstructions(e.target.value)}
+                  />
+                </div>
+
+                <Button
+                  onClick={handleContinueToPayment}
+                  className="w-full bg-naaz-green hover:bg-green-600"
+                >
+                  Continue to Payment
+                </Button>
+              </>
+            )}
+
+            {/* Payment Step */}
+            {currentStep === 'payment' && (
+              <UnifiedPayment
+                orderId={`ORDER_${Date.now()}`}
+                amount={finalTotal}
+                currency="INR"
+                customerInfo={{
+                  firstName: shippingAddress.fullName.split(' ')[0] || '',
+                  lastName: shippingAddress.fullName.split(' ').slice(1).join(' ') || '',
+                  email: shippingAddress.email,
+                  phone: shippingAddress.phone,
+                  country: shippingAddress.country
+                }}
+                shippingAddress={{
+                  addressLine1: shippingAddress.address,
+                  city: shippingAddress.city,
+                  state: shippingAddress.state,
+                  postalCode: shippingAddress.pincode,
+                  countryCode: shippingAddress.country === 'India' ? 'IN' : 'US'
+                }}
+                productInfo={`Order from Naaz Books - ${cart.length} items`}
+                onSuccess={handlePaymentSuccess}
+                onFailure={handlePaymentFailure}
               />
-            </div>
+            )}
+
+            {/* Confirmation Step */}
+            {currentStep === 'confirmation' && (
+              <div className="bg-white rounded-lg shadow-sm p-6 text-center">
+                <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
+                <h2 className="text-2xl font-bold text-green-600 mb-2">Order Placed Successfully!</h2>
+                <p className="text-gray-600 mb-4">
+                  Thank you for your order. You will receive a confirmation email shortly.
+                </p>
+                {loading && (
+                  <div className="flex items-center justify-center">
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    <span>Processing your order...</span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Order Summary */}
@@ -344,20 +397,20 @@ const Checkout = () => {
                 </div>
               )}
               
-              <Button
-                onClick={handlePlaceOrder}
-                disabled={loading}
-                className="w-full mt-6 bg-naaz-green hover:bg-green-600"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Placing Order...
-                  </>
-                ) : (
-                  `Place Order - ₹${finalTotal.toFixed(2)}`
-                )}
-              </Button>
+              {currentStep === 'shipping' && (
+                <Button
+                  onClick={handleContinueToPayment}
+                  className="w-full mt-6 bg-naaz-green hover:bg-green-600"
+                >
+                  Continue to Payment
+                </Button>
+              )}
+              
+              {currentStep === 'payment' && (
+                <div className="mt-6 text-center text-sm text-gray-600">
+                  Complete payment to place your order
+                </div>
+              )}
               
               <div className="mt-4 text-xs text-gray-500 text-center">
                 By placing your order, you agree to our Terms of Service and Privacy Policy.

@@ -50,7 +50,7 @@ export default function AdminProductNew() {
         tags: formData.tags,
       };
 
-      const product = await createProduct.mutateAsync(productPayload as any);
+      const product = await createProduct.mutateAsync(productPayload);
       if (product?.id) {
         navigate(`/admin/products/${product.id}/edit`);
       } else {

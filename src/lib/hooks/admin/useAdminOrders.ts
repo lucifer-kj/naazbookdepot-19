@@ -43,7 +43,7 @@ export const useUpdateOrderStatus = () => {
       status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded';
       trackingNumber?: string;
     }) => {
-      const updates: any = { status };
+      const updates: { status: string; tracking_number?: string } = { status };
       if (trackingNumber) {
         updates.tracking_number = trackingNumber;
       }

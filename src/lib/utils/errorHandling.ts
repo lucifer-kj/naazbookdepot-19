@@ -4,7 +4,7 @@ import { supabase } from '../integrations/supabase/client';
 import { toast } from 'sonner';
 
 // Global error handler for API calls
-export const handleApiError = (error: any, customMessage?: string) => {
+export const handleApiError = (error: unknown, customMessage?: string) => {
   console.error('API Error:', error);
   
   let message = customMessage || 'Something went wrong';
@@ -26,7 +26,7 @@ export const handleApiError = (error: any, customMessage?: string) => {
 };
 
 // Enhanced useQuery wrapper with error handling
-export const useApiQuery = (key: any[], queryFn: () => Promise<any>, options?: any) => {
+export const useApiQuery = <T>(key: unknown[], queryFn: () => Promise<T>, options?: Record<string, unknown>) => {
   return useQuery({
     queryKey: key,
     queryFn: async () => {
@@ -37,7 +37,7 @@ export const useApiQuery = (key: any[], queryFn: () => Promise<any>, options?: a
         throw error;
       }
     },
-    retry: (failureCount, error: any) => {
+    retry: (failureCount: number, error: { status?: number }) => {
       // Don't retry on authentication errors
       if (error?.status === 401 || error?.status === 403) {
         return false;
@@ -198,7 +198,7 @@ export const useIntersectionObserver = (
 };
 
 // Supabase error handler
-export const handleSupabaseError = (error: any, context?: string) => {
+export const handleSupabaseError = (error: unknown, context?: string) => {
   if (!error) return;
 
   let message = 'An unexpected error occurred';

@@ -5,12 +5,12 @@ import path from "path";
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   const isProduction = mode === 'production';
-  
+
   return {
+    base: './',
     server: {
       host: "::",
       port: 8080,
-      // @ts-expect-error - allowedHosts type issue with conditional assignment
       allowedHosts: process.env.TEMPO === "true" ? true : undefined
     },
     plugins: [
@@ -29,84 +29,6 @@ export default defineConfig(({ mode }) => {
       assetsInlineLimit: 4096,
       rollupOptions: {
         output: {
-          manualChunks: (id) => {
-            // Vendor chunk for core React libraries
-            if (id.includes('node_modules')) {
-              // Core React ecosystem
-              if (id.includes('react') || id.includes('react-dom')) {
-                return 'vendor-react';
-              }
-              if (id.includes('react-router')) {
-                return 'vendor-router';
-              }
-              
-              // UI library chunks
-              if (id.includes('@radix-ui')) {
-                return 'vendor-ui';
-              }
-              if (id.includes('lucide-react') || id.includes('react-icons')) {
-                return 'vendor-icons';
-              }
-              
-              // Data and API libraries
-              if (id.includes('@supabase')) {
-                return 'vendor-supabase';
-              }
-              if (id.includes('@tanstack/react-query')) {
-                return 'vendor-query';
-              }
-              
-              // Form and validation libraries
-              if (id.includes('react-hook-form') || id.includes('zod') || id.includes('@hookform')) {
-                return 'vendor-forms';
-              }
-              
-              // Animation and motion libraries
-              if (id.includes('framer-motion') || id.includes('embla-carousel')) {
-                return 'vendor-animation';
-              }
-              
-              // Admin-specific heavy libraries
-              if (id.includes('recharts') || id.includes('@tanstack/react-table')) {
-                return 'vendor-admin';
-              }
-              
-              // Utility libraries
-              if (id.includes('date-fns') || id.includes('clsx') || id.includes('class-variance-authority')) {
-                return 'vendor-utils';
-              }
-              
-              // Security and monitoring
-              if (id.includes('@sentry') || id.includes('dompurify')) {
-                return 'vendor-security';
-              }
-              
-              // Payment libraries
-              if (id.includes('paypal') || id.includes('stripe')) {
-                return 'vendor-payment';
-              }
-              
-              // Other vendor libraries
-              return 'vendor-misc';
-            }
-            
-            // Application chunks
-            if (id.includes('src/pages/admin') || id.includes('src/components/admin')) {
-              return 'admin';
-            }
-            if (id.includes('src/pages/checkout') || id.includes('src/components/checkout')) {
-              return 'checkout';
-            }
-            if (id.includes('src/pages/auth') || id.includes('src/components/auth')) {
-              return 'auth';
-            }
-            if (id.includes('src/lib/services/payment')) {
-              return 'payment';
-            }
-            if (id.includes('src/lib/services/image') || id.includes('src/lib/hooks/useImage')) {
-              return 'image-optimization';
-            }
-          },
           chunkFileNames: (chunkInfo) => {
             // Use more descriptive chunk names
             if (chunkInfo.name.startsWith('vendor-')) {
@@ -144,8 +66,8 @@ export default defineConfig(({ mode }) => {
     },
     optimizeDeps: {
       include: [
-        'react', 
-        'react-dom', 
+        'react',
+        'react-dom',
         'react-router-dom',
         '@supabase/supabase-js',
         '@tanstack/react-query'

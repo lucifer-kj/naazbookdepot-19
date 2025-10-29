@@ -32,40 +32,56 @@ EXCEPTION
         RAISE NOTICE 'Some tables may not exist, continuing...';
 END $$;
 
--- Recreate custom types
-CREATE TYPE order_status AS ENUM (
-  'pending',
-  'confirmed', 
-  'processing',
-  'shipped',
-  'delivered',
-  'cancelled',
-  'refunded',
-  'pending_payment_verification'
-);
+-- Recreate custom types (with existence check)
+DO $$ BEGIN
+  CREATE TYPE order_status AS ENUM (
+    'pending',
+    'confirmed', 
+    'processing',
+    'shipped',
+    'delivered',
+    'cancelled',
+    'refunded',
+    'pending_payment_verification'
+  );
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TYPE payment_status AS ENUM (
-  'pending',
-  'completed',
-  'failed',
-  'refunded',
-  'pending_verification'
-);
+DO $$ BEGIN
+  CREATE TYPE payment_status AS ENUM (
+    'pending',
+    'completed',
+    'failed',
+    'refunded',
+    'pending_verification'
+  );
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TYPE product_status AS ENUM (
-  'draft',
-  'published',
-  'archived'
-);
+DO $$ BEGIN
+  CREATE TYPE product_status AS ENUM (
+    'draft',
+    'published',
+    'archived'
+  );
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TYPE address_type AS ENUM (
-  'home',
-  'work',
-  'other'
-);
+DO $$ BEGIN
+  CREATE TYPE address_type AS ENUM (
+    'home',
+    'work',
+    'other'
+  );
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
 -- Categories table
-CREATE TABLE categories (
+CREATE TABLE IF NOT EXISTS categories (
   id BIGSERIAL PRIMARY KEY,
   name VARCHAR(255) NOT NULL UNIQUE,
   slug VARCHAR(255) NOT NULL UNIQUE,
@@ -79,7 +95,7 @@ CREATE TABLE categories (
 );
 
 -- Products table (ensuring BIGINT ID)
-CREATE TABLE products (
+CREATE TABLE IF NOT EXISTS products (
   id BIGSERIAL PRIMARY KEY,
   title VARCHAR(500) NOT NULL,
   slug VARCHAR(500) UNIQUE,

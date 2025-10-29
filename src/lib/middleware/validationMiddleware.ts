@@ -1,12 +1,24 @@
 import { ZodSchema, ZodError } from 'zod';
 import { formValidationService, ServerValidationConfig } from '../services/formValidationService';
 import sentryService from '../services/sentryService';
+import { sanitizationService } from '../services/sanitizationService';
+import { fileUploadSecurity, FileSecurityConfig } from '../services/fileUploadSecurity';
+import { securityMiddleware } from './securityMiddleware';
 
 export interface ValidationMiddlewareConfig {
   schema: ZodSchema;
   serverValidation?: ServerValidationConfig;
   skipSanitization?: boolean;
   customErrorHandler?: (errors: Record<string, string>) => any;
+  securityLevel?: 'basic' | 'strict' | 'paranoid';
+  enableCSRFValidation?: boolean;
+  enableRateLimiting?: boolean;
+  sanitizationOptions?: {
+    level: 'basic' | 'strict' | 'html' | 'sql' | 'nosql';
+    maxLength?: number;
+    allowedPatterns?: RegExp[];
+    blockedPatterns?: RegExp[];
+  };
 }
 
 export interface ValidationResult {
@@ -16,22 +28,57 @@ export interface ValidationResult {
 }
 
 /**
- * Validation middleware for API requests
+ * Enhanced validation middleware for API requests with security features
  */
 export async function validateRequest(
   requestData: any,
-  config: ValidationMiddlewareConfig
+  config: ValidationMiddlewareConfig,
+  requestContext?: {
+    headers?: Record<string, string>;
+    method?: string;
+    url?: string;
+  }
 ): Promise<ValidationResult> {
   const {
     schema,
     serverValidation,
     skipSanitization = false,
-    customErrorHandler
+    customErrorHandler,
+    securityLevel = 'basic',
+    enableCSRFValidation = true,
+    enableRateLimiting = true,
+    sanitizationOptions
   } = config;
 
   try {
+    // Security validation
+    if (requestContext && securityLevel !== 'basic') {
+      const securityResult = await securityMiddleware.validateRequest(requestContext);
+      
+      if (!securityResult.isValid) {
+        return {
+          success: false,
+          errors: { security: securityResult.errors.join(', ') }
+        };
+      }
+    }
+
+    // Enhanced sanitization based on security level
+    let sanitizedData = requestData;
+    
+    if (!skipSanitization) {
+      sanitizedData = await enhancedSanitization(requestData, {
+        level: sanitizationOptions?.level || 'basic',
+        securityLevel,
+        maxLength: sanitizationOptions?.maxLength,
+        allowedPatterns: sanitizationOptions?.allowedPatterns,
+        blockedPatterns: sanitizationOptions?.blockedPatterns
+      });
+    }
+
+    // Schema validation
     const result = await formValidationService.validateFormData(
-      requestData,
+      sanitizedData,
       schema,
       serverValidation
     );
@@ -44,22 +91,166 @@ export async function validateRequest(
       };
     }
 
+    // Additional security checks for paranoid level
+    if (securityLevel === 'paranoid') {
+      const securityCheck = await performParanoidSecurityCheck(result.sanitizedData);
+      if (!securityCheck.passed) {
+        return {
+          success: false,
+          errors: { security: securityCheck.errors.join(', ') }
+        };
+      }
+    }
+
     return {
       success: true,
       data: result.sanitizedData
     };
   } catch (error) {
     sentryService.captureError(
-      error instanceof Error ? error : new Error('Request validation failed'),
+      error instanceof Error ? error : new Error('Enhanced request validation failed'),
       {
-        action: 'validate_request',
-        additionalData: { requestData, config }
+        action: 'validate_request_enhanced',
+        additionalData: { requestData, config, requestContext }
       }
     );
 
     return {
       success: false,
       errors: { general: 'Request validation failed' }
+    };
+  }
+}
+
+/**
+ * Enhanced sanitization with multiple security levels
+ */
+async function enhancedSanitization(
+  data: any,
+  options: {
+    level: 'basic' | 'strict' | 'html' | 'sql' | 'nosql';
+    securityLevel: 'basic' | 'strict' | 'paranoid';
+    maxLength?: number;
+    allowedPatterns?: RegExp[];
+    blockedPatterns?: RegExp[];
+  }
+): Promise<any> {
+  if (typeof data === 'string') {
+    // Apply appropriate sanitization based on level
+    switch (options.level) {
+      case 'strict':
+        return sanitizationService.sanitizeInput(data, options.maxLength);
+      case 'html':
+        return sanitizationService.sanitizeHtml(data);
+      case 'sql':
+        return sanitizationService.sanitizeSQLInput(data);
+      case 'nosql':
+        return sanitizationService.sanitizeNoSQLInput(data);
+      default:
+        return sanitizationService.sanitizeInput(data, options.maxLength);
+    }
+  }
+
+  if (Array.isArray(data)) {
+    return Promise.all(data.map(item => enhancedSanitization(item, options)));
+  }
+
+  if (typeof data === 'object' && data !== null) {
+    // Handle NoSQL injection for objects
+    if (options.level === 'nosql' || options.securityLevel === 'paranoid') {
+      data = sanitizationService.sanitizeNoSQLInput(data);
+    }
+
+    const sanitized: any = {};
+    for (const [key, value] of Object.entries(data)) {
+      const sanitizedKey = sanitizationService.sanitizeInput(key);
+      sanitized[sanitizedKey] = await enhancedSanitization(value, options);
+    }
+    return sanitized;
+  }
+
+  return data;
+}
+
+/**
+ * Paranoid security checks for highly sensitive operations
+ */
+async function performParanoidSecurityCheck(
+  data: any
+): Promise<{ passed: boolean; errors: string[] }> {
+  const errors: string[] = [];
+
+  try {
+    // Check for potential injection patterns
+    const dataString = JSON.stringify(data);
+    
+    const suspiciousPatterns = [
+      /\$\w+/g, // MongoDB operators
+      /union\s+select/gi, // SQL injection
+      /<script/gi, // XSS
+      /javascript:/gi, // JavaScript protocol
+      /data:/gi, // Data URLs
+      /eval\s*\(/gi, // Code evaluation
+      /function\s*\(/gi, // Function declarations
+      /setTimeout|setInterval/gi, // Timer functions
+      /document\.|window\./gi, // DOM access
+    ];
+
+    for (const pattern of suspiciousPatterns) {
+      if (pattern.test(dataString)) {
+        errors.push(`Suspicious pattern detected: ${pattern.source}`);
+      }
+    }
+
+    // Check for excessive nesting (potential DoS)
+    const maxDepth = 10;
+    const checkDepth = (obj: any, depth: number = 0): boolean => {
+      if (depth > maxDepth) return false;
+      
+      if (typeof obj === 'object' && obj !== null) {
+        if (Array.isArray(obj)) {
+          return obj.every(item => checkDepth(item, depth + 1));
+        } else {
+          return Object.values(obj).every(value => checkDepth(value, depth + 1));
+        }
+      }
+      
+      return true;
+    };
+
+    if (!checkDepth(data)) {
+      errors.push('Data structure too deeply nested');
+    }
+
+    // Check for excessively large strings
+    const checkStringLengths = (obj: any): boolean => {
+      if (typeof obj === 'string' && obj.length > 10000) {
+        return false;
+      }
+      
+      if (Array.isArray(obj)) {
+        return obj.every(checkStringLengths);
+      }
+      
+      if (typeof obj === 'object' && obj !== null) {
+        return Object.values(obj).every(checkStringLengths);
+      }
+      
+      return true;
+    };
+
+    if (!checkStringLengths(data)) {
+      errors.push('Excessively large string detected');
+    }
+
+    return {
+      passed: errors.length === 0,
+      errors
+    };
+  } catch (error) {
+    return {
+      passed: false,
+      errors: ['Paranoid security check failed']
     };
   }
 }

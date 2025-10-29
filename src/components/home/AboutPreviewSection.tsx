@@ -41,7 +41,7 @@ const AboutPreviewSection = () => {
                 MD Irfan
               </p>
               <p className="text-sm text-naaz-gold font-semibold mt-1">
-                Director, Naaz Book Depot
+                Founder, Naaz Book Depot
               </p>
               <p className="text-xs text-gray-600 mt-2">
                 A legendary figure in Islamic publishing

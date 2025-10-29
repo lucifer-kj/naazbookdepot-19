@@ -142,6 +142,9 @@ const Navbar = () => {
               <Link to="/about" className="text-naaz-green hover:text-naaz-gold transition-colors font-medium">
                 About
               </Link>
+              <Link to="/track-order" className="text-naaz-green hover:text-naaz-gold transition-colors font-medium">
+                Track Order
+              </Link>
               <Link to="/contact" className="text-naaz-green hover:text-naaz-gold transition-colors font-medium">
                 Contact
               </Link>
@@ -212,6 +215,13 @@ const Navbar = () => {
                           onClick={() => setIsUserDropdownOpen(false)}
                         >
                           My Orders
+                        </Link>
+                        <Link 
+                          to="/track-order" 
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" 
+                          onClick={() => setIsUserDropdownOpen(false)}
+                        >
+                          Track Order
                         </Link>
                         <Link 
                           to="/account" 

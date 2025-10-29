@@ -62,9 +62,75 @@ export const CACHE_CONFIG = {
   }
 };
 
-// Optimized Query Client configuration
+// Browser storage configuration
+export const STORAGE_CONFIG = {
+  localStorage: {
+    maxAge: CACHE_TIMES.PERSISTENT,
+    serialize: JSON.stringify,
+    deserialize: JSON.parse
+  },
+  sessionStorage: {
+    maxAge: CACHE_TIMES.LONG,
+    serialize: JSON.stringify,
+    deserialize: JSON.parse
+  },
+  indexedDB: {
+    maxAge: CACHE_TIMES.PERSISTENT * 7, // 7 days
+    dbName: 'naaz-cache',
+    version: 1
+  }
+};
+
+// Memory cache for frequently accessed data
+class MemoryCache {
+  private cache = new Map<string, { data: any; timestamp: number; ttl: number }>();
+  private maxSize = 100; // Maximum number of entries
+
+  set(key: string, data: any, ttl: number = CACHE_TIMES.SHORT): void {
+    // Remove oldest entries if cache is full
+    if (this.cache.size >= this.maxSize) {
+      const oldestKey = this.cache.keys().next().value;
+      this.cache.delete(oldestKey);
+    }
+
+    this.cache.set(key, {
+      data,
+      timestamp: Date.now(),
+      ttl
+    });
+  }
+
+  get(key: string): any | null {
+    const entry = this.cache.get(key);
+    if (!entry) return null;
+
+    // Check if entry has expired
+    if (Date.now() - entry.timestamp > entry.ttl) {
+      this.cache.delete(key);
+      return null;
+    }
+
+    return entry.data;
+  }
+
+  delete(key: string): void {
+    this.cache.delete(key);
+  }
+
+  clear(): void {
+    this.cache.clear();
+  }
+
+  size(): number {
+    return this.cache.size;
+  }
+}
+
+export const memoryCache = new MemoryCache();
+
+// Optimized Query Client configuration with persistence
 export const createOptimizedQueryClient = (): QueryClient => {
-  return new QueryClient({
+  const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
         // Default cache settings
@@ -106,6 +172,10 @@ export const createOptimizedQueryClient = (): QueryClient => {
       }
     }
   });
+
+  // Note: Persistence can be added later with proper packages
+
+  return queryClient;
 };
 
 // Cache invalidation strategies

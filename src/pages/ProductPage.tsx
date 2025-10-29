@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/context/AuthContext';
 import { useCartContext } from '@/lib/context/CartContext';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import ProductReviews from '@/components/product/ProductReviews';
 
 const ProductPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -266,6 +267,11 @@ const ProductPage = () => {
               </button>
             </div>
           </div>
+        </div>
+
+        {/* Product Reviews Section */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <ProductReviews productId={id!} />
         </div>
       </main>
       <Footer />

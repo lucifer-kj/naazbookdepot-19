@@ -65,6 +65,8 @@ const Cart = lazy(() => import('./pages/Cart'));
 const Checkout = lazy(() => import('./pages/Checkout'));
 const UpiPayment = lazy(() => import('./pages/UpiPayment'));
 const OrderConfirmation = lazy(() => import('./pages/OrderConfirmation'));
+const OrderTracking = lazy(() => import('./pages/OrderTracking'));
+const TrackOrder = lazy(() => import('./pages/TrackOrder'));
 const ProductPage = lazy(() => import('./pages/ProductPage'));
 const Account = lazy(() => import('./pages/Account'));
 const Wishlist = lazy(() => import('./pages/Wishlist'));
@@ -121,6 +123,8 @@ function App() {
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/upi-payment" element={<UpiPayment />} />
                 <Route path="/order-confirmation" element={<OrderConfirmation />} />
+                <Route path="/track-order" element={<TrackOrder />} />
+                <Route path="/track-order/:orderNumber" element={<OrderTracking />} />
                 <Route path="/product/:id" element={<ProductPage />} />
                 <Route path="/account" element={<Account />} />
                 <Route path="/account/*" element={<Account />} />

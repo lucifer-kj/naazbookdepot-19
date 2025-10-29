@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
 import { useAuth } from '@/lib/context/AuthContext';
 import { useCart, useAddToCart, useUpdateCartItem, useRemoveFromCart, useClearCart } from '../hooks/useCart';
+import { useEnhancedCart } from '../hooks/useEnhancedCart';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface CartItem {
@@ -26,6 +27,15 @@ interface CartContextType {
   removeItem: (productId: string) => void;
   clearCart: () => void;
   isLoading: boolean;
+  // Enhanced cart features
+  syncWithServer: () => Promise<void>;
+  isSyncing: boolean;
+  syncStatus: {
+    isOnline: boolean;
+    hasOfflineOperations: boolean;
+    lastSynced: number;
+  };
+  recoverCart: () => Promise<void>;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -148,6 +158,9 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     animationTrigger: 0
   });
 
+  // Use enhanced cart for better persistence and sync
+  const enhancedCart = useEnhancedCart();
+  
   const { data: supabaseCartItems = [], isLoading } = useCart();
   const addToCartMutation = useAddToCart();
   const updateCartItemMutation = useUpdateCartItem();
@@ -172,9 +185,23 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, [isAuthenticated]);
 
-  // Sync Supabase cart to local state for authenticated users
+  // Sync enhanced cart to local state
   useEffect(() => {
-    if (isAuthenticated && supabaseCartItems) {
+    if (enhancedCart.cart) {
+      const cartItems: CartItem[] = enhancedCart.cart.items.map(item => ({
+        productId: item.productId,
+        name: item.name,
+        price: item.price,
+        image: item.image,
+        quantity: item.quantity
+      }));
+      dispatch({ type: 'SET_CART', items: cartItems });
+    }
+  }, [enhancedCart.cart]);
+
+  // Fallback: Sync Supabase cart to local state for authenticated users
+  useEffect(() => {
+    if (isAuthenticated && supabaseCartItems && !enhancedCart.cart.items.length) {
       const cartItems: CartItem[] = supabaseCartItems.map(item => ({
         productId: item.product_id,
         name: item.products.name,
@@ -184,7 +211,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }));
       dispatch({ type: 'SET_CART', items: cartItems });
     }
-  }, [isAuthenticated, supabaseCartItems]);
+  }, [isAuthenticated, supabaseCartItems, enhancedCart.cart.items.length]);
 
   // Save to localStorage when cart changes (for non-authenticated users)
   useEffect(() => {
@@ -221,89 +248,56 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [isAuthenticated, user]);
 
   const addItem = async (item: Omit<CartItem, 'quantity'>) => {
-    if (isAuthenticated) {
-      try {
-        await addToCartMutation.mutateAsync({
-          productId: item.productId,
-          quantity: 1
-        });
-        dispatch({ type: 'TRIGGER_ANIMATION' });
-      } catch (error) {
-        import('../utils/consoleMigration').then(({ handleApiError }) => {
-          handleApiError(error, 'add_to_cart');
-        });
-        // Fallback to local storage if Supabase fails
-        dispatch({ type: 'ADD_ITEM', item });
-      }
-    } else {
+    try {
+      // Use enhanced cart for better persistence
+      await enhancedCart.addItem({
+        productId: item.productId,
+        name: item.name,
+        price: item.price,
+        image: item.image
+      });
+      dispatch({ type: 'TRIGGER_ANIMATION' });
+    } catch (error) {
+      import('../utils/consoleMigration').then(({ handleApiError }) => {
+        handleApiError(error, 'add_to_cart');
+      });
+      // Fallback to local state
       dispatch({ type: 'ADD_ITEM', item });
     }
   };
 
   const updateQuantity = async (productId: string, quantity: number) => {
-    if (quantity <= 0) {
-      removeItem(productId);
-      return;
-    }
-
-    if (isAuthenticated) {
-      const cartItem = supabaseCartItems?.find(
-        item => item.product_id === productId
-      );
-      
-      if (cartItem) {
-        try {
-          await updateCartItemMutation.mutateAsync({
-            cartItemId: cartItem.id,
-            quantity
-          });
-        } catch (error) {
-          import('../utils/consoleMigration').then(({ handleApiError }) => {
-            handleApiError(error, 'update_cart_quantity');
-          });
-          // Fallback to local state
-          dispatch({ type: 'UPDATE_QUANTITY', productId, quantity });
-        }
-      }
-    } else {
+    try {
+      await enhancedCart.updateQuantity(productId, quantity);
+    } catch (error) {
+      import('../utils/consoleMigration').then(({ handleApiError }) => {
+        handleApiError(error, 'update_cart_quantity');
+      });
+      // Fallback to local state
       dispatch({ type: 'UPDATE_QUANTITY', productId, quantity });
     }
   };
 
   const removeItem = async (productId: string) => {
-    if (isAuthenticated) {
-      const cartItem = supabaseCartItems?.find(
-        item => item.product_id === productId
-      );
-      
-      if (cartItem) {
-        try {
-          await removeFromCartMutation.mutateAsync(cartItem.id);
-        } catch (error) {
-          import('../utils/consoleMigration').then(({ handleApiError }) => {
-            handleApiError(error, 'remove_cart_item');
-          });
-          // Fallback to local state
-          dispatch({ type: 'REMOVE_ITEM', productId });
-        }
-      }
-    } else {
+    try {
+      await enhancedCart.removeItem(productId);
+    } catch (error) {
+      import('../utils/consoleMigration').then(({ handleApiError }) => {
+        handleApiError(error, 'remove_cart_item');
+      });
+      // Fallback to local state
       dispatch({ type: 'REMOVE_ITEM', productId });
     }
   };
 
   const clearCart = async () => {
-    if (isAuthenticated) {
-      try {
-        await clearCartMutation.mutateAsync();
-      } catch (error) {
-        import('../utils/consoleMigration').then(({ handleApiError }) => {
-          handleApiError(error, 'clear_cart');
-        });
-        // Fallback to local state
-        dispatch({ type: 'CLEAR_CART' });
-      }
-    } else {
+    try {
+      await enhancedCart.clearCart();
+    } catch (error) {
+      import('../utils/consoleMigration').then(({ handleApiError }) => {
+        handleApiError(error, 'clear_cart');
+      });
+      // Fallback to local state
       dispatch({ type: 'CLEAR_CART' });
     }
   };
@@ -315,7 +309,12 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       updateQuantity, 
       removeItem, 
       clearCart,
-      isLoading
+      isLoading: isLoading || enhancedCart.isLoading,
+      // Enhanced cart features
+      syncWithServer: enhancedCart.syncWithServer,
+      isSyncing: enhancedCart.isSyncing,
+      syncStatus: enhancedCart.syncStatus,
+      recoverCart: enhancedCart.recoverCart
     }}>
       {children}
     </CartContext.Provider>

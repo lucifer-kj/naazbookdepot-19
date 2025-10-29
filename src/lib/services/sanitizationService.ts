@@ -40,13 +40,13 @@ class SanitizationService {
     }
 
     try {
-      const config = {
+      const config: any = {
         ...this.defaultHtmlConfig,
         ...(options.allowedTags && { ALLOWED_TAGS: options.allowedTags }),
         ...(options.allowedAttributes && { ALLOWED_ATTR: options.allowedAttributes })
       };
 
-      let sanitized = DOMPurify.sanitize(input, config);
+      let sanitized = DOMPurify.sanitize(input, config) as unknown as string;
 
       // Apply additional processing
       if (options.maxLength && sanitized.length > options.maxLength) {
@@ -84,7 +84,7 @@ class SanitizationService {
     }
 
     try {
-      let sanitized = DOMPurify.sanitize(input, this.strictConfig);
+      let sanitized = DOMPurify.sanitize(input, this.strictConfig) as string;
       
       // Remove any remaining HTML entities
       sanitized = sanitized
@@ -260,23 +260,23 @@ class SanitizationService {
    */
   sanitizeFormData<T extends Record<string, unknown>>(
     data: T,
-    fieldConfig: Record<keyof T, SanitizationOptions> = {}
+    fieldConfig: Partial<Record<keyof T, SanitizationOptions>> = {}
   ): T {
     const sanitized = { ...data };
 
     try {
       Object.keys(sanitized).forEach(key => {
         const value = sanitized[key];
-        const config = fieldConfig[key] || {};
+        const config = fieldConfig[key as keyof T] || {};
 
         if (typeof value === 'string') {
           if (config.stripTags) {
-            sanitized[key] = this.stripHtml(value, config.maxLength);
+            (sanitized as any)[key] = this.stripHtml(value, config.maxLength);
           } else {
-            sanitized[key] = this.sanitizeInput(value, config.maxLength);
+            (sanitized as any)[key] = this.sanitizeInput(value, config.maxLength);
           }
         } else if (Array.isArray(value)) {
-          sanitized[key] = value.map(item => 
+          (sanitized as any)[key] = value.map(item => 
             typeof item === 'string' 
               ? this.sanitizeInput(item, config.maxLength)
               : item
@@ -327,6 +327,263 @@ class SanitizationService {
       maxLength,
       preserveWhitespace: true
     });
+  }
+
+  /**
+   * Advanced input validation with multiple security checks
+   */
+  validateAndSanitizeInput(
+    input: string,
+    options: {
+      maxLength?: number;
+      minLength?: number;
+      allowedPatterns?: RegExp[];
+      blockedPatterns?: RegExp[];
+      requireAlphanumeric?: boolean;
+      allowSpecialChars?: string[];
+      customValidator?: (input: string) => boolean | { isValid: boolean; error?: string };
+    } = {}
+  ): { isValid: boolean; sanitized: string; errors: string[] } {
+    const errors: string[] = [];
+    let sanitized = input;
+
+    try {
+      // Basic sanitization
+      sanitized = this.sanitizeInput(input);
+
+      // Length validation
+      if (options.minLength && sanitized.length < options.minLength) {
+        errors.push(`Input must be at least ${options.minLength} characters long`);
+      }
+
+      if (options.maxLength && sanitized.length > options.maxLength) {
+        errors.push(`Input must be no more than ${options.maxLength} characters long`);
+        sanitized = sanitized.substring(0, options.maxLength);
+      }
+
+      // Pattern validation
+      if (options.allowedPatterns) {
+        const matchesAllowed = options.allowedPatterns.some(pattern => pattern.test(sanitized));
+        if (!matchesAllowed) {
+          errors.push('Input contains invalid characters');
+        }
+      }
+
+      if (options.blockedPatterns) {
+        const matchesBlocked = options.blockedPatterns.some(pattern => pattern.test(sanitized));
+        if (matchesBlocked) {
+          errors.push('Input contains prohibited content');
+        }
+      }
+
+      // Alphanumeric validation
+      if (options.requireAlphanumeric) {
+        const allowedChars = options.allowSpecialChars?.join('') || '';
+        const alphanumericPattern = new RegExp(`^[a-zA-Z0-9${allowedChars.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}]+$`);
+        if (!alphanumericPattern.test(sanitized)) {
+          errors.push('Input must contain only alphanumeric characters and allowed special characters');
+        }
+      }
+
+      // Custom validation
+      if (options.customValidator) {
+        const customResult = options.customValidator(sanitized);
+        if (typeof customResult === 'object') {
+          if (!customResult.isValid) {
+            errors.push(customResult.error || 'Input failed custom validation');
+          }
+        } else if (!customResult) {
+          errors.push('Input failed custom validation');
+        }
+      }
+
+      return {
+        isValid: errors.length === 0,
+        sanitized,
+        errors
+      };
+    } catch (error) {
+      sentryService.captureError(
+        error instanceof Error ? error : new Error('Input validation failed'),
+        {
+          action: 'validate_and_sanitize_input',
+          additionalData: { input: input?.substring(0, 100), options }
+        }
+      );
+
+      return {
+        isValid: false,
+        sanitized: '',
+        errors: ['Input validation failed']
+      };
+    }
+  }
+
+  /**
+   * Sanitize and validate SQL-like inputs to prevent injection
+   */
+  sanitizeSQLInput(input: string): string {
+    if (!input || typeof input !== 'string') {
+      return '';
+    }
+
+    return input
+      .replace(/['"`;\\]/g, '') // Remove dangerous SQL characters
+      .replace(/\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION|SCRIPT)\b/gi, '') // Remove SQL keywords
+      .replace(/--/g, '') // Remove SQL comments
+      .replace(/\/\*/g, '') // Remove SQL block comments start
+      .replace(/\*\//g, '') // Remove SQL block comments end
+      .trim()
+      .substring(0, 1000); // Reasonable length limit
+  }
+
+  /**
+   * Sanitize NoSQL injection attempts
+   */
+  sanitizeNoSQLInput(input: any): any {
+    if (typeof input === 'string') {
+      return this.sanitizeInput(input);
+    }
+
+    if (Array.isArray(input)) {
+      return input.map(item => this.sanitizeNoSQLInput(item));
+    }
+
+    if (typeof input === 'object' && input !== null) {
+      // Remove dangerous MongoDB operators
+      const dangerousKeys = ['$where', '$regex', '$ne', '$gt', '$lt', '$gte', '$lte', '$in', '$nin', '$exists'];
+      const sanitized: any = {};
+
+      for (const [key, value] of Object.entries(input)) {
+        if (!dangerousKeys.includes(key)) {
+          sanitized[this.sanitizeInput(key)] = this.sanitizeNoSQLInput(value);
+        }
+      }
+
+      return sanitized;
+    }
+
+    return input;
+  }
+
+  /**
+   * Validate and sanitize JSON input
+   */
+  sanitizeJSONInput(input: string, maxDepth: number = 5): { isValid: boolean; sanitized: any; error?: string } {
+    try {
+      if (!input || typeof input !== 'string') {
+        return { isValid: false, sanitized: null, error: 'Invalid JSON input' };
+      }
+
+      // Basic sanitization
+      const sanitizedInput = this.sanitizeInput(input);
+
+      // Parse JSON
+      const parsed = JSON.parse(sanitizedInput);
+
+      // Check depth to prevent deeply nested objects
+      const checkDepth = (obj: any, depth: number = 0): boolean => {
+        if (depth > maxDepth) return false;
+        
+        if (typeof obj === 'object' && obj !== null) {
+          if (Array.isArray(obj)) {
+            return obj.every(item => checkDepth(item, depth + 1));
+          } else {
+            return Object.values(obj).every(value => checkDepth(value, depth + 1));
+          }
+        }
+        
+        return true;
+      };
+
+      if (!checkDepth(parsed)) {
+        return { isValid: false, sanitized: null, error: 'JSON structure too deeply nested' };
+      }
+
+      // Recursively sanitize the parsed object
+      const sanitizeObject = (obj: any): any => {
+        if (typeof obj === 'string') {
+          return this.sanitizeInput(obj);
+        }
+        
+        if (Array.isArray(obj)) {
+          return obj.map(sanitizeObject);
+        }
+        
+        if (typeof obj === 'object' && obj !== null) {
+          const sanitized: any = {};
+          for (const [key, value] of Object.entries(obj)) {
+            sanitized[this.sanitizeInput(key)] = sanitizeObject(value);
+          }
+          return sanitized;
+        }
+        
+        return obj;
+      };
+
+      return {
+        isValid: true,
+        sanitized: sanitizeObject(parsed)
+      };
+    } catch (error) {
+      return {
+        isValid: false,
+        sanitized: null,
+        error: 'Invalid JSON format'
+      };
+    }
+  }
+
+  /**
+   * Comprehensive XSS protection
+   */
+  preventXSS(input: string, context: 'html' | 'attribute' | 'javascript' | 'css' = 'html'): string {
+    if (!input || typeof input !== 'string') {
+      return '';
+    }
+
+    let sanitized = input;
+
+    switch (context) {
+      case 'html':
+        sanitized = this.sanitizeHtml(input, { stripTags: true });
+        break;
+      
+      case 'attribute':
+        sanitized = input
+          .replace(/[<>"'&]/g, (match) => {
+            const entities: Record<string, string> = {
+              '<': '&lt;',
+              '>': '&gt;',
+              '"': '&quot;',
+              "'": '&#x27;',
+              '&': '&amp;'
+            };
+            return entities[match] || match;
+          });
+        break;
+      
+      case 'javascript':
+        sanitized = input
+          .replace(/[<>"'&\\]/g, (match) => {
+            const escapes: Record<string, string> = {
+              '<': '\\u003c',
+              '>': '\\u003e',
+              '"': '\\u0022',
+              "'": '\\u0027',
+              '&': '\\u0026',
+              '\\': '\\\\'
+            };
+            return escapes[match] || match;
+          });
+        break;
+      
+      case 'css':
+        sanitized = input.replace(/[<>"'&\\]/g, '');
+        break;
+    }
+
+    return sanitized;
   }
 }
 

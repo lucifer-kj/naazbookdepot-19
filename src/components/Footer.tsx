@@ -36,7 +36,7 @@ const Footer = () => {
             <div>
               <h3 className="text-xl font-playfair font-bold mb-4">Naaz Book Depot</h3>
               <p className="text-white/80 mb-4">
-                Publishing the Light of Knowledge since 1967. Your trusted source for authentic Islamic literature 
+                Publishing the Light of Knowledge since 1967. Your trusted source for authentic Islamic literature
                 in Kolkata, West Bengal. Over 2,000 Islamic books published under the guidance of MD Irfan.
               </p>
               <div className="text-sm text-white/70">
@@ -128,15 +128,15 @@ const Footer = () => {
                     <p>India</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center">
                   <Phone className="text-naaz-gold mr-2" size={16} />
                   <div className="text-sm text-white/80">
                     <p>+91 90510 85118</p>
-                    <p>033 2235 0051</p>
+                    <p>+91 91634 31395</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center">
                   <Mail className="text-naaz-gold mr-2" size={16} />
                   <span className="text-sm text-white/80">naazgroupofficial@gmail.com</span>

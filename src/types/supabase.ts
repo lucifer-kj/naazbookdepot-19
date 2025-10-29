@@ -359,6 +359,12 @@ export interface Database {
           would_recommend: boolean
           verified_purchase: boolean
           helpful_count: number
+          status: 'pending' | 'approved' | 'rejected'
+          moderated_by: string | null
+          moderated_at: string | null
+          moderation_notes: string | null
+          reported_count: number
+          is_featured: boolean
           created_at: string
           updated_at: string
         }
@@ -372,6 +378,12 @@ export interface Database {
           would_recommend?: boolean
           verified_purchase?: boolean
           helpful_count?: number
+          status?: 'pending' | 'approved' | 'rejected'
+          moderated_by?: string | null
+          moderated_at?: string | null
+          moderation_notes?: string | null
+          reported_count?: number
+          is_featured?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -385,8 +397,142 @@ export interface Database {
           would_recommend?: boolean
           verified_purchase?: boolean
           helpful_count?: number
+          status?: 'pending' | 'approved' | 'rejected'
+          moderated_by?: string | null
+          moderated_at?: string | null
+          moderation_notes?: string | null
+          reported_count?: number
+          is_featured?: boolean
           created_at?: string
           updated_at?: string
+        }
+      }
+      review_reports: {
+        Row: {
+          id: number
+          review_id: number
+          reporter_id: string
+          reason: 'spam' | 'inappropriate' | 'fake' | 'offensive' | 'other'
+          description: string | null
+          status: 'pending' | 'reviewed' | 'resolved'
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          review_id: number
+          reporter_id: string
+          reason: 'spam' | 'inappropriate' | 'fake' | 'offensive' | 'other'
+          description?: string | null
+          status?: 'pending' | 'reviewed' | 'resolved'
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          review_id?: number
+          reporter_id?: string
+          reason?: 'spam' | 'inappropriate' | 'fake' | 'offensive' | 'other'
+          description?: string | null
+          status?: 'pending' | 'reviewed' | 'resolved'
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      order_feedback: {
+        Row: {
+          id: number
+          order_id: number
+          user_id: string
+          overall_rating: number
+          delivery_rating: number
+          packaging_rating: number
+          would_recommend: boolean
+          feedback_text: string | null
+          improvement_suggestions: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          order_id: number
+          user_id: string
+          overall_rating: number
+          delivery_rating: number
+          packaging_rating: number
+          would_recommend?: boolean
+          feedback_text?: string | null
+          improvement_suggestions?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          order_id?: number
+          user_id?: string
+          overall_rating?: number
+          delivery_rating?: number
+          packaging_rating?: number
+          would_recommend?: boolean
+          feedback_text?: string | null
+          improvement_suggestions?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      review_analytics: {
+        Row: {
+          id: number
+          review_id: number
+          sentiment_score: number | null
+          sentiment_label: 'positive' | 'negative' | 'neutral' | null
+          keywords: string[] | null
+          readability_score: number | null
+          word_count: number | null
+          analyzed_at: string
+        }
+        Insert: {
+          id?: number
+          review_id: number
+          sentiment_score?: number | null
+          sentiment_label?: 'positive' | 'negative' | 'neutral' | null
+          keywords?: string[] | null
+          readability_score?: number | null
+          word_count?: number | null
+          analyzed_at?: string
+        }
+        Update: {
+          id?: number
+          review_id?: number
+          sentiment_score?: number | null
+          sentiment_label?: 'positive' | 'negative' | 'neutral' | null
+          keywords?: string[] | null
+          readability_score?: number | null
+          word_count?: number | null
+          analyzed_at?: string
+        }
+      }
+      review_helpful_votes: {
+        Row: {
+          id: number
+          review_id: number
+          user_id: string
+          is_helpful: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          review_id: number
+          user_id: string
+          is_helpful: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          review_id?: number
+          user_id?: string
+          is_helpful?: boolean
+          created_at?: string
         }
       }
       blog_categories: {

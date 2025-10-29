@@ -115,55 +115,46 @@ const About = () => {
         </div>
       </section>
 
-      {/* Team Section */}
-      <section className="bg-gray-50 py-16">
+      {/* Tribute to MD Irfan Section */}
+      <section className="bg-gradient-to-b from-gray-50 to-naaz-cream/30 py-20">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Meet Our Team</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Our dedicated team works tirelessly to bring you the best books and service.
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            <div className="text-center">
-              <img 
-                src="https://api.dicebear.com/7.x/avataaars/svg?seed=founder" 
-                alt="Founder" 
-                className="w-32 h-32 rounded-full mx-auto mb-4"
-              />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Mohammed Naaz</h3>
-              <p className="text-naaz-green font-medium mb-2">Founder & CEO</p>
-              <p className="text-gray-600 text-sm">
-                Passionate about books and education, leading the vision of making knowledge accessible to all.
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center max-w-6xl mx-auto">
+            <div>
+              <h2 className="text-4xl md:text-5xl font-bold text-naaz-green mb-6">
+                A Legendary Legacy Since 1967
+              </h2>
+              <div className="w-24 h-1 bg-naaz-gold mb-6"></div>
+              <p className="text-gray-700 mb-6 leading-relaxed text-lg">
+                Founded in the heart of Kolkata, Naaz Book Depot has been a beacon of Islamic knowledge 
+                for over five decades under the visionary leadership of MD Irfan. With over 60 years of 
+                experience, he has personally overseen the publication of more than 2,000 Islamic titles.
+              </p>
+              <p className="text-gray-700 mb-8 leading-relaxed text-lg">
+                Known throughout India as a legendary figure in Islamic publishing, MD Irfan continues 
+                this tradition of authentic Islamic literature, serving the Ummah with unwavering dedication 
+                and commitment to spreading Qur'anic knowledge.
               </p>
             </div>
             
-            <div className="text-center">
-              <img 
-                src="https://api.dicebear.com/7.x/avataaars/svg?seed=manager" 
-                alt="Operations Manager" 
-                className="w-32 h-32 rounded-full mx-auto mb-4"
+            <div className="bg-gradient-to-br from-naaz-cream to-white p-8 rounded-2xl shadow-lg border border-naaz-gold/20">
+              <img
+                src="lovable-uploads/Owner.jpg"
+                alt="MD Irfan, Director of Naaz Book Depot"
+                className="w-full h-auto rounded-lg shadow-md"
+                loading="lazy"
               />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Sarah Ahmed</h3>
-              <p className="text-naaz-green font-medium mb-2">Operations Manager</p>
-              <p className="text-gray-600 text-sm">
-                Ensures smooth operations and exceptional customer service across all channels.
-              </p>
-            </div>
-            
-            <div className="text-center">
-              <img 
-                src="https://api.dicebear.com/7.x/avataaars/svg?seed=curator" 
-                alt="Book Curator" 
-                className="w-32 h-32 rounded-full mx-auto mb-4"
-              />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Dr. Rajesh Kumar</h3>
-              <p className="text-naaz-green font-medium mb-2">Chief Book Curator</p>
-              <p className="text-gray-600 text-sm">
-                Expert in literature and education, carefully selecting books that inspire and educate.
-              </p>
-            </div>
+              <div className="mt-6 text-center">
+                <p className="text-lg text-gray-700 font-semibold">
+                  MD Irfan
+                </p>
+                <p className="text-sm text-naaz-gold font-semibold mt-1">
+                  Founder, Naaz Book Depot
+                </p>
+                <p className="text-xs text-gray-600 mt-2">
+                  A legendary figure in Islamic publishing
+                </p>
+              </div>
+            </div>  
           </div>
         </div>
       </section>

@@ -3,6 +3,9 @@ import { ErrorContext } from './sentryService';
 import { supabase } from '../supabase';
 import { Database } from '../../types/supabase';
 import { ApiResponseHandler, ApiResult } from './ApiResponseHandler';
+import { securityMiddleware } from '../middleware/securityMiddleware';
+import { csrfService } from './csrfService';
+import { sessionService } from './sessionService';
 
 export interface ApiClientConfig {
   baseURL?: string;
@@ -35,6 +38,63 @@ export class ApiClient {
     };
 
     this.fetchWrapper = apiErrorHandler.createFetchWrapper();
+    
+    // Initialize security middleware
+    this.initializeSecurity();
+  }
+
+  /**
+   * Initialize security middleware and interceptors
+   */
+  private initializeSecurity(): void {
+    // Set up request interceptor for security
+    const originalFetchWrapper = this.fetchWrapper;
+    
+    this.fetchWrapper = async <T>(
+      url: string,
+      options: RequestInit = {},
+      context?: ErrorContext
+    ): Promise<T> => {
+      // Apply security middleware to request
+      const securityResult = await securityMiddleware.validateRequest({
+        headers: options.headers as Record<string, string>,
+        method: options.method,
+        url,
+        body: options.body
+      });
+
+      if (!securityResult.isValid) {
+        throw new Error(`Security validation failed: ${securityResult.errors.join(', ')}`);
+      }
+
+      // Add security headers
+      const enhancedOptions: RequestInit = {
+        ...options,
+        headers: {
+          ...options.headers,
+          ...securityResult.headers
+        }
+      };
+
+      // Add CSRF token for state-changing requests
+      if (this.isStateChangingRequest(options.method)) {
+        const csrfHeaders = csrfService.getTokenHeader();
+        enhancedOptions.headers = {
+          ...enhancedOptions.headers,
+          ...csrfHeaders
+        };
+      }
+
+      return originalFetchWrapper<T>(url, enhancedOptions, context);
+    };
+  }
+
+  /**
+   * Check if request method is state-changing
+   */
+  private isStateChangingRequest(method?: string): boolean {
+    if (!method) return false;
+    return ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method.toUpperCase());
   }
 
   /**

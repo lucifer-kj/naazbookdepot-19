@@ -34,32 +34,90 @@ export default defineConfig(({ mode }) => {
           manualChunks: (id) => {
             // Vendor chunk for core React libraries
             if (id.includes('node_modules')) {
-              if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
-                return 'vendor';
+              // Core React ecosystem
+              if (id.includes('react') || id.includes('react-dom')) {
+                return 'vendor-react';
               }
-              // UI library chunk for Radix UI components
+              if (id.includes('react-router')) {
+                return 'vendor-router';
+              }
+              
+              // UI library chunks
               if (id.includes('@radix-ui')) {
-                return 'ui';
+                return 'vendor-ui';
               }
-              // Supabase and query libraries
-              if (id.includes('@supabase') || id.includes('@tanstack')) {
-                return 'data';
+              if (id.includes('lucide-react') || id.includes('react-icons')) {
+                return 'vendor-icons';
               }
-              // Admin-specific libraries
-              if (id.includes('recharts') || id.includes('react-table')) {
-                return 'admin';
+              
+              // Data and API libraries
+              if (id.includes('@supabase')) {
+                return 'vendor-supabase';
               }
+              if (id.includes('@tanstack/react-query')) {
+                return 'vendor-query';
+              }
+              
+              // Form and validation libraries
+              if (id.includes('react-hook-form') || id.includes('zod') || id.includes('@hookform')) {
+                return 'vendor-forms';
+              }
+              
+              // Animation and motion libraries
+              if (id.includes('framer-motion') || id.includes('embla-carousel')) {
+                return 'vendor-animation';
+              }
+              
+              // Admin-specific heavy libraries
+              if (id.includes('recharts') || id.includes('@tanstack/react-table')) {
+                return 'vendor-admin';
+              }
+              
+              // Utility libraries
+              if (id.includes('date-fns') || id.includes('clsx') || id.includes('class-variance-authority')) {
+                return 'vendor-utils';
+              }
+              
+              // Security and monitoring
+              if (id.includes('@sentry') || id.includes('dompurify')) {
+                return 'vendor-security';
+              }
+              
+              // Payment libraries
+              if (id.includes('paypal') || id.includes('stripe')) {
+                return 'vendor-payment';
+              }
+              
               // Other vendor libraries
               return 'vendor-misc';
             }
-            // Admin routes chunk
+            
+            // Application chunks
             if (id.includes('src/pages/admin') || id.includes('src/components/admin')) {
               return 'admin';
             }
+            if (id.includes('src/pages/checkout') || id.includes('src/components/checkout')) {
+              return 'checkout';
+            }
+            if (id.includes('src/pages/auth') || id.includes('src/components/auth')) {
+              return 'auth';
+            }
+            if (id.includes('src/lib/services/payment')) {
+              return 'payment';
+            }
+            if (id.includes('src/lib/services/image') || id.includes('src/lib/hooks/useImage')) {
+              return 'image-optimization';
+            }
           },
           chunkFileNames: (chunkInfo) => {
-            const facadeModuleId = chunkInfo.facadeModuleId ? chunkInfo.facadeModuleId.split('/').pop() : 'chunk';
-            return `assets/[name]-[hash].js`;
+            // Use more descriptive chunk names
+            if (chunkInfo.name.startsWith('vendor-')) {
+              return `assets/vendor/[name]-[hash].js`;
+            }
+            if (['admin', 'checkout', 'auth', 'payment'].includes(chunkInfo.name)) {
+              return `assets/features/[name]-[hash].js`;
+            }
+            return `assets/chunks/[name]-[hash].js`;
           },
           assetFileNames: (assetInfo) => {
             const info = assetInfo.name?.split('.') || [];
@@ -70,12 +128,20 @@ export default defineConfig(({ mode }) => {
             if (/css/i.test(ext)) {
               return `assets/css/[name]-[hash][extname]`;
             }
+            if (/woff2?|eot|ttf|otf/i.test(ext)) {
+              return `assets/fonts/[name]-[hash][extname]`;
+            }
             return `assets/[name]-[hash][extname]`;
           },
         },
         external: [],
+        treeshake: {
+          moduleSideEffects: false,
+          propertyReadSideEffects: false,
+          unknownGlobalSideEffects: false,
+        },
       },
-      chunkSizeWarningLimit: 1000,
+      chunkSizeWarningLimit: 500,
       reportCompressedSize: isProduction,
     },
     optimizeDeps: {

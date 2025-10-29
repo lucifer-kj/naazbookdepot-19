@@ -17,7 +17,7 @@ describe('Authentication Integration Tests', () => {
   });
 
   afterEach(async () => {
-    // Clean up any auth state
+    // Clean up unknown auth state
     await supabase.auth.signOut();
   });
 

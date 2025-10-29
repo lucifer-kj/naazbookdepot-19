@@ -21,7 +21,7 @@ test.describe('Shopping Flow', () => {
     await productCards.first().click();
     
     // Should navigate to product detail page
-    await expect(page).toHaveURL(/\/products\/[^\/]+$/);
+    await expect(page).toHaveURL(/\/products\/[^/]+$/);
     
     // Should show product details
     await expect(page.locator('[data-testid="product-title"]')).toBeVisible();

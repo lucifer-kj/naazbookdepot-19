@@ -16,7 +16,7 @@ export interface FormValidationConfig<T extends FieldValues> {
 
 export interface UseFormValidationReturn<T extends FieldValues> extends UseFormReturn<T> {
   handleSubmitWithValidation: (onValid: (data: T) => Promise<void> | void) => (e?: React.BaseSyntheticEvent) => Promise<void>;
-  validateField: (fieldName: Path<T>, value: any) => Promise<string | null>;
+  validateField: (fieldName: Path<T>, value: unknown) => Promise<string | null>;
   sanitizeFormData: (data: T) => T;
   isSubmitting: boolean;
   submitError: string | null;
@@ -51,7 +51,7 @@ export function useFormValidation<T extends FieldValues>(
 
   const sanitizeFormData = React.useCallback((data: T): T => {
     try {
-      return sanitizationService.sanitizeFormData(data as Record<string, any>, sanitizationConfig || {}) as T;
+      return sanitizationService.sanitizeFormData(data as Record<string, unknown>, sanitizationConfig || {}) as T;
     } catch (error) {
       sentryService.captureError(
         error instanceof Error ? error : new Error('Form data sanitization failed'),
@@ -66,7 +66,7 @@ export function useFormValidation<T extends FieldValues>(
 
   const validateField = React.useCallback(async (
     fieldName: Path<T>,
-    value: any
+    value: unknown
   ): Promise<string | null> => {
     try {
       // Simple validation - just check if the value passes basic validation
@@ -145,10 +145,10 @@ export function useFormValidation<T extends FieldValues>(
 
   // Enhanced setValue with sanitization
   const setValueWithSanitization = React.useCallback(
-    (name: Path<T>, value: any, options?: Parameters<typeof form.setValue>[2]) => {
+    (name: Path<T>, value: unknown, options?: Parameters<typeof form.setValue>[2]) => {
       if (sanitizeOnChange && typeof value === 'string') {
         const sanitizedValue = sanitizationService.sanitizeInput(value);
-        form.setValue(name, sanitizedValue as any, options);
+        form.setValue(name, sanitizedValue as unknown, options);
       } else {
         form.setValue(name, value, options);
       }
@@ -213,7 +213,7 @@ export function useAuthForm(type: 'signin' | 'signup' | 'forgot' | 'reset') {
 
   React.useEffect(() => {
     getSchema().then(setSchema);
-  }, [type]);
+  }, [type, getSchema]);
 
   return useFormValidation({
     schema: schema!,

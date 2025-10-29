@@ -71,7 +71,7 @@ const NewsletterSection = () => {
           </form>
           
           <p className="text-naaz-cream/80 text-sm mt-4">
-            We respect your privacy. Unsubscribe at any time.
+            We respect your privacy. Unsubscribe at unknown time.
           </p>
         </div>
       </div>

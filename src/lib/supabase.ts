@@ -39,7 +39,7 @@ export const supabase = createClient<Database>(
 );
 
 // Enhanced Supabase error handler
-export const handleSupabaseError = (error: any, operation: string, context?: any) => {
+export const handleSupabaseError = (error: unknown, operation: string, context?: Record<string, unknown>) => {
   return apiErrorHandler.handleSupabaseError(error, operation, {
     component: 'supabase',
     additionalData: context

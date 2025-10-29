@@ -28,7 +28,7 @@ export class EmailNotificationService {
             table: 'orders'
           },
           (payload) => {
-            this.handleOrderStatusChange(payload.new as any, payload.old as any);
+            this.handleOrderStatusChange(payload.new as unknown, payload.old as unknown);
           }
         )
         .on(
@@ -39,13 +39,12 @@ export class EmailNotificationService {
             table: 'orders'
           },
           (payload) => {
-            this.handleNewOrder(payload.new as any);
+            this.handleNewOrder(payload.new as unknown);
           }
         )
         .subscribe();
 
       console.log('Email notification system initialized');
-      return subscription;
     } catch (error) {
       console.error('Error initializing email notifications:', error);
     }
@@ -54,7 +53,7 @@ export class EmailNotificationService {
   /**
    * Handle new order creation
    */
-  private async handleNewOrder(order: any): Promise<void> {
+  private async handleNewOrder(order: unknown): Promise<void> {
     try {
       // Get full order with items
       const fullOrder = await this.getOrderWithItems(order.id);
@@ -66,7 +65,7 @@ export class EmailNotificationService {
 
       // Send order confirmation email
       await emailService.sendOrderConfirmation(fullOrder);
-      
+
       // Log notification
       await this.logNotification(fullOrder.id, 'order_confirmation', 'sent');
     } catch (error) {
@@ -77,7 +76,7 @@ export class EmailNotificationService {
   /**
    * Handle order status changes
    */
-  private async handleOrderStatusChange(newOrder: any, oldOrder: any): Promise<void> {
+  private async handleOrderStatusChange(newOrder: unknown, oldOrder: unknown): Promise<void> {
     try {
       // Only process if status actually changed
       if (newOrder.status === oldOrder.status) return;
@@ -92,7 +91,7 @@ export class EmailNotificationService {
 
       // Send appropriate notification based on new status
       await this.sendStatusNotification(fullOrder, newOrder.status, oldOrder.status);
-      
+
       // Log notification
       await this.logNotification(fullOrder.id, `status_${newOrder.status}`, 'sent');
     } catch (error) {
@@ -104,43 +103,44 @@ export class EmailNotificationService {
    * Send status-specific notification
    */
   private async sendStatusNotification(
-    order: OrderWithItems, 
-    newStatus: OrderStatus, 
+    order: OrderWithItems,
+    newStatus: OrderStatus,
     oldStatus: OrderStatus
   ): Promise<void> {
     switch (newStatus) {
       case 'confirmed':
         await emailService.sendOrderStatusUpdate(order, newStatus, 'Your order has been confirmed and is being processed');
         break;
-        
+
       case 'processing':
         await emailService.sendOrderStatusUpdate(order, newStatus, 'Your order is being prepared for shipment');
         break;
-        
-      case 'shipped':
+
+      case 'shipped': {
         // Check if user wants shipping notifications
         const wantsShipping = await this.shouldSendOrderEmail(order.email, 'shipping_notifications');
         if (wantsShipping) {
           await emailService.sendShippingNotification(
-            order, 
-            order.tracking_number || '', 
+            order,
+            order.tracking_number || '',
             order.shipped_at ? new Date(order.shipped_at).toLocaleDateString('en-IN') : undefined
           );
         }
         break;
-        
+      }
+
       case 'delivered':
         await emailService.sendDeliveryConfirmation(order);
         break;
-        
+
       case 'cancelled':
         await emailService.sendOrderStatusUpdate(order, newStatus, 'Your order has been cancelled');
         break;
-        
+
       case 'refunded':
         await emailService.sendOrderStatusUpdate(order, newStatus, 'Your order has been refunded');
         break;
-        
+
       default:
         await emailService.sendOrderStatusUpdate(order, newStatus);
         break;
@@ -204,8 +204,8 @@ export class EmailNotificationService {
    * Log email notification for tracking
    */
   private async logNotification(
-    orderId: number, 
-    type: string, 
+    orderId: number,
+    type: string,
     status: 'sent' | 'failed'
   ): Promise<void> {
     try {
@@ -224,8 +224,8 @@ export class EmailNotificationService {
    * Send marketing email to newsletter subscribers
    */
   async sendMarketingEmail(
-    subject: string, 
-    content: string, 
+    subject: string,
+    content: string,
     targetSegment?: 'all' | 'new_arrivals' | 'special_offers' | 'islamic_insights'
   ): Promise<{ sent: number; failed: number }> {
     let sent = 0;
@@ -253,7 +253,7 @@ export class EmailNotificationService {
       const batchSize = 50;
       for (let i = 0; i < subscribers.length; i += batchSize) {
         const batch = subscribers.slice(i, i + batchSize);
-        
+
         const promises = batch.map(async (subscriber) => {
           try {
             await emailService.sendMarketingEmail(
@@ -270,7 +270,7 @@ export class EmailNotificationService {
         });
 
         await Promise.allSettled(promises);
-        
+
         // Add delay between batches
         if (i + batchSize < subscribers.length) {
           await new Promise(resolve => setTimeout(resolve, 1000));
@@ -298,7 +298,7 @@ export class EmailNotificationService {
   /**
    * Send abandoned cart recovery email
    */
-  async sendAbandonedCartEmail(userId: string, cartItems: any[]): Promise<boolean> {
+  async sendAbandonedCartEmail(userId: string, cartItems: unknown[]): Promise<boolean> {
     try {
       // Get user details
       const { data: profile } = await supabase
@@ -358,7 +358,7 @@ export class EmailNotificationService {
     try {
       // This would typically be run as a scheduled job
       // For now, we'll check for carts abandoned in the last 24 hours
-      
+
       const oneDayAgo = new Date();
       oneDayAgo.setDate(oneDayAgo.getDate() - 1);
 
@@ -381,17 +381,17 @@ export class EmailNotificationService {
           acc[item.user_id] = [];
         }
         acc[item.user_id].push({
-          title: (item.products as any)?.title || 'Product',
-          price: (item.products as any)?.price || 0,
+          title: (item.products as unknown)?.title || 'Product',
+          price: (item.products as unknown)?.price || 0,
           quantity: item.quantity
         });
         return acc;
-      }, {} as Record<string, any[]>);
+      }, {} as Record<string, unknown[]>);
 
       // Send abandoned cart emails
       for (const [userId, items] of Object.entries(userCarts)) {
         await this.sendAbandonedCartEmail(userId, items);
-        
+
         // Add delay to avoid rate limiting
         await new Promise(resolve => setTimeout(resolve, 500));
       }

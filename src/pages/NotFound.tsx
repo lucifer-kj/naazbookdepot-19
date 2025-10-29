@@ -135,7 +135,7 @@ const NotFound = () => {
           <div className="bg-blue-50 rounded-lg p-6">
             <h4 className="font-medium text-blue-900 mb-2">Still Need Help?</h4>
             <p className="text-blue-800 mb-4">
-              Our customer support team is here to assist you with any questions or concerns.
+              Our customer support team is here to assist you with unknown questions or concerns.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link to="/contact">

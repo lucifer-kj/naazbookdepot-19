@@ -206,7 +206,7 @@ class CSRFService {
   /**
    * Middleware function to add CSRF token to requests
    */
-  addCSRFToRequest = (config: any) => {
+  addCSRFToRequest = (config: unknown) => {
     const token = this.getToken();
     
     if (!config.headers) {

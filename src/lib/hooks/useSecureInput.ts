@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { sanitizationService } from '../services/sanitizationService';
-import { fileUploadSecurity, FileSecurityConfig, FileValidationResult } from '../services/fileUploadSecurity';
+import { fileUploadSecurity, FileSecurityConfig, FileValidationResult, fileSecurityPolicies } from '../services/fileUploadSecurity';
 import { useAdvancedRateLimit } from './useRateLimit';
 import { rateLimitConfigs } from '../services/rateLimitService';
 import sentryService from '../services/sentryService';
@@ -217,7 +217,6 @@ export function useSecureFileUpload(
 
   const getSecurityConfig = useCallback((): FileSecurityConfig => {
     if (typeof options.securityPolicy === 'string') {
-      const { fileSecurityPolicies } = require('../services/fileUploadSecurity');
       return fileSecurityPolicies[options.securityPolicy];
     }
     return options.securityPolicy;
@@ -331,7 +330,7 @@ export function useSecureFileUpload(
 /**
  * Hook for secure form validation (combines multiple inputs)
  */
-export function useSecureForm<T extends Record<string, any>>(
+export function useSecureForm<T extends Record<string, unknown>>(
   initialValues: T,
   validationRules: Record<keyof T, SecureInputOptions>
 ) {
@@ -340,7 +339,7 @@ export function useSecureForm<T extends Record<string, any>>(
   const [isValid, setIsValid] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
 
-  const validateField = useCallback(async (fieldName: keyof T, value: any): Promise<any> => {
+  const validateField = useCallback(async (fieldName: keyof T, value: unknown): Promise<unknown> => {
     const rules = validationRules[fieldName];
     if (!rules) return { isValid: true, sanitized: value, errors: [] };
 
@@ -374,7 +373,7 @@ export function useSecureForm<T extends Record<string, any>>(
     return formIsValid;
   }, [values, validateField]);
 
-  const updateField = useCallback((fieldName: keyof T, value: any) => {
+  const updateField = useCallback((fieldName: keyof T, value: unknown) => {
     setValues(prev => ({ ...prev, [fieldName]: value }));
     
     // Real-time validation for the field

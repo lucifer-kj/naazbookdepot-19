@@ -5,7 +5,7 @@ interface AdminValidationResult {
   test: string;
   status: 'pass' | 'fail' | 'warning';
   message: string;
-  details?: any;
+  details?: Record<string, unknown>;
 }
 
 export class AdminDashboardValidator {
@@ -254,7 +254,7 @@ export class AdminDashboardValidator {
     }
   }
 
-  private addResult(test: string, status: 'pass' | 'fail' | 'warning', message: string, details?: any): void {
+  private addResult(test: string, status: 'pass' | 'fail' | 'warning', message: string, details?: Record<string, unknown>): void {
     this.results.push({ test, status, message, details });
     
     const emoji = status === 'pass' ? '✅' : status === 'fail' ? '❌' : '⚠️';

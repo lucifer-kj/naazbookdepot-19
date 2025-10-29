@@ -75,7 +75,7 @@ export function useImageUpload(options: UseImageUploadOptions = {}): UseImageUpl
         return basicResult;
       }
 
-      let result: EnhancedUploadResult = basicResult;
+      const result: EnhancedUploadResult = basicResult;
 
       // Step 2: Generate optimized formats if requested
       if (optimizeFormats) {

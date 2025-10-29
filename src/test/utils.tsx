@@ -29,8 +29,7 @@ const customRender = (
   options?: Omit<RenderOptions, 'wrapper'>
 ) => render(ui, { wrapper: AllTheProviders, ...options });
 
-// Re-export everything
-export * from '@testing-library/react';
+// Re-exports moved to avoid react-refresh warnings
 export { customRender as render };
 
 // Mock data generators
@@ -101,23 +100,11 @@ export const mockOrder = {
   updated_at: new Date().toISOString()
 };
 
-// Test helpers
-export const createMockApiResponse = <T>(data: T, delay = 0): Promise<T> => {
-  return new Promise((resolve) => {
-    setTimeout(() => resolve(data), delay);
-  });
-};
-
-export const createMockApiError = (status = 500, message = 'Server Error') => {
-  const error = new Error(message) as any;
-  error.status = status;
-  error.response = { status, statusText: message };
-  return Promise.reject(error);
-};
+// Test helpers moved to testHelpers.ts
 
 // Form test helpers
 export const fillForm = async (
-  getByLabelText: any,
+  getByLabelText: unknown,
   formData: Record<string, string>
 ) => {
   const userEvent = (await import('@testing-library/user-event')).default;
@@ -130,7 +117,7 @@ export const fillForm = async (
   }
 };
 
-export const submitForm = async (getByRole: any, buttonText = 'submit') => {
+export const submitForm = async (getByRole: unknown, buttonText = 'submit') => {
   const userEvent = (await import('@testing-library/user-event')).default;
   const user = userEvent.setup();
   

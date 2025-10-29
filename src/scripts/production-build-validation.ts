@@ -7,10 +7,10 @@ import { BuildValidator } from './build-validation';
 import { healthCheckService } from '@/lib/services/HealthCheck';
 
 interface ProductionReadinessReport {
-  buildValidation: any;
-  healthCheck: any;
-  performanceBaseline: any;
-  securityChecks: any;
+  buildValidation: unknown;
+  healthCheck: unknown;
+  performanceBaseline: unknown;
+  securityChecks: unknown;
   overallStatus: 'ready' | 'needs_attention' | 'not_ready';
   recommendations: string[];
 }
@@ -53,7 +53,7 @@ class ProductionBuildValidator {
     return report;
   }
 
-  private async validateHealthChecks(): Promise<any> {
+  private async validateHealthChecks(): Promise<unknown> {
     console.log('🏥 Validating health check systems...');
     
     try {
@@ -73,7 +73,7 @@ class ProductionBuildValidator {
     }
   }
 
-  private async validatePerformanceBaseline(): Promise<any> {
+  private async validatePerformanceBaseline(): Promise<unknown> {
     console.log('⚡ Validating performance baseline...');
     
     try {
@@ -101,7 +101,7 @@ class ProductionBuildValidator {
     }
   }
 
-  private checkBundleSize(): any {
+  private checkBundleSize(): unknown {
     // In a real implementation, this would analyze the actual build output
     const estimatedBundleSize = 500; // KB
     const maxRecommendedSize = 1000; // KB
@@ -114,7 +114,7 @@ class ProductionBuildValidator {
     };
   }
 
-  private checkLoadTime(): any {
+  private checkLoadTime(): unknown {
     // Simulate load time check
     const estimatedLoadTime = 2.5; // seconds
     const maxRecommendedTime = 3.0; // seconds
@@ -127,7 +127,7 @@ class ProductionBuildValidator {
     };
   }
 
-  private checkMemoryUsage(): any {
+  private checkMemoryUsage(): unknown {
     // Check if memory monitoring is available
     const hasMemoryAPI = 'memory' in performance;
 
@@ -138,7 +138,7 @@ class ProductionBuildValidator {
     };
   }
 
-  private checkCacheStrategy(): any {
+  private checkCacheStrategy(): unknown {
     // Validate caching configuration
     const hasCacheConfig = true; // We implemented cache configuration
 
@@ -149,7 +149,7 @@ class ProductionBuildValidator {
     };
   }
 
-  private async validateSecurityConfiguration(): Promise<any> {
+  private async validateSecurityConfiguration(): Promise<unknown> {
     console.log('🔒 Validating security configuration...');
     
     try {
@@ -176,7 +176,7 @@ class ProductionBuildValidator {
     }
   }
 
-  private checkEnvironmentSecurity(): any {
+  private checkEnvironmentSecurity(): unknown {
     const requiredVars = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY'];
     const missingVars = requiredVars.filter(varName => !import.meta.env[varName]);
 
@@ -187,7 +187,7 @@ class ProductionBuildValidator {
     };
   }
 
-  private checkCSP(): any {
+  private checkCSP(): unknown {
     // In a real implementation, this would check actual CSP headers
     return {
       status: 'warn',
@@ -196,7 +196,7 @@ class ProductionBuildValidator {
     };
   }
 
-  private checkHTTPS(): any {
+  private checkHTTPS(): unknown {
     const isHTTPS = window.location.protocol === 'https:' || window.location.hostname === 'localhost';
 
     return {
@@ -206,7 +206,7 @@ class ProductionBuildValidator {
     };
   }
 
-  private checkErrorHandling(): any {
+  private checkErrorHandling(): unknown {
     // Check if error handling is properly configured
     const hasErrorBoundary = true; // We implemented error boundaries
     const hasErrorMonitoring = true; // We implemented error monitoring
@@ -219,7 +219,7 @@ class ProductionBuildValidator {
     };
   }
 
-  private determineOverallStatus(validations: any[]): 'ready' | 'needs_attention' | 'not_ready' {
+  private determineOverallStatus(validations: unknown[]): 'ready' | 'needs_attention' | 'not_ready' {
     const failures = validations.filter(v => v.status === 'fail').length;
     const warnings = validations.filter(v => v.status === 'warn').length;
 
@@ -234,7 +234,7 @@ class ProductionBuildValidator {
     return 'ready';
   }
 
-  private generateRecommendations(validations: any[]): string[] {
+  private generateRecommendations(validations: unknown[]): string[] {
     const recommendations: string[] = [];
 
     validations.forEach(validation => {

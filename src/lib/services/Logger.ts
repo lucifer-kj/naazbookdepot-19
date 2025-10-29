@@ -201,7 +201,7 @@ export class Logger {
   userAction(
     action: string,
     component: string,
-    details?: Record<string, any>,
+    details?: Record<string, unknown>,
     context?: Partial<LogContext>
   ): void {
     const message = `User action: ${action} in ${component}`;
@@ -273,7 +273,7 @@ export class Logger {
   componentLifecycle(
     component: string,
     event: 'mount' | 'unmount' | 'update' | 'error',
-    details?: Record<string, any>
+    details?: Record<string, unknown>
   ): void {
     if (!import.meta.env.DEV) return;
 

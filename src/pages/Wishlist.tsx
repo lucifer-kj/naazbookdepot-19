@@ -15,7 +15,7 @@ const Wishlist = () => {
   const { mutate: removeFromWishlist } = useRemoveFromWishlist();
   const { mutate: addToCart } = useAddToCart();
 
-  const handleAddToCart = (item: any) => {
+  const handleAddToCart = (item: unknown) => {
     addToCart({
       productId: item.products.id,
       quantity: 1

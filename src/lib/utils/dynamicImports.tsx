@@ -11,7 +11,7 @@ interface LazyComponentOptions {
 /**
  * Enhanced lazy loading with better error handling and preloading
  */
-export function createLazyComponent<T extends ComponentType<any>>(
+export function createLazyComponent<T extends ComponentType<unknown>>(
   importFn: () => Promise<{ default: T }>,
   options: LazyComponentOptions = {}
 ): ComponentType {
@@ -49,7 +49,7 @@ export function createLazyComponent<T extends ComponentType<any>>(
   }
 
   // Return the lazy component with custom fallback
-  const WrappedComponent = (props: any) => {
+  const WrappedComponent = (props: unknown) => {
     if (fallback) {
       const FallbackComponent = fallback;
       return <FallbackComponent {...props} />;
@@ -64,7 +64,7 @@ export function createLazyComponent<T extends ComponentType<any>>(
   };
 
   // Add preload method to the component
-  (LazyComponent as any).preload = () => importWithRetry();
+  (LazyComponent as unknown).preload = () => importWithRetry();
 
   return LazyComponent;
 }
@@ -72,7 +72,7 @@ export function createLazyComponent<T extends ComponentType<any>>(
 /**
  * Preload multiple components
  */
-export function preloadComponents(components: Array<() => Promise<any>>): Promise<any[]> {
+export function preloadComponents(components: Array<() => Promise<unknown>>): Promise<unknown[]> {
   return Promise.all(components.map(comp => comp().catch(() => null)));
 }
 
@@ -80,7 +80,7 @@ export function preloadComponents(components: Array<() => Promise<any>>): Promis
  * Create route-based lazy components with automatic preloading
  */
 export const createRouteComponent = (
-  importFn: () => Promise<{ default: ComponentType<any> }>,
+  importFn: () => Promise<{ default: ComponentType<unknown> }>,
   routeName: string
 ) => {
   return createLazyComponent(importFn, {
@@ -94,7 +94,7 @@ export const createRouteComponent = (
  * Create feature-based lazy components (admin, checkout, etc.)
  */
 export const createFeatureComponent = (
-  importFn: () => Promise<{ default: ComponentType<any> }>,
+  importFn: () => Promise<{ default: ComponentType<unknown> }>,
   featureName: string,
   preload = false
 ) => {
@@ -162,7 +162,7 @@ export const bundleUtils = {
   },
 
   // Preload components based on user interaction
-  preloadOnHover: (element: HTMLElement, importFn: () => Promise<any>) => {
+  preloadOnHover: (element: HTMLElement, importFn: () => Promise<unknown>) => {
     let hasPreloaded = false;
     
     const preload = () => {
@@ -179,7 +179,7 @@ export const bundleUtils = {
   // Preload based on viewport intersection
   preloadOnIntersection: (
     element: HTMLElement, 
-    importFn: () => Promise<any>,
+    importFn: () => Promise<unknown>,
     options: IntersectionObserverInit = {}
   ) => {
     const observer = new IntersectionObserver(

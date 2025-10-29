@@ -11,14 +11,14 @@ import { criticalPathMonitoring } from '@/lib/services/CriticalPathMonitoring';
 interface HealthStatus {
   status: 'healthy' | 'degraded' | 'unhealthy';
   timestamp: string;
-  checks: any;
+  checks: unknown;
 }
 
 export const MonitoringDashboard = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [healthStatus, setHealthStatus] = useState<HealthStatus | null>(null);
-  const [metrics, setMetrics] = useState<any[]>([]);
-  const [pathSummaries, setPathSummaries] = useState<Map<string, any>>(new Map());
+  const [metrics, setMetrics] = useState<unknown[]>([]);
+  const [pathSummaries, setPathSummaries] = useState<Map<string, unknown>>(new Map());
 
   useEffect(() => {
     if (isOpen) {
@@ -105,7 +105,7 @@ export const MonitoringDashboard = () => {
                     Overall: {healthStatus.status.toUpperCase()}
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-sm">
-                    {Object.entries(healthStatus.checks).map(([key, check]: [string, any]) => (
+                    {Object.entries(healthStatus.checks).map(([key, check]: [string, unknown]) => (
                       <div key={key} className="flex justify-between">
                         <span className="capitalize">{key}:</span>
                         <span className={getStatusColor(check.status)}>

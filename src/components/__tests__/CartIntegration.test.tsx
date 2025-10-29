@@ -9,7 +9,7 @@ import { supabase } from '../../lib/supabase';
 import { mockProduct, mockUser, mockCartItem } from '../../test/utils';
 
 // Mock components for testing
-const MockProductCard = ({ product }: { product: any }) => {
+const MockProductCard = ({ product }: { product: unknown }) => {
   const { addToCart } = useCart();
   
   return (
@@ -137,7 +137,7 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => {
 };
 
 describe('Cart Integration Tests', () => {
-  let mockSupabaseFrom: any;
+  let mockSupabaseFrom: unknown;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -151,7 +151,7 @@ describe('Cart Integration Tests', () => {
       single: vi.fn(),
       then: vi.fn()
     };
-    (supabase.from as any).mockReturnValue(mockSupabaseFrom);
+    (supabase.from as unknown).mockReturnValue(mockSupabaseFrom);
     localStorageMock.getItem.mockReturnValue(null);
   });
 
@@ -160,7 +160,7 @@ describe('Cart Integration Tests', () => {
       const user = userEvent.setup();
       
       // Mock authenticated user
-      (supabase.auth.getSession as any).mockResolvedValue({
+      (supabase.auth.getSession as unknown).mockResolvedValue({
         data: { session: { user: mockUser } },
         error: null
       });
@@ -199,7 +199,7 @@ describe('Cart Integration Tests', () => {
       const user = userEvent.setup();
       
       // Mock guest user
-      (supabase.auth.getSession as any).mockResolvedValue({
+      (supabase.auth.getSession as unknown).mockResolvedValue({
         data: { session: null },
         error: null
       });
@@ -231,7 +231,7 @@ describe('Cart Integration Tests', () => {
     it('should update quantity and remove items from cart', async () => {
       const user = userEvent.setup();
       
-      (supabase.auth.getSession as any).mockResolvedValue({
+      (supabase.auth.getSession as unknown).mockResolvedValue({
         data: { session: { user: mockUser } },
         error: null
       });
@@ -277,7 +277,7 @@ describe('Cart Integration Tests', () => {
       const user = userEvent.setup();
       
       // Start as guest with items in localStorage
-      (supabase.auth.getSession as any).mockResolvedValue({
+      (supabase.auth.getSession as unknown).mockResolvedValue({
         data: { session: null },
         error: null
       });
@@ -296,7 +296,7 @@ describe('Cart Integration Tests', () => {
       });
 
       // Simulate login
-      (supabase.auth.getSession as any).mockResolvedValue({
+      (supabase.auth.getSession as unknown).mockResolvedValue({
         data: { session: { user: mockUser } },
         error: null
       });
@@ -324,7 +324,7 @@ describe('Cart Integration Tests', () => {
     it('should complete checkout flow for authenticated user', async () => {
       const user = userEvent.setup();
       
-      (supabase.auth.getSession as any).mockResolvedValue({
+      (supabase.auth.getSession as unknown).mockResolvedValue({
         data: { session: { user: mockUser } },
         error: null
       });
@@ -360,7 +360,7 @@ describe('Cart Integration Tests', () => {
     it('should handle guest checkout flow', async () => {
       const user = userEvent.setup();
       
-      (supabase.auth.getSession as any).mockResolvedValue({
+      (supabase.auth.getSession as unknown).mockResolvedValue({
         data: { session: null },
         error: null
       });
@@ -395,7 +395,7 @@ describe('Cart Integration Tests', () => {
     it('should handle database errors gracefully', async () => {
       const user = userEvent.setup();
       
-      (supabase.auth.getSession as any).mockResolvedValue({
+      (supabase.auth.getSession as unknown).mockResolvedValue({
         data: { session: { user: mockUser } },
         error: null
       });
@@ -427,7 +427,7 @@ describe('Cart Integration Tests', () => {
     it('should handle network errors with retry', async () => {
       const user = userEvent.setup();
       
-      (supabase.auth.getSession as any).mockResolvedValue({
+      (supabase.auth.getSession as unknown).mockResolvedValue({
         data: { session: { user: mockUser } },
         error: null
       });

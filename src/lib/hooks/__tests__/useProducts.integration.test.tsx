@@ -37,7 +37,7 @@ const createWrapper = () => {
 };
 
 describe('useProducts Integration Tests', () => {
-  let mockSupabaseFrom: any;
+  let mockSupabaseFrom: unknown;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -51,7 +51,7 @@ describe('useProducts Integration Tests', () => {
       range: vi.fn().mockReturnThis(),
       then: vi.fn()
     };
-    (supabase.from as any).mockReturnValue(mockSupabaseFrom);
+    (supabase.from as unknown).mockReturnValue(mockSupabaseFrom);
   });
 
   describe('Product Fetching', () => {
@@ -228,7 +228,7 @@ describe('useProducts Integration Tests', () => {
 
       // Clear the mock to ensure it's not called again
       vi.clearAllMocks();
-      (supabase.from as any).mockReturnValue(mockSupabaseFrom);
+      (supabase.from as unknown).mockReturnValue(mockSupabaseFrom);
 
       // Rerender should use cached data
       rerender();

@@ -4,7 +4,7 @@ export interface ApiError extends Error {
   status?: number;
   statusText?: string;
   code?: string;
-  details?: any;
+  details?: Record<string, unknown>;
   endpoint?: string;
   method?: string;
 }
@@ -45,7 +45,7 @@ class ApiErrorHandlerService {
    * Creates a standardized API error from various error types
    */
   createApiError(
-    error: any,
+    error: unknown,
     endpoint?: string,
     method?: string,
     context?: ErrorContext
@@ -306,7 +306,7 @@ class ApiErrorHandlerService {
   /**
    * Handles Supabase-specific errors
    */
-  handleSupabaseError(error: any, operation: string, context?: ErrorContext): never {
+  handleSupabaseError(error: unknown, operation: string, context?: ErrorContext): never {
     const apiError = this.createApiError(error, `supabase/${operation}`, 'POST', context);
     
     // Enhance with Supabase-specific error information

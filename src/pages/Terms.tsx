@@ -134,7 +134,7 @@ const Terms = () => {
                   <li>We strive for accurate product descriptions</li>
                   <li>Colors may vary due to monitor settings</li>
                   <li>Dimensions and weights are approximate</li>
-                  <li>Report any discrepancies for immediate correction</li>
+                  <li>Report unknown discrepancies for immediate correction</li>
                 </ul>
               </div>
             </section>
@@ -146,7 +146,7 @@ const Terms = () => {
                 <ul className="list-disc list-inside space-y-2 ml-4">
                   <li>Use website for lawful purposes only</li>
                   <li>Respect Islamic values and cultural sensitivity</li>
-                  <li>Do not violate any local, state, or federal laws</li>
+                  <li>Do not violate unknown local, state, or federal laws</li>
                   <li>Respect intellectual property rights</li>
                 </ul>
 
@@ -180,7 +180,7 @@ const Terms = () => {
               <h2 className="text-2xl font-playfair font-bold text-naaz-green mb-4">Limitation of Liability</h2>
               <div className="space-y-4 text-gray-700">
                 <p>
-                  Naaz Book Depot shall not be liable for any indirect, incidental, special, or consequential damages 
+                  Naaz Book Depot shall not be liable for unknown indirect, incidental, special, or consequential damages 
                   resulting from the use of our website or services.
                 </p>
                 <div className="bg-naaz-cream p-4 rounded-lg">

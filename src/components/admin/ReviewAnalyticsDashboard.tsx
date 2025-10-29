@@ -66,7 +66,7 @@ const ReviewAnalyticsDashboard: React.FC = () => {
   })) : [];
 
   const reviewsOverTime = analytics ? 
-    analytics.reviewsOverTime.reduce((acc: any[], review) => {
+    analytics.reviewsOverTime.reduce((acc: unknown[], review) => {
       const date = new Date(review.date).toLocaleDateString();
       const existing = acc.find(item => item.date === date);
       if (existing) {

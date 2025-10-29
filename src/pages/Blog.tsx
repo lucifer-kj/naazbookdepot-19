@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
@@ -23,9 +23,9 @@ const Blog = () => {
 
   useEffect(() => {
     fetchPosts();
-  }, [currentPage, searchTerm, selectedCategory]);
+  }, [fetchPosts]);
 
-  const fetchPosts = async () => {
+  const fetchPosts = useCallback(async () => {
     try {
       setLoading(true);
       const result = await blogService.getPosts({
@@ -117,7 +117,7 @@ const Blog = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, searchTerm, selectedCategory]);
 
   const totalPages = Math.ceil(totalPosts / postsPerPage);
 

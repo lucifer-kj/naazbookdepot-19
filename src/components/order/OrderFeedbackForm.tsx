@@ -31,7 +31,7 @@ const OrderFeedbackForm: React.FC<OrderFeedbackFormProps> = ({ orderId, orderNum
     value: number; 
     onChange: (value: number) => void; 
     label: string;
-    icon: React.ComponentType<any>;
+    icon: React.ComponentType<unknown>;
   }) => (
     <div className="space-y-2">
       <div className="flex items-center space-x-2">

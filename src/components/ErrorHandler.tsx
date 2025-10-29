@@ -89,10 +89,10 @@ class ErrorHandler extends Component<Props, State> {
           width: window.innerWidth,
           height: window.innerHeight
         },
-        connection: (navigator as any).connection ? {
-          effectiveType: (navigator as any).connection.effectiveType,
-          downlink: (navigator as any).connection.downlink,
-          rtt: (navigator as any).connection.rtt
+        connection: (navigator as unknown).connection ? {
+          effectiveType: (navigator as unknown).connection.effectiveType,
+          downlink: (navigator as unknown).connection.downlink,
+          rtt: (navigator as unknown).connection.rtt
         } : null
       }
     };
@@ -310,7 +310,7 @@ export const handleAsyncError = async <T,>(
 };
 
 // Enhanced network error handler with Sentry integration
-export const handleNetworkError = (error: any, context?: ErrorContext) => {
+export const handleNetworkError = (error: unknown, context?: ErrorContext) => {
   let errorMessage = '';
   let errorType = 'network';
 
@@ -346,7 +346,7 @@ export const handleNetworkError = (error: any, context?: ErrorContext) => {
       url: error.url || error.config?.url,
       method: error.config?.method,
       online: navigator.onLine,
-      connectionType: (navigator as any).connection?.effectiveType
+      connectionType: (navigator as unknown).connection?.effectiveType
     }
   });
 

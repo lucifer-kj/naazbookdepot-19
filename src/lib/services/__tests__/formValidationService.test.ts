@@ -87,7 +87,7 @@ describe('FormValidationService', () => {
         }))
       }));
       const mockFrom = vi.fn(() => ({ select: mockSelect }));
-      (supabase.from as any).mockImplementation(mockFrom);
+      (supabase.from as unknown).mockImplementation(mockFrom);
 
       const result = await formValidationService.validateFormData(
         validData,

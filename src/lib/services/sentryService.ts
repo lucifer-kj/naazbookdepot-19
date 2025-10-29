@@ -28,10 +28,7 @@ class SentryService {
         const config = getSentryConfig();
         
         if (!config.enabled || !config.dsn) {
-          // Use a simple warning since we can't use our error handler here (circular dependency)
-          if (import.meta.env.DEV) {
-            console.warn('Sentry DSN not found or disabled. Error tracking will be disabled.');
-          }
+          // Sentry is intentionally disabled - no need to warn
           return;
         }
 

@@ -29,23 +29,23 @@ export const useLoadingState = (options: LoadingOptions = {}) => {
     setState({
       isLoading: true,
       progress: 0,
-      message: message || options.initialMessage,
+      message: message || options?.initialMessage,
       error: undefined
     });
 
     startTimeRef.current = Date.now();
 
     // Set timeout if specified
-    if (options.timeout) {
+    if (options?.timeout) {
       timeoutRef.current = setTimeout(() => {
         setState(prev => ({
           ...prev,
           error: 'Operation timed out'
         }));
-        options.onTimeout?.();
-      }, options.timeout);
+        options?.onTimeout?.();
+      }, options?.timeout);
     }
-  }, [options.initialMessage, options.timeout, options.onTimeout]);
+  }, [options]);
 
   const updateProgress = useCallback((progress: number, message?: string) => {
     setState(prev => ({
@@ -209,13 +209,13 @@ export const useMultipleLoadingStates = () => {
 };
 
 // Hook for async operations with loading state
-export const useAsyncOperation = <T = any>(
-  operation: (...args: any[]) => Promise<T>,
+export const useAsyncOperation = <T = unknown>(
+  operation: (...args: unknown[]) => Promise<T>,
   options: LoadingOptions = {}
 ) => {
   const loadingState = useLoadingState(options);
 
-  const execute = useCallback(async (...args: any[]): Promise<T | null> => {
+  const execute = useCallback(async (...args: unknown[]): Promise<T | null> => {
     try {
       loadingState.startLoading();
       const result = await operation(...args);

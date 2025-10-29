@@ -11,7 +11,7 @@ export default defineConfig(({ mode }) => {
     server: {
       host: "::",
       port: 8080,
-      // @ts-ignore
+      // @ts-expect-error - allowedHosts type issue with conditional assignment
       allowedHosts: process.env.TEMPO === "true" ? true : undefined
     },
     plugins: [

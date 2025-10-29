@@ -12,7 +12,7 @@ export interface EmailNotificationData {
   customerName: string;
   orderNumber: string;
   orderTotal: number;
-  orderItems: any[];
+  orderItems: unknown[];
   trackingNumber?: string;
   estimatedDelivery?: string;
   orderUrl: string;
@@ -36,7 +36,7 @@ export class EmailService {
     try {
       const template = this.generateOrderConfirmationTemplate({
         to: order.email || '',
-        customerName: (order.shipping_address as any)?.name || 'Customer',
+        customerName: (order.shipping_address as unknown)?.name || 'Customer',
         orderNumber: order.order_number,
         orderTotal: order.total_amount,
         orderItems: order.order_items,
@@ -61,7 +61,7 @@ export class EmailService {
     try {
       const template = this.generateOrderStatusUpdateTemplate({
         to: order.email || '',
-        customerName: (order.shipping_address as any)?.name || 'Customer',
+        customerName: (order.shipping_address as unknown)?.name || 'Customer',
         orderNumber: order.order_number,
         orderTotal: order.total_amount,
         orderItems: order.order_items,
@@ -87,7 +87,7 @@ export class EmailService {
     try {
       const template = this.generateShippingNotificationTemplate({
         to: order.email || '',
-        customerName: (order.shipping_address as any)?.name || 'Customer',
+        customerName: (order.shipping_address as unknown)?.name || 'Customer',
         orderNumber: order.order_number,
         orderTotal: order.total_amount,
         orderItems: order.order_items,
@@ -110,7 +110,7 @@ export class EmailService {
     try {
       const template = this.generateDeliveryConfirmationTemplate({
         to: order.email || '',
-        customerName: (order.shipping_address as any)?.name || 'Customer',
+        customerName: (order.shipping_address as unknown)?.name || 'Customer',
         orderNumber: order.order_number,
         orderTotal: order.total_amount,
         orderItems: order.order_items,
@@ -258,7 +258,7 @@ export class EmailService {
             
             <a href="${data.orderUrl}" class="button">Track Your Order</a>
             
-            <p>If you have any questions about your order, please contact our customer service team.</p>
+            <p>If you have unknown questions about your order, please contact our customer service team.</p>
           </div>
           
           <div class="footer">
@@ -586,7 +586,7 @@ export class EmailService {
           
           <div class="footer">
             <p>© 2024 Naaz Book Depot. All rights reserved.</p>
-            <p>You can unsubscribe at any time by clicking <a href="${this.baseUrl}/unsubscribe?email=${email}">here</a></p>
+            <p>You can unsubscribe at unknown time by clicking <a href="${this.baseUrl}/unsubscribe?email=${email}">here</a></p>
           </div>
         </div>
       </body>

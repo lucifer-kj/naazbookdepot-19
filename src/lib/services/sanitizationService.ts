@@ -40,7 +40,7 @@ class SanitizationService {
     }
 
     try {
-      const config: any = {
+      const config: Record<string, unknown> = {
         ...this.defaultHtmlConfig,
         ...(options.allowedTags && { ALLOWED_TAGS: options.allowedTags }),
         ...(options.allowedAttributes && { ALLOWED_ATTR: options.allowedAttributes })
@@ -86,7 +86,7 @@ class SanitizationService {
     try {
       let sanitized = DOMPurify.sanitize(input, this.strictConfig) as string;
       
-      // Remove any remaining HTML entities
+      // Remove unknown remaining HTML entities
       sanitized = sanitized
         .replace(/&nbsp;/g, ' ')
         .replace(/&amp;/g, '&')
@@ -271,12 +271,12 @@ class SanitizationService {
 
         if (typeof value === 'string') {
           if (config.stripTags) {
-            (sanitized as any)[key] = this.stripHtml(value, config.maxLength);
+            (sanitized as unknown)[key] = this.stripHtml(value, config.maxLength);
           } else {
-            (sanitized as any)[key] = this.sanitizeInput(value, config.maxLength);
+            (sanitized as unknown)[key] = this.sanitizeInput(value, config.maxLength);
           }
         } else if (Array.isArray(value)) {
-          (sanitized as any)[key] = value.map(item => 
+          (sanitized as unknown)[key] = value.map(item => 
             typeof item === 'string' 
               ? this.sanitizeInput(item, config.maxLength)
               : item
@@ -440,7 +440,7 @@ class SanitizationService {
   /**
    * Sanitize NoSQL injection attempts
    */
-  sanitizeNoSQLInput(input: any): any {
+  sanitizeNoSQLInput(input: unknown): unknown {
     if (typeof input === 'string') {
       return this.sanitizeInput(input);
     }
@@ -452,7 +452,7 @@ class SanitizationService {
     if (typeof input === 'object' && input !== null) {
       // Remove dangerous MongoDB operators
       const dangerousKeys = ['$where', '$regex', '$ne', '$gt', '$lt', '$gte', '$lte', '$in', '$nin', '$exists'];
-      const sanitized: any = {};
+      const sanitized: Record<string, unknown> = {};
 
       for (const [key, value] of Object.entries(input)) {
         if (!dangerousKeys.includes(key)) {
@@ -469,7 +469,7 @@ class SanitizationService {
   /**
    * Validate and sanitize JSON input
    */
-  sanitizeJSONInput(input: string, maxDepth: number = 5): { isValid: boolean; sanitized: any; error?: string } {
+  sanitizeJSONInput(input: string, maxDepth: number = 5): { isValid: boolean; sanitized: unknown; error?: string } {
     try {
       if (!input || typeof input !== 'string') {
         return { isValid: false, sanitized: null, error: 'Invalid JSON input' };
@@ -482,7 +482,7 @@ class SanitizationService {
       const parsed = JSON.parse(sanitizedInput);
 
       // Check depth to prevent deeply nested objects
-      const checkDepth = (obj: any, depth: number = 0): boolean => {
+      const checkDepth = (obj: unknown, depth: number = 0): boolean => {
         if (depth > maxDepth) return false;
         
         if (typeof obj === 'object' && obj !== null) {
@@ -501,7 +501,7 @@ class SanitizationService {
       }
 
       // Recursively sanitize the parsed object
-      const sanitizeObject = (obj: any): any => {
+      const sanitizeObject = (obj: unknown): unknown => {
         if (typeof obj === 'string') {
           return this.sanitizeInput(obj);
         }
@@ -511,7 +511,7 @@ class SanitizationService {
         }
         
         if (typeof obj === 'object' && obj !== null) {
-          const sanitized: any = {};
+          const sanitized: Record<string, unknown> = {};
           for (const [key, value] of Object.entries(obj)) {
             sanitized[this.sanitizeInput(key)] = sanitizeObject(value);
           }

@@ -5,7 +5,7 @@ import { Check } from 'lucide-react';
 interface Step {
   id: number;
   title: string;
-  icon: React.ComponentType<any>;
+  icon: React.ComponentType<unknown>;
 }
 
 interface CheckoutStepsProps {

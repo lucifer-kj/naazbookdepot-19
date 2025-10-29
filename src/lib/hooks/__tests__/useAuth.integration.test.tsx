@@ -58,13 +58,13 @@ const createWrapper = () => {
 };
 
 describe('useAuth Integration Tests', () => {
-  let mockAuthStateCallback: any;
+  let mockAuthStateCallback: unknown;
 
   beforeEach(() => {
     vi.clearAllMocks();
     mockAuthStateCallback = null;
     
-    (supabase.auth.onAuthStateChange as any).mockImplementation((callback: any) => {
+    (supabase.auth.onAuthStateChange as unknown).mockImplementation((callback: unknown) => {
       mockAuthStateCallback = callback;
       return {
         data: {
@@ -82,7 +82,7 @@ describe('useAuth Integration Tests', () => {
 
   describe('Authentication State Management', () => {
     it('should initialize with authenticated user', async () => {
-      (supabase.auth.getSession as any).mockResolvedValue({
+      (supabase.auth.getSession as unknown).mockResolvedValue({
         data: { session: { user: mockUser } },
         error: null
       });
@@ -95,7 +95,7 @@ describe('useAuth Integration Tests', () => {
           error: null
         })
       };
-      (supabase.from as any).mockReturnValue(mockSupabaseFrom);
+      (supabase.from as unknown).mockReturnValue(mockSupabaseFrom);
 
       const { result } = renderHook(() => useAuth(), {
         wrapper: createWrapper()
@@ -112,7 +112,7 @@ describe('useAuth Integration Tests', () => {
     });
 
     it('should initialize with no user when not authenticated', async () => {
-      (supabase.auth.getSession as any).mockResolvedValue({
+      (supabase.auth.getSession as unknown).mockResolvedValue({
         data: { session: null },
         error: null
       });
@@ -129,7 +129,7 @@ describe('useAuth Integration Tests', () => {
     });
 
     it('should handle auth state changes', async () => {
-      (supabase.auth.getSession as any).mockResolvedValue({
+      (supabase.auth.getSession as unknown).mockResolvedValue({
         data: { session: null },
         error: null
       });
@@ -151,7 +151,7 @@ describe('useAuth Integration Tests', () => {
           error: null
         })
       };
-      (supabase.from as any).mockReturnValue(mockSupabaseFrom);
+      (supabase.from as unknown).mockReturnValue(mockSupabaseFrom);
 
       act(() => {
         mockAuthStateCallback('SIGNED_IN', { user: mockUser });
@@ -169,12 +169,12 @@ describe('useAuth Integration Tests', () => {
 
   describe('Sign Up Flow', () => {
     it('should handle successful sign up', async () => {
-      (supabase.auth.getSession as any).mockResolvedValue({
+      (supabase.auth.getSession as unknown).mockResolvedValue({
         data: { session: null },
         error: null
       });
 
-      (supabase.auth.signUp as any).mockResolvedValue({
+      (supabase.auth.signUp as unknown).mockResolvedValue({
         data: { user: mockUser, session: null },
         error: null
       });
@@ -185,7 +185,7 @@ describe('useAuth Integration Tests', () => {
           error: null
         })
       };
-      (supabase.from as any).mockReturnValue(mockSupabaseFrom);
+      (supabase.from as unknown).mockReturnValue(mockSupabaseFrom);
 
       const { result } = renderHook(() => useAuth(), {
         wrapper: createWrapper()
@@ -218,12 +218,12 @@ describe('useAuth Integration Tests', () => {
     });
 
     it('should handle sign up errors', async () => {
-      (supabase.auth.getSession as any).mockResolvedValue({
+      (supabase.auth.getSession as unknown).mockResolvedValue({
         data: { session: null },
         error: null
       });
 
-      (supabase.auth.signUp as any).mockResolvedValue({
+      (supabase.auth.signUp as unknown).mockResolvedValue({
         data: null,
         error: { message: 'Email already registered' }
       });
@@ -246,12 +246,12 @@ describe('useAuth Integration Tests', () => {
 
   describe('Sign In Flow', () => {
     it('should handle successful sign in', async () => {
-      (supabase.auth.getSession as any).mockResolvedValue({
+      (supabase.auth.getSession as unknown).mockResolvedValue({
         data: { session: null },
         error: null
       });
 
-      (supabase.auth.signInWithPassword as any).mockResolvedValue({
+      (supabase.auth.signInWithPassword as unknown).mockResolvedValue({
         data: { user: mockUser, session: { user: mockUser } },
         error: null
       });
@@ -264,7 +264,7 @@ describe('useAuth Integration Tests', () => {
           error: null
         })
       };
-      (supabase.from as any).mockReturnValue(mockSupabaseFrom);
+      (supabase.from as unknown).mockReturnValue(mockSupabaseFrom);
 
       const { result } = renderHook(() => useAuth(), {
         wrapper: createWrapper()
@@ -284,12 +284,12 @@ describe('useAuth Integration Tests', () => {
     });
 
     it('should handle sign in errors', async () => {
-      (supabase.auth.getSession as any).mockResolvedValue({
+      (supabase.auth.getSession as unknown).mockResolvedValue({
         data: { session: null },
         error: null
       });
 
-      (supabase.auth.signInWithPassword as any).mockResolvedValue({
+      (supabase.auth.signInWithPassword as unknown).mockResolvedValue({
         data: null,
         error: { message: 'Invalid credentials' }
       });
@@ -311,7 +311,7 @@ describe('useAuth Integration Tests', () => {
 
   describe('Sign Out Flow', () => {
     it('should handle successful sign out', async () => {
-      (supabase.auth.getSession as any).mockResolvedValue({
+      (supabase.auth.getSession as unknown).mockResolvedValue({
         data: { session: { user: mockUser } },
         error: null
       });
@@ -324,9 +324,9 @@ describe('useAuth Integration Tests', () => {
           error: null
         })
       };
-      (supabase.from as any).mockReturnValue(mockSupabaseFrom);
+      (supabase.from as unknown).mockReturnValue(mockSupabaseFrom);
 
-      (supabase.auth.signOut as any).mockResolvedValue({
+      (supabase.auth.signOut as unknown).mockResolvedValue({
         error: null
       });
 
@@ -358,12 +358,12 @@ describe('useAuth Integration Tests', () => {
 
   describe('Password Reset Flow', () => {
     it('should handle password reset request', async () => {
-      (supabase.auth.getSession as any).mockResolvedValue({
+      (supabase.auth.getSession as unknown).mockResolvedValue({
         data: { session: null },
         error: null
       });
 
-      (supabase.auth.resetPasswordForEmail as any).mockResolvedValue({
+      (supabase.auth.resetPasswordForEmail as unknown).mockResolvedValue({
         data: {},
         error: null
       });
@@ -385,12 +385,12 @@ describe('useAuth Integration Tests', () => {
     });
 
     it('should handle password reset errors', async () => {
-      (supabase.auth.getSession as any).mockResolvedValue({
+      (supabase.auth.getSession as unknown).mockResolvedValue({
         data: { session: null },
         error: null
       });
 
-      (supabase.auth.resetPasswordForEmail as any).mockResolvedValue({
+      (supabase.auth.resetPasswordForEmail as unknown).mockResolvedValue({
         data: null,
         error: { message: 'Email not found' }
       });
@@ -409,7 +409,7 @@ describe('useAuth Integration Tests', () => {
 
   describe('Profile Update Flow', () => {
     it('should handle profile updates', async () => {
-      (supabase.auth.getSession as any).mockResolvedValue({
+      (supabase.auth.getSession as unknown).mockResolvedValue({
         data: { session: { user: mockUser } },
         error: null
       });
@@ -426,9 +426,9 @@ describe('useAuth Integration Tests', () => {
           error: null
         })
       };
-      (supabase.from as any).mockReturnValue(mockSupabaseFrom);
+      (supabase.from as unknown).mockReturnValue(mockSupabaseFrom);
 
-      (supabase.auth.updateUser as any).mockResolvedValue({
+      (supabase.auth.updateUser as unknown).mockResolvedValue({
         data: { user: { ...mockUser, user_metadata: { full_name: 'Updated Name' } } },
         error: null
       });
@@ -461,7 +461,7 @@ describe('useAuth Integration Tests', () => {
     it('should correctly identify admin users', async () => {
       const adminUser = { ...mockUser, role: 'admin' };
       
-      (supabase.auth.getSession as any).mockResolvedValue({
+      (supabase.auth.getSession as unknown).mockResolvedValue({
         data: { session: { user: mockUser } },
         error: null
       });
@@ -474,7 +474,7 @@ describe('useAuth Integration Tests', () => {
           error: null
         })
       };
-      (supabase.from as any).mockReturnValue(mockSupabaseFrom);
+      (supabase.from as unknown).mockReturnValue(mockSupabaseFrom);
 
       const { result } = renderHook(() => useAuth(), {
         wrapper: createWrapper()
@@ -489,7 +489,7 @@ describe('useAuth Integration Tests', () => {
     it('should correctly identify customer users', async () => {
       const customerUser = { ...mockUser, role: 'customer' };
       
-      (supabase.auth.getSession as any).mockResolvedValue({
+      (supabase.auth.getSession as unknown).mockResolvedValue({
         data: { session: { user: mockUser } },
         error: null
       });
@@ -502,7 +502,7 @@ describe('useAuth Integration Tests', () => {
           error: null
         })
       };
-      (supabase.from as any).mockReturnValue(mockSupabaseFrom);
+      (supabase.from as unknown).mockReturnValue(mockSupabaseFrom);
 
       const { result } = renderHook(() => useAuth(), {
         wrapper: createWrapper()

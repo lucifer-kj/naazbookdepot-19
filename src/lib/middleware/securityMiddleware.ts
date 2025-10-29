@@ -47,7 +47,7 @@ class SecurityMiddleware {
       headers?: Record<string, string>;
       method?: string;
       url?: string;
-      body?: any;
+      body?: unknown;
     }
   ): Promise<SecurityValidationResult> {
     const errors: string[] = [];
@@ -145,7 +145,7 @@ class SecurityMiddleware {
    * Create a request interceptor for API calls
    */
   createRequestInterceptor() {
-    return async (config: any) => {
+    return async (config: unknown) => {
       try {
         // Add CSRF token to state-changing requests
         if (this.config.enableCSRF && this.isStateChangingRequest(config.method)) {
@@ -191,7 +191,7 @@ class SecurityMiddleware {
    */
   createResponseInterceptor() {
     return {
-      onFulfilled: (response: any) => {
+      onFulfilled: (response: unknown) => {
         // Add security headers to response
         const securityHeaders = this.getSecurityHeaders();
         if (response.headers) {
@@ -200,7 +200,7 @@ class SecurityMiddleware {
 
         return response;
       },
-      onRejected: (error: any) => {
+      onRejected: (error: unknown) => {
         // Handle security-related errors
         if (error.response?.status === 403) {
           sentryService.addBreadcrumb(
@@ -323,7 +323,7 @@ export const securityMiddleware = new SecurityMiddleware();
  * React hook for security middleware
  */
 export const useSecurity = () => {
-  const validateRequest = (request: any) => securityMiddleware.validateRequest(request);
+  const validateRequest = (request: unknown) => securityMiddleware.validateRequest(request);
   const getSecurityHeaders = () => securityMiddleware.getSecurityHeaders();
   const createRequestInterceptor = () => securityMiddleware.createRequestInterceptor();
   const createResponseInterceptor = () => securityMiddleware.createResponseInterceptor();

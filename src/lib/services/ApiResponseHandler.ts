@@ -16,7 +16,7 @@ export interface StandardizedResponse<T> {
 export interface StandardizedError {
   error: string;
   success: false;
-  details?: any;
+  details?: unknown;
 }
 
 export type ApiResult<T> = StandardizedResponse<T> | StandardizedError;
@@ -30,7 +30,7 @@ export class ApiResponseHandler {
    * Handles Supabase query responses with standardized error handling and null checks
    */
   static async handleSupabaseResponse<T>(
-    queryBuilder: any,
+    queryBuilder: unknown,
     context: ErrorContext
   ): Promise<ApiResult<T>> {
     try {
@@ -69,7 +69,7 @@ export class ApiResponseHandler {
    * Handles array responses with proper validation
    */
   static async handleArrayResponse<T>(
-    queryBuilder: any,
+    queryBuilder: unknown,
     context: ErrorContext
   ): Promise<ApiResult<T[]>> {
     try {
@@ -103,7 +103,7 @@ export class ApiResponseHandler {
    * Handles single record responses with proper validation
    */
   static async handleSingleResponse<T>(
-    queryBuilder: any,
+    queryBuilder: unknown,
     context: ErrorContext,
     allowNull: boolean = false
   ): Promise<ApiResult<T | null>> {
@@ -142,7 +142,7 @@ export class ApiResponseHandler {
   /**
    * Safely accesses nested object properties with fallback values
    */
-  static safeGet<T>(obj: any, path: string, defaultValue: T): T {
+  static safeGet<T>(obj: unknown, path: string, defaultValue: T): T {
     try {
       const keys = path.split('.');
       let current = obj;
@@ -163,7 +163,7 @@ export class ApiResponseHandler {
   /**
    * Validates required fields in API response data
    */
-  static validateRequiredFields<T extends Record<string, any>>(
+  static validateRequiredFields<T extends Record<string, unknown>>(
     data: T,
     requiredFields: (keyof T)[],
     context: string
@@ -214,7 +214,7 @@ export class ApiResponseHandler {
    * Handles paginated responses with proper validation
    */
   static async handlePaginatedResponse<T>(
-    queryBuilder: any,
+    queryBuilder: unknown,
     context: ErrorContext
   ): Promise<ApiResult<{ items: T[]; total: number; hasMore: boolean }>> {
     try {

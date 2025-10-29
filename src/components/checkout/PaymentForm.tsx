@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import { CreditCard, Smartphone, Banknote, Wallet } from 'lucide-react';
 
 interface PaymentFormProps {
-  shippingData: any;
-  onComplete: (data: any) => void;
+  shippingData: unknown;
+  onComplete: (data: unknown) => void;
   onBack: () => void;
 }
 

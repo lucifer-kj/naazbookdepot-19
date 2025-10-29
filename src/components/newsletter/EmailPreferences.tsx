@@ -214,7 +214,7 @@ export const EmailPreferences = ({ className = '' }: EmailPreferencesProps) => {
       </div>
 
       <p className="text-gray-600 mb-6">
-        Choose which emails you'd like to receive from us. You can update these preferences at any time.
+        Choose which emails you'd like to receive from us. You can update these preferences at unknown time.
       </p>
 
       <div className="space-y-4">
@@ -296,7 +296,7 @@ export const EmailPreferences = ({ className = '' }: EmailPreferencesProps) => {
         <h4 className="font-medium text-gray-900 mb-2">Privacy Notice</h4>
         <p className="text-sm text-gray-600">
           We respect your privacy and will never share your email address with third parties. 
-          You can unsubscribe from any email list at any time by clicking the unsubscribe link 
+          You can unsubscribe from unknown email list at unknown time by clicking the unsubscribe link 
           in our emails or by updating your preferences here.
         </p>
       </div>

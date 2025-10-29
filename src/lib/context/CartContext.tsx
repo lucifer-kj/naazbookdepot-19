@@ -56,7 +56,7 @@ const cartReducer = (state: Cart, action: CartAction): Cart => {
   };
 
   switch (action.type) {
-    case 'SET_CART':
+    case 'SET_CART': {
       const { totalItems: setTotalItems, subtotal: setSubtotal } = calculateTotals(action.items);
       return {
         ...state,
@@ -64,8 +64,9 @@ const cartReducer = (state: Cart, action: CartAction): Cart => {
         totalItems: setTotalItems,
         subtotal: setSubtotal
       };
+    }
 
-    case 'ADD_ITEM':
+    case 'ADD_ITEM': {
       const existingItemIndex = state.items.findIndex(
         item => item.productId === action.item.productId
       );
@@ -87,8 +88,9 @@ const cartReducer = (state: Cart, action: CartAction): Cart => {
         subtotal: addSubtotal,
         animationTrigger: Date.now()
       };
+    }
 
-    case 'UPDATE_QUANTITY':
+    case 'UPDATE_QUANTITY': {
       const itemIndex = state.items.findIndex(
         item => item.productId === action.productId
       );
@@ -112,8 +114,9 @@ const cartReducer = (state: Cart, action: CartAction): Cart => {
         };
       }
       return state;
+    }
 
-    case 'REMOVE_ITEM':
+    case 'REMOVE_ITEM': {
       const filteredItems = state.items.filter(
         item => item.productId !== action.productId
       );
@@ -127,20 +130,23 @@ const cartReducer = (state: Cart, action: CartAction): Cart => {
         subtotal: removeSubtotal,
         animationTrigger: Date.now()
       };
+    }
 
-    case 'CLEAR_CART':
+    case 'CLEAR_CART': {
       return {
         items: [],
         totalItems: 0,
         subtotal: 0,
         animationTrigger: Date.now()
       };
+    }
 
-    case 'TRIGGER_ANIMATION':
+    case 'TRIGGER_ANIMATION': {
       return {
         ...state,
         animationTrigger: Date.now()
       };
+    }
 
     default:
       return state;

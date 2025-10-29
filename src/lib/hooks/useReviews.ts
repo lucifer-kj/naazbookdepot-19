@@ -32,7 +32,7 @@ export const useProductReviews = (productId: string, userId?: string) => {
           table: 'reviews',
           filter: `product_id=eq.${productId}`,
         },
-        async (payload: any) => {
+        async (payload: unknown) => {
           console.log('Review update received:', payload);
 
           if (payload.eventType === 'DELETE') {

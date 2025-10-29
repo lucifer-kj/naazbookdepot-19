@@ -83,10 +83,10 @@ export const STORAGE_CONFIG = {
 
 // Memory cache for frequently accessed data
 class MemoryCache {
-  private cache = new Map<string, { data: any; timestamp: number; ttl: number }>();
+  private cache = new Map<string, { data: unknown; timestamp: number; ttl: number }>();
   private maxSize = 100; // Maximum number of entries
 
-  set(key: string, data: any, ttl: number = CACHE_TIMES.SHORT): void {
+  set(key: string, data: unknown, ttl: number = CACHE_TIMES.SHORT): void {
     // Remove oldest entries if cache is full
     if (this.cache.size >= this.maxSize) {
       const oldestKey = this.cache.keys().next().value;
@@ -100,7 +100,7 @@ class MemoryCache {
     });
   }
 
-  get(key: string): any | null {
+  get(key: string): unknown | null {
     const entry = this.cache.get(key);
     if (!entry) return null;
 
@@ -138,7 +138,7 @@ export const createOptimizedQueryClient = (): QueryClient => {
         gcTime: CACHE_TIMES.MEDIUM,
         
         // Retry configuration
-        retry: (failureCount, error: any) => {
+        retry: (failureCount, error: unknown) => {
           // Don't retry on 4xx errors except timeout and rate limit
           if (error?.status && error.status >= 400 && error.status < 500) {
             return error.status === 408 || error.status === 429;
@@ -160,7 +160,7 @@ export const createOptimizedQueryClient = (): QueryClient => {
       
       mutations: {
         // Mutation retry configuration
-        retry: (failureCount, error: any) => {
+        retry: (failureCount, error: unknown) => {
           // Don't retry mutations on client errors
           if (error?.status && error.status >= 400 && error.status < 500) {
             return false;

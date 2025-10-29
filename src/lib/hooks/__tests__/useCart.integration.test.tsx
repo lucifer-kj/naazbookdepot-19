@@ -50,7 +50,7 @@ const createWrapper = () => {
 };
 
 describe('useCart Integration Tests', () => {
-  let mockSupabaseFrom: any;
+  let mockSupabaseFrom: unknown;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -64,7 +64,7 @@ describe('useCart Integration Tests', () => {
       single: vi.fn(),
       then: vi.fn()
     };
-    (supabase.from as any).mockReturnValue(mockSupabaseFrom);
+    (supabase.from as unknown).mockReturnValue(mockSupabaseFrom);
   });
 
   afterEach(() => {
@@ -73,7 +73,7 @@ describe('useCart Integration Tests', () => {
 
   describe('Cart Operations for Authenticated Users', () => {
     beforeEach(() => {
-      (supabase.auth.getUser as any).mockResolvedValue({
+      (supabase.auth.getUser as unknown).mockResolvedValue({
         data: { user: mockUser },
         error: null
       });
@@ -181,7 +181,7 @@ describe('useCart Integration Tests', () => {
 
   describe('Cart Operations for Guest Users', () => {
     beforeEach(() => {
-      (supabase.auth.getUser as any).mockResolvedValue({
+      (supabase.auth.getUser as unknown).mockResolvedValue({
         data: { user: null },
         error: null
       });
@@ -222,7 +222,7 @@ describe('useCart Integration Tests', () => {
       localStorageMock.getItem.mockReturnValue(JSON.stringify(guestCartItems));
 
       // Start as guest
-      (supabase.auth.getUser as any).mockResolvedValue({
+      (supabase.auth.getUser as unknown).mockResolvedValue({
         data: { user: null },
         error: null
       });
@@ -236,7 +236,7 @@ describe('useCart Integration Tests', () => {
       });
 
       // Simulate login
-      (supabase.auth.getUser as any).mockResolvedValue({
+      (supabase.auth.getUser as unknown).mockResolvedValue({
         data: { user: mockUser },
         error: null
       });
@@ -259,7 +259,7 @@ describe('useCart Integration Tests', () => {
         { ...mockCartItem, id: 'item2', quantity: 1, price: 15.00 }
       ];
 
-      (supabase.auth.getUser as any).mockResolvedValue({
+      (supabase.auth.getUser as unknown).mockResolvedValue({
         data: { user: mockUser },
         error: null
       });
@@ -282,7 +282,7 @@ describe('useCart Integration Tests', () => {
 
   describe('Error Handling', () => {
     it('should handle database errors gracefully', async () => {
-      (supabase.auth.getUser as any).mockResolvedValue({
+      (supabase.auth.getUser as unknown).mockResolvedValue({
         data: { user: mockUser },
         error: null
       });
@@ -303,7 +303,7 @@ describe('useCart Integration Tests', () => {
     });
 
     it('should handle localStorage errors gracefully', async () => {
-      (supabase.auth.getUser as any).mockResolvedValue({
+      (supabase.auth.getUser as unknown).mockResolvedValue({
         data: { user: null },
         error: null
       });
@@ -324,7 +324,7 @@ describe('useCart Integration Tests', () => {
 
   describe('Optimistic Updates', () => {
     it('should show optimistic updates while syncing', async () => {
-      (supabase.auth.getUser as any).mockResolvedValue({
+      (supabase.auth.getUser as unknown).mockResolvedValue({
         data: { user: mockUser },
         error: null
       });

@@ -8,7 +8,7 @@ import { logger } from '../services/Logger';
 
 // Drop-in replacements for console methods
 export const console = {
-  error: (message: string | Error, ...args: any[]) => {
+  error: (message: string | Error, ...args: unknown[]) => {
     if (args.length > 0) {
       errorHandler.error(message instanceof Error ? message : message, {
         additionalData: { args }
@@ -18,7 +18,7 @@ export const console = {
     }
   },
 
-  warn: (message: string, ...args: any[]) => {
+  warn: (message: string, ...args: unknown[]) => {
     if (args.length > 0) {
       errorHandler.warn(message, {
         additionalData: { args }
@@ -28,7 +28,7 @@ export const console = {
     }
   },
 
-  info: (message: string, ...args: any[]) => {
+  info: (message: string, ...args: unknown[]) => {
     if (args.length > 0) {
       logger.info(message, {
         additionalData: { args }
@@ -38,7 +38,7 @@ export const console = {
     }
   },
 
-  log: (message: string, ...args: any[]) => {
+  log: (message: string, ...args: unknown[]) => {
     if (args.length > 0) {
       logger.info(message, {
         additionalData: { args }
@@ -48,7 +48,7 @@ export const console = {
     }
   },
 
-  debug: (message: string, ...args: any[]) => {
+  debug: (message: string, ...args: unknown[]) => {
     if (args.length > 0) {
       logger.debug(message, {
         additionalData: { args }
@@ -60,7 +60,7 @@ export const console = {
 };
 
 // Specific error handlers for common patterns
-export const handleApiError = (error: unknown, operation: string, context?: any) => {
+export const handleApiError = (error: unknown, operation: string, context?: unknown) => {
   errorHandler.apiError(
     error instanceof Error ? error : new Error(String(error)),
     operation,
@@ -71,7 +71,7 @@ export const handleApiError = (error: unknown, operation: string, context?: any)
   );
 };
 
-export const handleAuthError = (error: unknown, context?: any) => {
+export const handleAuthError = (error: unknown, context?: unknown) => {
   errorHandler.authError(
     error instanceof Error ? error : new Error(String(error)),
     {
@@ -81,7 +81,7 @@ export const handleAuthError = (error: unknown, context?: any) => {
   );
 };
 
-export const handleDatabaseError = (error: unknown, operation: string, context?: any) => {
+export const handleDatabaseError = (error: unknown, operation: string, context?: unknown) => {
   errorHandler.databaseError(
     error instanceof Error ? error : new Error(String(error)),
     operation,
@@ -92,7 +92,7 @@ export const handleDatabaseError = (error: unknown, operation: string, context?:
   );
 };
 
-export const handleNetworkError = (error: unknown, url?: string, context?: any) => {
+export const handleNetworkError = (error: unknown, url?: string, context?: unknown) => {
   errorHandler.networkError(
     error instanceof Error ? error : new Error(String(error)),
     url,
@@ -103,7 +103,7 @@ export const handleNetworkError = (error: unknown, url?: string, context?: any) 
   );
 };
 
-export const handleValidationError = (errors: Record<string, string> | string, context?: any) => {
+export const handleValidationError = (errors: Record<string, string> | string, context?: unknown) => {
   errorHandler.validationError(errors, {
     component: 'validation',
     additionalData: context

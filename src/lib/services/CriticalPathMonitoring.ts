@@ -11,7 +11,7 @@ interface CriticalPathMetric {
   duration?: number;
   success: boolean;
   error?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 interface CriticalPathSummary {
@@ -41,7 +41,7 @@ class CriticalPathMonitoringService {
     ADMIN_ORDER_MANAGEMENT: 'admin_order_management'
   } as const;
 
-  public startPath(pathName: string, metadata?: Record<string, any>): string {
+  public startPath(pathName: string, metadata?: Record<string, unknown>): string {
     const pathId = `${pathName}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
     const initialMetric: CriticalPathMetric = {
@@ -58,7 +58,7 @@ class CriticalPathMonitoringService {
     return pathId;
   }
 
-  public addStep(pathId: string, stepName: string, metadata?: Record<string, any>): void {
+  public addStep(pathId: string, stepName: string, metadata?: Record<string, unknown>): void {
     const pathMetrics = this.activePaths.get(pathId);
     if (!pathMetrics) {
       console.warn(`Path ${pathId} not found`);
@@ -190,39 +190,39 @@ class CriticalPathMonitoringService {
   }
 
   // Convenience methods for common critical paths
-  public startUserRegistration(metadata?: Record<string, any>): string {
+  public startUserRegistration(metadata?: Record<string, unknown>): string {
     return this.startPath(this.CRITICAL_PATHS.USER_REGISTRATION, metadata);
   }
 
-  public startUserLogin(metadata?: Record<string, any>): string {
+  public startUserLogin(metadata?: Record<string, unknown>): string {
     return this.startPath(this.CRITICAL_PATHS.USER_LOGIN, metadata);
   }
 
-  public startProductBrowse(metadata?: Record<string, any>): string {
+  public startProductBrowse(metadata?: Record<string, unknown>): string {
     return this.startPath(this.CRITICAL_PATHS.PRODUCT_BROWSE, metadata);
   }
 
-  public startAddToCart(metadata?: Record<string, any>): string {
+  public startAddToCart(metadata?: Record<string, unknown>): string {
     return this.startPath(this.CRITICAL_PATHS.ADD_TO_CART, metadata);
   }
 
-  public startCheckoutFlow(metadata?: Record<string, any>): string {
+  public startCheckoutFlow(metadata?: Record<string, unknown>): string {
     return this.startPath(this.CRITICAL_PATHS.CHECKOUT_FLOW, metadata);
   }
 
-  public startOrderCompletion(metadata?: Record<string, any>): string {
+  public startOrderCompletion(metadata?: Record<string, unknown>): string {
     return this.startPath(this.CRITICAL_PATHS.ORDER_COMPLETION, metadata);
   }
 
-  public startAdminLogin(metadata?: Record<string, any>): string {
+  public startAdminLogin(metadata?: Record<string, unknown>): string {
     return this.startPath(this.CRITICAL_PATHS.ADMIN_LOGIN, metadata);
   }
 
-  public startAdminProductManagement(metadata?: Record<string, any>): string {
+  public startAdminProductManagement(metadata?: Record<string, unknown>): string {
     return this.startPath(this.CRITICAL_PATHS.ADMIN_PRODUCT_MANAGEMENT, metadata);
   }
 
-  public startAdminOrderManagement(metadata?: Record<string, any>): string {
+  public startAdminOrderManagement(metadata?: Record<string, unknown>): string {
     return this.startPath(this.CRITICAL_PATHS.ADMIN_ORDER_MANAGEMENT, metadata);
   }
 

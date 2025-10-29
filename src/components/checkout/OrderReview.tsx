@@ -2,8 +2,8 @@
 import React from 'react';
 
 interface OrderReviewProps {
-  shippingData: any;
-  paymentData: any;
+  shippingData: unknown;
+  paymentData: unknown;
   onBack: () => void;
   onPlaceOrder: () => void;
 }

@@ -82,8 +82,8 @@ export async function testDatabaseConnection() {
     });
     
     const { data, error } = await supabase
-      .from('products')
-      .select('count()')
+      .from('categories')
+      .select('id')
       .limit(1);
 
     if (error) {

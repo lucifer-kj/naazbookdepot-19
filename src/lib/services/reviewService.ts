@@ -42,7 +42,7 @@ export class ReviewService {
     
     if (error) throw error;
     
-    return (data as any[]).map(review => ({
+    return (data as unknown[]).map(review => ({
       ...review,
       user_helpful_vote: userId ? review.review_helpful_votes?.[0]?.is_helpful : undefined,
       is_verified_purchase: review.verified_purchase
@@ -306,7 +306,7 @@ export class ReviewService {
       acc[category].totalRating += review.rating;
       acc[category].averageRating = acc[category].totalRating / acc[category].count;
       return acc;
-    }, {} as Record<string, any>);
+    }, {} as Record<string, unknown>);
 
     return {
       totalReviews,

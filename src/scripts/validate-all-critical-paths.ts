@@ -39,10 +39,10 @@ console.log('');
 
 async function runCompleteValidation() {
   const results = {
-    auth: { success: false, error: null as any },
-    cart: { success: false, error: null as any },
-    admin: { success: false, error: null as any },
-    catalog: { success: false, error: null as any }
+    auth: { success: false, error: null as unknown },
+    cart: { success: false, error: null as unknown },
+    admin: { success: false, error: null as unknown },
+    catalog: { success: false, error: null as unknown }
   };
 
   console.log('🔐 Starting Authentication Flow Validation...\n');

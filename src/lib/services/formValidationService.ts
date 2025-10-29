@@ -6,7 +6,7 @@ import { supabase } from '../supabase';
 export interface ValidationResult {
   isValid: boolean;
   errors: Record<string, string>;
-  sanitizedData?: any;
+  sanitizedData?: Record<string, unknown>;
 }
 
 export interface ServerValidationConfig {
@@ -28,7 +28,7 @@ class FormValidationService {
   ): Promise<ValidationResult> {
     try {
       // First sanitize the data
-      const sanitizedData = sanitizationService.sanitizeFormData(data as Record<string, any>);
+      const sanitizedData = sanitizationService.sanitizeFormData(data as Record<string, unknown>);
       
       // Validate against schema
       const validatedData = await schema.parseAsync(sanitizedData);
@@ -85,7 +85,7 @@ class FormValidationService {
    * Performs server-side validations
    */
   private async performServerValidations(
-    data: any,
+    data: Record<string, unknown>,
     config: ServerValidationConfig
   ): Promise<Record<string, string>> {
     const errors: Record<string, string> = {};
@@ -314,7 +314,7 @@ class FormValidationService {
   /**
    * Basic rate limiting check
    */
-  private async checkRateLimit(data: any): Promise<ValidationResult> {
+  private async checkRateLimit(data: Record<string, unknown>): Promise<ValidationResult> {
     // This is a basic implementation - in production, use Redis or similar
     const identifier = data.email || data.userId || 'anonymous';
     const key = `rate_limit_${identifier}`;

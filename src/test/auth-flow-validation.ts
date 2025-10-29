@@ -5,7 +5,7 @@ interface AuthValidationResult {
   test: string;
   status: 'pass' | 'fail' | 'warning';
   message: string;
-  details?: any;
+  details?: Record<string, unknown>;
 }
 
 export class AuthFlowValidator {
@@ -211,7 +211,7 @@ export class AuthFlowValidator {
     }
   }
 
-  private addResult(test: string, status: 'pass' | 'fail' | 'warning', message: string, details?: any): void {
+  private addResult(test: string, status: 'pass' | 'fail' | 'warning', message: string, details?: Record<string, unknown>): void {
     this.results.push({ test, status, message, details });
     
     const emoji = status === 'pass' ? '✅' : status === 'fail' ? '❌' : '⚠️';

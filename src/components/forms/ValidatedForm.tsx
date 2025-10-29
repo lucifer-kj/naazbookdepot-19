@@ -38,7 +38,7 @@ export function ValidatedForm<T extends FieldValues>({
     onSubmit,
     ...validationConfig,
   }, {
-    defaultValues: defaultValues as any,
+    defaultValues: defaultValues as unknown,
   });
 
   const {
@@ -95,7 +95,7 @@ export function ValidatedForm<T extends FieldValues>({
 // Specialized form components for common use cases
 
 export interface ContactFormProps {
-  onSubmit: (data: any) => Promise<void>;
+  onSubmit: (data: unknown) => Promise<void>;
   className?: string;
 }
 
@@ -189,7 +189,7 @@ export function ContactForm({ onSubmit, className }: ContactFormProps) {
 }
 
 export interface NewsletterFormProps {
-  onSubmit: (data: any) => Promise<void>;
+  onSubmit: (data: unknown) => Promise<void>;
   className?: string;
 }
 
@@ -242,7 +242,7 @@ export function NewsletterForm({ onSubmit, className }: NewsletterFormProps) {
 
 export interface AuthFormProps {
   type: 'signin' | 'signup' | 'forgot' | 'reset';
-  onSubmit: (data: any) => Promise<void>;
+  onSubmit: (data: unknown) => Promise<void>;
   className?: string;
 }
 

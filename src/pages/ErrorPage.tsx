@@ -210,8 +210,8 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
                 <div><strong>User Agent:</strong> {navigator.userAgent}</div>
                 <div><strong>URL:</strong> {window.location.href}</div>
                 <div><strong>Online:</strong> {navigator.onLine ? 'Yes' : 'No'}</div>
-                {(navigator as any).connection && (
-                  <div><strong>Connection:</strong> {(navigator as any).connection.effectiveType}</div>
+                {(navigator as unknown).connection && (
+                  <div><strong>Connection:</strong> {(navigator as unknown).connection.effectiveType}</div>
                 )}
               </div>
             </div>

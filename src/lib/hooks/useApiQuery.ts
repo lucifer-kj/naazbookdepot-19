@@ -193,7 +193,7 @@ export function useOptimisticMutation<T, V = void>({
   ...options
 }: ApiMutationOptions<T, V> & {
   queryKey: string[];
-  optimisticUpdate: (oldData: any, variables: V) => any;
+  optimisticUpdate: (oldData: unknown, variables: V) => unknown;
 }) {
   const queryClient = useQueryClient();
 
@@ -219,7 +219,7 @@ export function useOptimisticMutation<T, V = void>({
       const previousData = queryClient.getQueryData(queryKey);
 
       // Optimistically update to the new value
-      queryClient.setQueryData(queryKey, (old: any) => optimisticUpdate(old, variables));
+      queryClient.setQueryData(queryKey, (old: unknown) => optimisticUpdate(old, variables));
 
       // Return a context object with the snapshotted value
       return { previousData };
@@ -298,11 +298,11 @@ export function useFileUploadMutation({
   successMessage = 'File uploaded successfully',
   onProgress,
   ...options
-}: Omit<ApiMutationOptions<any, File>, 'mutationFn'> & {
-  uploadFn: (file: File, onProgress?: (progress: number) => void) => Promise<any>;
+}: Omit<ApiMutationOptions<unknown, File>, 'mutationFn'> & {
+  uploadFn: (file: File, onProgress?: (progress: number) => void) => Promise<unknown>;
   onProgress?: (progress: number) => void;
 }) {
-  return useMutation<any, ApiError, File>({
+  return useMutation<unknown, ApiError, File>({
     ...options,
     mutationFn: async (file: File) => {
       return apiErrorHandler.handleApiCall(

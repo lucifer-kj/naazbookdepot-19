@@ -114,7 +114,7 @@ export function useAdvancedRateLimit({
     getUserId,
     getClientIP: getIP,
     skipCondition,
-    onLimitExceeded: (result: any) => {
+    onLimitExceeded: (result: unknown) => {
       setIsRateLimited(true);
       setRetryAfter(result.retryAfter || null);
     }

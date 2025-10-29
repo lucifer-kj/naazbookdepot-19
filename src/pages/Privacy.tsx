@@ -126,7 +126,7 @@ const Privacy = () => {
             <section className="bg-naaz-green text-white p-8 rounded-lg">
               <h2 className="text-2xl font-playfair font-bold mb-4">Contact Us</h2>
               <p className="mb-4">
-                If you have any questions about this Privacy Policy or our data practices, please contact us:
+                If you have unknown questions about this Privacy Policy or our data practices, please contact us:
               </p>
               <div className="space-y-2">
                 <p>📧 Email: privacy@naazbookdepot.com</p>

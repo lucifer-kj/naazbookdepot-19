@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import { MapPin, Plus } from 'lucide-react';
 
 interface ShippingFormProps {
-  user: any;
-  onComplete: (data: any) => void;
+  user: unknown;
+  onComplete: (data: unknown) => void;
 }
 
 const ShippingForm: React.FC<ShippingFormProps> = ({ user, onComplete }) => {
@@ -249,7 +249,7 @@ const ShippingForm: React.FC<ShippingFormProps> = ({ user, onComplete }) => {
             value={formData.specialInstructions}
             onChange={handleInputChange}
             rows={2}
-            placeholder="Any special delivery instructions..."
+            placeholder="unknown special delivery instructions..."
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-naaz-green"
           />
         </div>

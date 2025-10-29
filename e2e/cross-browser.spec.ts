@@ -207,7 +207,7 @@ test.describe('Cross-Browser Compatibility', () => {
         await productCard.tap();
         
         // Should navigate to product page
-        await expect(page).toHaveURL(/\/products\/[^\/]+$/);
+        await expect(page).toHaveURL(/\/products\/[^/]+$/);
         
         await context.close();
       });

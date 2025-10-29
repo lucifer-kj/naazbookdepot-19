@@ -27,7 +27,7 @@ describe('ApiErrorHandler', () => {
   describe('handleError', () => {
     it('should handle network errors', () => {
       const networkError = new Error('Network Error');
-      (networkError as any).code = 'NETWORK_ERROR';
+      (networkError as unknown).code = 'NETWORK_ERROR';
 
       const result = apiErrorHandler.handleError(networkError);
 
@@ -41,7 +41,7 @@ describe('ApiErrorHandler', () => {
 
     it('should handle authentication errors', () => {
       const authError = new Error('Unauthorized');
-      (authError as any).status = 401;
+      (authError as unknown).status = 401;
 
       const result = apiErrorHandler.handleError(authError);
 
@@ -52,8 +52,8 @@ describe('ApiErrorHandler', () => {
 
     it('should handle validation errors', () => {
       const validationError = new Error('Validation failed');
-      (validationError as any).status = 400;
-      (validationError as any).details = { field: 'email', message: 'Invalid email' };
+      (validationError as unknown).status = 400;
+      (validationError as unknown).details = { field: 'email', message: 'Invalid email' };
 
       const result = apiErrorHandler.handleError(validationError);
 
@@ -64,7 +64,7 @@ describe('ApiErrorHandler', () => {
 
     it('should handle server errors', () => {
       const serverError = new Error('Internal Server Error');
-      (serverError as any).status = 500;
+      (serverError as unknown).status = 500;
 
       const result = apiErrorHandler.handleError(serverError);
 
@@ -74,7 +74,7 @@ describe('ApiErrorHandler', () => {
 
     it('should handle rate limiting errors', () => {
       const rateLimitError = new Error('Too Many Requests');
-      (rateLimitError as any).status = 429;
+      (rateLimitError as unknown).status = 429;
 
       const result = apiErrorHandler.handleError(rateLimitError);
 
@@ -96,14 +96,14 @@ describe('ApiErrorHandler', () => {
   describe('shouldRetry', () => {
     it('should return true for retryable errors', () => {
       const networkError = new Error('Network Error');
-      (networkError as any).code = 'NETWORK_ERROR';
+      (networkError as unknown).code = 'NETWORK_ERROR';
 
       expect(apiErrorHandler.shouldRetry(networkError)).toBe(true);
     });
 
     it('should return false for non-retryable errors', () => {
       const authError = new Error('Unauthorized');
-      (authError as any).status = 401;
+      (authError as unknown).status = 401;
 
       expect(apiErrorHandler.shouldRetry(authError)).toBe(false);
     });

@@ -76,7 +76,7 @@ export class ErrorHandler {
   /**
    * Formats console output for development
    */
-  private formatConsoleOutput(level: LogLevel, message: string, data?: any): void {
+  private formatConsoleOutput(level: LogLevel, message: string, data?: unknown): void {
     if (!this.config.enableConsoleLogging || !this.shouldLog(level)) return;
 
     const timestamp = new Date().toLocaleTimeString();
@@ -241,7 +241,7 @@ export class ErrorHandler {
         ...context?.additionalData,
         url,
         online: navigator.onLine,
-        connectionType: (navigator as any).connection?.effectiveType
+        connectionType: (navigator as unknown as { connection?: { effectiveType?: string } }).connection?.effectiveType
       }
     };
 

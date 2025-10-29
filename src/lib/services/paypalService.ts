@@ -51,7 +51,7 @@ export interface PayPalCapture {
 export interface PayPalWebhook {
   id: string;
   event_type: string;
-  resource: any;
+  resource: unknown;
   summary: string;
   resource_type: string;
   event_version: string;
@@ -242,7 +242,7 @@ class PayPalService {
   /**
    * Get order details
    */
-  async getOrderDetails(paypalOrderId: string): Promise<any> {
+  async getOrderDetails(paypalOrderId: string): Promise<unknown> {
     try {
       const accessToken = await this.getAccessToken();
 
@@ -298,7 +298,7 @@ class PayPalService {
   /**
    * Handle order approved webhook
    */
-  private async handleOrderApproved(resource: any): Promise<void> {
+  private async handleOrderApproved(resource: unknown): Promise<void> {
     const orderId = resource.purchase_units[0].reference_id;
     await this.updateOrderStatus(orderId, 'approved', resource.id);
   }
@@ -306,7 +306,7 @@ class PayPalService {
   /**
    * Handle payment captured webhook
    */
-  private async handlePaymentCaptured(resource: any): Promise<void> {
+  private async handlePaymentCaptured(resource: unknown): Promise<void> {
     const orderId = resource.supplementary_data?.related_ids?.order_id;
     if (orderId) {
       await this.updateOrderStatus(orderId, 'completed', resource.id);
@@ -316,7 +316,7 @@ class PayPalService {
   /**
    * Handle payment denied webhook
    */
-  private async handlePaymentDenied(resource: any): Promise<void> {
+  private async handlePaymentDenied(resource: unknown): Promise<void> {
     const orderId = resource.supplementary_data?.related_ids?.order_id;
     if (orderId) {
       await this.updateOrderStatus(orderId, 'denied', resource.id);
@@ -326,7 +326,7 @@ class PayPalService {
   /**
    * Handle order voided webhook
    */
-  private async handleOrderVoided(resource: any): Promise<void> {
+  private async handleOrderVoided(resource: unknown): Promise<void> {
     const orderId = resource.purchase_units[0].reference_id;
     await this.updateOrderStatus(orderId, 'voided', resource.id);
   }
@@ -380,11 +380,11 @@ class PayPalService {
   /**
    * Refund payment
    */
-  async refundPayment(captureId: string, amount?: number, currency?: string): Promise<any> {
+  async refundPayment(captureId: string, amount?: number, currency?: string): Promise<unknown> {
     try {
       const accessToken = await this.getAccessToken();
 
-      const refundData: any = {};
+      const refundData: unknown = {};
       if (amount && currency) {
         refundData.amount = {
           value: amount.toFixed(2),

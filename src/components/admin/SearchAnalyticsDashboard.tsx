@@ -14,7 +14,7 @@ interface SearchAnalyticsDashboardProps {
 const SearchAnalyticsDashboard: React.FC<SearchAnalyticsDashboardProps> = ({
   className
 }) => {
-  const [analytics, setAnalytics] = useState<any>(null);
+  const [analytics, setAnalytics] = useState<unknown>(null);
   const [timeRange, setTimeRange] = useState('30d');
   const [isLoading, setIsLoading] = useState(true);
 

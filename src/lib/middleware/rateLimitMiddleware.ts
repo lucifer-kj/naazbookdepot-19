@@ -5,7 +5,7 @@ export interface RateLimitMiddlewareOptions {
   config: RateLimitConfig;
   getUserId?: () => string | undefined;
   getClientIP?: () => string | undefined;
-  onLimitExceeded?: (result: any) => void;
+  onLimitExceeded?: (result: unknown) => void;
   skipCondition?: () => boolean;
 }
 
@@ -121,7 +121,7 @@ export class RateLimitMiddleware {
   /**
    * Create a rate-limited wrapper for API functions
    */
-  static createRateLimitedWrapper<T extends (...args: any[]) => Promise<any>>(
+  static createRateLimitedWrapper<T extends (...args: unknown[]) => Promise<unknown>>(
     fn: T,
     action: string,
     options: RateLimitMiddlewareOptions
@@ -156,7 +156,7 @@ export class RateLimitMiddleware {
    */
   static getRateLimitStatus(
     options: RateLimitMiddlewareOptions
-  ): any {
+  ): unknown {
     const userId = options.getUserId?.();
     const clientIP = options.getClientIP?.();
 
@@ -187,7 +187,7 @@ export const rateLimitMiddlewares = {
       config: rateLimitConfigs.auth,
       getUserId,
       getClientIP,
-      onLimitExceeded: (result: any) => {
+      onLimitExceeded: (result: unknown) => {
         sentryService.addBreadcrumb(
           'Authentication rate limit exceeded',
           'security',
@@ -201,7 +201,7 @@ export const rateLimitMiddlewares = {
       config: rateLimitConfigs.auth,
       getUserId,
       getClientIP,
-      onLimitExceeded: (result: any) => {
+      onLimitExceeded: (result: unknown) => {
         sentryService.addBreadcrumb(
           'Sign up rate limit exceeded',
           'security',
@@ -215,7 +215,7 @@ export const rateLimitMiddlewares = {
       config: rateLimitConfigs.passwordReset,
       getUserId,
       getClientIP,
-      onLimitExceeded: (result: any) => {
+      onLimitExceeded: (result: unknown) => {
         sentryService.addBreadcrumb(
           'Password reset rate limit exceeded',
           'security',
@@ -243,7 +243,7 @@ export const rateLimitMiddlewares = {
       config: rateLimitConfigs.uploads,
       getUserId,
       getClientIP,
-      onLimitExceeded: (result: any) => {
+      onLimitExceeded: (result: unknown) => {
         sentryService.addBreadcrumb(
           'File upload rate limit exceeded',
           'security',

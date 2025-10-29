@@ -6,7 +6,7 @@ export interface BreadcrumbData {
   message: string;
   category: string;
   level: 'debug' | 'info' | 'warning' | 'error';
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
   timestamp?: string;
 }
 
@@ -156,7 +156,7 @@ export class ErrorMonitoring {
     message: string,
     category: string,
     level: BreadcrumbData['level'] = 'info',
-    data?: Record<string, any>
+    data?: Record<string, unknown>
   ): void {
     const breadcrumb: BreadcrumbData = {
       message,
@@ -241,7 +241,7 @@ export class ErrorMonitoring {
   trackInteraction(
     action: string,
     element: string,
-    details?: Record<string, any>
+    details?: Record<string, unknown>
   ): void {
     this.sessionContext.interactions++;
 
@@ -294,8 +294,8 @@ export class ErrorMonitoring {
   /**
    * Get connection information
    */
-  private getConnectionInfo(): any {
-    const connection = (navigator as any).connection;
+  private getConnectionInfo(): unknown {
+    const connection = (navigator as unknown).connection;
     if (!connection) return null;
 
     return {
@@ -309,8 +309,8 @@ export class ErrorMonitoring {
   /**
    * Get memory information
    */
-  private getMemoryInfo(): any {
-    const memory = (performance as any).memory;
+  private getMemoryInfo(): unknown {
+    const memory = (performance as unknown).memory;
     if (!memory) return null;
 
     return {

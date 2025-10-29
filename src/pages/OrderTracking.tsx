@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   Package, 
@@ -32,9 +32,9 @@ const OrderTracking = () => {
     if (orderNumber) {
       loadTrackingInfo();
     }
-  }, [orderNumber]);
+  }, [orderNumber, loadTrackingInfo]);
 
-  const loadTrackingInfo = async () => {
+  const loadTrackingInfo = useCallback(async () => {
     if (!orderNumber) return;
 
     try {
@@ -54,7 +54,7 @@ const OrderTracking = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [orderNumber]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -304,19 +304,19 @@ const OrderTracking = () => {
                       Shipping Address
                     </h3>
                     <div className="text-sm text-gray-600">
-                      <p>{(order.shipping_address as any).name}</p>
-                      <p>{(order.shipping_address as any).address_line_1}</p>
-                      {(order.shipping_address as any).address_line_2 && (
-                        <p>{(order.shipping_address as any).address_line_2}</p>
+                      <p>{(order.shipping_address as unknown).name}</p>
+                      <p>{(order.shipping_address as unknown).address_line_1}</p>
+                      {(order.shipping_address as unknown).address_line_2 && (
+                        <p>{(order.shipping_address as unknown).address_line_2}</p>
                       )}
                       <p>
-                        {(order.shipping_address as any).city}, {(order.shipping_address as any).state} {(order.shipping_address as any).postal_code}
+                        {(order.shipping_address as unknown).city}, {(order.shipping_address as unknown).state} {(order.shipping_address as unknown).postal_code}
                       </p>
-                      <p>{(order.shipping_address as any).country}</p>
-                      {(order.shipping_address as any).phone && (
+                      <p>{(order.shipping_address as unknown).country}</p>
+                      {(order.shipping_address as unknown).phone && (
                         <p className="flex items-center mt-1">
                           <Phone className="w-3 h-3 mr-1" />
-                          {(order.shipping_address as any).phone}
+                          {(order.shipping_address as unknown).phone}
                         </p>
                       )}
                     </div>
@@ -383,7 +383,7 @@ const OrderTracking = () => {
               <div className="bg-white rounded-lg shadow-sm p-6">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Order Items</h2>
                 <div className="space-y-4">
-                  {order.order_items.map((item: any) => (
+                  {order.order_items.map((item: unknown) => (
                     <div key={item.id} className="flex items-center space-x-3 pb-4 border-b border-gray-100 last:border-b-0 last:pb-0">
                       <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
                         <Package className="w-6 h-6 text-gray-400" />

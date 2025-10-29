@@ -98,7 +98,7 @@ export const optimizeCaching = () => {
 // Memory usage monitoring
 export const monitorMemoryUsage = () => {
   if (import.meta.env.DEV && 'memory' in performance) {
-    const memory = (performance as any).memory;
+    const memory = (performance as unknown).memory;
     console.log('Memory usage:', {
       used: `${(memory.usedJSHeapSize / 1024 / 1024).toFixed(2)} MB`,
       total: `${(memory.totalJSHeapSize / 1024 / 1024).toFixed(2)} MB`,
@@ -113,7 +113,7 @@ export const collectPerformanceMetrics = () => {
     // Collect Core Web Vitals
     const observer = new PerformanceObserver((list) => {
       list.getEntries().forEach((entry) => {
-        if (import.meta.env.DEV) {
+        if (import.meta.env.DEV && entry.name.includes('LCP') || entry.name.includes('FID') || entry.name.includes('CLS')) {
           console.log(`${entry.name}: ${entry.value}`);
         }
         

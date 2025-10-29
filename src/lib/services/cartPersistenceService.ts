@@ -176,7 +176,7 @@ class CartPersistenceService {
    */
   private async resolveConflicts(
     localCart: CartState | null,
-    serverItems: any[],
+    serverItems: unknown[],
     userId: string
   ): Promise<CartState> {
     const mergedItems: CartItem[] = [];
@@ -223,7 +223,7 @@ class CartPersistenceService {
   /**
    * Convert server cart item to local format
    */
-  private convertServerItemToLocal(serverItem: any): CartItem {
+  private convertServerItemToLocal(serverItem: unknown): CartItem {
     return {
       id: serverItem.id,
       productId: serverItem.product_id,
@@ -349,7 +349,7 @@ class CartPersistenceService {
         }
         break;
         
-      case 'clear':
+      case 'clear': {
         const { error } = await supabase
           .from('cart_items')
           .delete()
@@ -357,6 +357,7 @@ class CartPersistenceService {
         
         if (error) throw error;
         break;
+      }
     }
   }
 

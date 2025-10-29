@@ -13,7 +13,7 @@ interface CacheOptions {
 }
 
 interface CacheEntry {
-  data: any;
+  data: unknown;
   timestamp: number;
   ttl: number;
   version: string;
@@ -28,7 +28,7 @@ class CacheService {
   /**
    * Set data in cache with specified options
    */
-  async set(key: string, data: any, options: CacheOptions = {}): Promise<void> {
+  async set(key: string, data: unknown, options: CacheOptions = {}): Promise<void> {
     const {
       ttl = CACHE_TIMES.SHORT,
       storage = 'memory',
@@ -76,7 +76,7 @@ class CacheService {
   /**
    * Get data from cache
    */
-  async get(key: string, storage: 'memory' | 'localStorage' | 'sessionStorage' | 'indexedDB' = 'memory'): Promise<any | null> {
+  async get(key: string, storage: 'memory' | 'localStorage' | 'sessionStorage' | 'indexedDB' = 'memory'): Promise<unknown | null> {
     let entry: CacheEntry | null = null;
 
     switch (storage) {
@@ -423,11 +423,11 @@ class CacheService {
     }
   }
 
-  private getDataSize(data: any): number {
+  private getDataSize(data: unknown): number {
     return JSON.stringify(data).length;
   }
 
-  private async compressData(data: any): Promise<string> {
+  private async compressData(data: unknown): Promise<string> {
     // Simple compression using built-in compression
     const jsonString = JSON.stringify(data);
     
@@ -462,7 +462,7 @@ class CacheService {
     return jsonString;
   }
 
-  private async decompressData(compressedData: string): Promise<any> {
+  private async decompressData(compressedData: string): Promise<unknown> {
     if ('DecompressionStream' in window) {
       try {
         const compressed = Uint8Array.from(atob(compressedData), c => c.charCodeAt(0));
@@ -501,14 +501,14 @@ class CacheService {
     return JSON.parse(compressedData);
   }
 
-  private async encryptData(data: any): Promise<string> {
+  private async encryptData(data: unknown): Promise<string> {
     // Simple encryption for demo purposes
     // In production, use proper encryption libraries
     const jsonString = JSON.stringify(data);
     return btoa(jsonString);
   }
 
-  private async decryptData(encryptedData: string): Promise<any> {
+  private async decryptData(encryptedData: string): Promise<unknown> {
     // Simple decryption for demo purposes
     try {
       const jsonString = atob(encryptedData);

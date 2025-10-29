@@ -79,9 +79,9 @@ export const useCreateOrder = () => {
       notes,
       paymentMethod = 'cod'
     }: {
-      cartItems: any[];
-      shippingAddress: any;
-      billingAddress?: any;
+      cartItems: unknown[];
+      shippingAddress: unknown;
+      billingAddress?: unknown;
       total: number;
       notes?: string;
       paymentMethod?: string;
@@ -193,7 +193,7 @@ export const useUpdateOrderStatus = () => {
       status: string;
       trackingNumber?: string;
     }) => {
-      const updateData: any = { status };
+      const updateData: unknown = { status };
       if (trackingNumber) {
         updateData.tracking_number = trackingNumber;
       }

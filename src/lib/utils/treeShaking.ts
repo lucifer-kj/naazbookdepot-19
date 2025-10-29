@@ -273,7 +273,7 @@ export const treeShakingAnalyzer = new TreeShakingAnalyzer();
 
 // Development utilities
 if (import.meta.env.DEV) {
-  (window as any).treeShakingAnalyzer = treeShakingAnalyzer;
+  (window as unknown).treeShakingAnalyzer = treeShakingAnalyzer;
   
   // Generate report after page load
   window.addEventListener('load', () => {

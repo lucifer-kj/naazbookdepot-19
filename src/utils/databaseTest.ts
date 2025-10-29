@@ -3,9 +3,9 @@ import { supabase } from '../lib/supabase';
 export const testDatabaseConnection = async () => {
   try {
     const { data, error } = await supabase
-      .from('products')
-      .select('count()')
-      .single();
+      .from('categories')
+      .select('id')
+      .limit(1);
 
     if (error) {
       throw error;

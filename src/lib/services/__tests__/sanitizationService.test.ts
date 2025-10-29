@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { sanitizationService } from '../sanitizationService';
+import DOMPurify from 'dompurify';
 
 // Mock DOMPurify
 vi.mock('dompurify', () => ({
@@ -29,8 +30,8 @@ describe('SanitizationService', () => {
   describe('sanitizeHtml', () => {
     it('should return empty string for null or undefined input', () => {
       expect(sanitizationService.sanitizeHtml('')).toBe('');
-      expect(sanitizationService.sanitizeHtml(null as any)).toBe('');
-      expect(sanitizationService.sanitizeHtml(undefined as any)).toBe('');
+      expect(sanitizationService.sanitizeHtml(null as unknown)).toBe('');
+      expect(sanitizationService.sanitizeHtml(undefined as unknown)).toBe('');
     });
 
     it('should sanitize HTML content', () => {
@@ -62,7 +63,7 @@ describe('SanitizationService', () => {
     it('should handle HTML entities', () => {
       const input = 'Hello&nbsp;&amp;&lt;&gt;&quot;&#x27;&#x2F;world';
       const result = sanitizationService.stripHtml(input);
-      expect(result).toBe('Hello &<>"\'\/world');
+      expect(result).toBe('Hello &<>"\'/world');
     });
 
     it('should truncate when maxLength is specified', () => {
@@ -264,7 +265,7 @@ describe('SanitizationService', () => {
   describe('error handling', () => {
     it('should handle errors gracefully and return safe defaults', () => {
       // Mock DOMPurify to throw an error
-      const DOMPurify = require('dompurify').default;
+      // DOMPurify is already imported
       DOMPurify.sanitize.mockImplementationOnce(() => {
         throw new Error('DOMPurify error');
       });

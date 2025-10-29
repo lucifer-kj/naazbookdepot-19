@@ -115,7 +115,7 @@ export const useDeleteProduct = () => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
       queryClient.invalidateQueries({ queryKey: ['products'] });
       queryClient.invalidateQueries({ queryKey: ['search-products'] });
-      // Remove all cached product lists with any categoryId
+      // Remove all cached product lists with unknown categoryId
       queryClient.invalidateQueries({ predicate: (query) => {
         const key = Array.isArray(query.queryKey) ? query.queryKey : [];
         return key[0] === 'products';

@@ -14,7 +14,7 @@ export interface ApiClientConfig {
   enableLogging?: boolean;
 }
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   data?: T;
   error?: ApiError;
   success: boolean;
@@ -134,7 +134,7 @@ export class ApiClient {
    * Supabase query wrapper with standardized error handling
    */
   async supabaseQuery<T>(
-    queryFn: () => Promise<{ data: T | null; error: any }>,
+    queryFn: () => Promise<{ data: T | null; error: unknown }>,
     operation: string,
     context?: ErrorContext
   ): Promise<ApiResponse<T>> {
@@ -176,7 +176,7 @@ export class ApiClient {
    */
   async post<T>(
     url: string,
-    data?: any,
+    data?: unknown,
     options: RequestInit = {},
     context?: ErrorContext
   ): Promise<ApiResponse<T>> {
@@ -203,7 +203,7 @@ export class ApiClient {
    */
   async put<T>(
     url: string,
-    data?: any,
+    data?: unknown,
     options: RequestInit = {},
     context?: ErrorContext
   ): Promise<ApiResponse<T>> {

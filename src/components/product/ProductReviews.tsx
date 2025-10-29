@@ -47,7 +47,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
   const reportReview = useReportReview();
 
   const [showForm, setShowForm] = useState(false);
-  const [editingReview, setEditingReview] = useState<any>(null);
+  const [editingReview, setEditingReview] = useState<unknown>(null);
   const [rating, setRating] = useState(5);
   const [title, setTitle] = useState('');
   const [comment, setComment] = useState('');
@@ -89,7 +89,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
     }
   };
 
-  const handleEdit = (review: any) => {
+  const handleEdit = (review: unknown) => {
     setEditingReview(review);
     setRating(review.rating);
     setTitle(review.title || '');
@@ -112,7 +112,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
     try {
       await reportReview.mutateAsync({
         reviewId: reportingReview,
-        reason: reportReason as any,
+        reason: reportReason as unknown,
         description: reportDescription,
       });
       setReportingReview(null);

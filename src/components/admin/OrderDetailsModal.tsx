@@ -64,7 +64,7 @@ const OrderDetailsModal = ({ orderId, isOpen, onClose }: OrderDetailsModalProps)
     try {
       await updateOrderStatus.mutateAsync({
         orderId,
-        status: newStatus as any,
+        status: newStatus as unknown,
         trackingNumber: trackingNumber || undefined
       });
       setEditingStatus(false);
@@ -263,11 +263,11 @@ const OrderDetailsModal = ({ orderId, isOpen, onClose }: OrderDetailsModalProps)
                 </h3>
                 {order.shipping_address && (
                   <div className="space-y-1 text-sm">
-                    <p>{(order.shipping_address as any).name}</p>
-                    <p>{(order.shipping_address as any).line1}</p>
-                    {(order.shipping_address as any).line2 && <p>{(order.shipping_address as any).line2}</p>}
-                    <p>{(order.shipping_address as any).city}, {(order.shipping_address as any).state}</p>
-                    <p>{(order.shipping_address as any).postalCode}</p>
+                    <p>{(order.shipping_address as unknown).name}</p>
+                    <p>{(order.shipping_address as unknown).line1}</p>
+                    {(order.shipping_address as unknown).line2 && <p>{(order.shipping_address as unknown).line2}</p>}
+                    <p>{(order.shipping_address as unknown).city}, {(order.shipping_address as unknown).state}</p>
+                    <p>{(order.shipping_address as unknown).postalCode}</p>
                   </div>
                 )}
               </div>

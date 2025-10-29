@@ -8,6 +8,6 @@ export interface DefaultAddress {
   landmark?: string;
 }
 
-export function isDefaultAddress(obj: any): obj is DefaultAddress {
+export function isDefaultAddress(obj: unknown): obj is DefaultAddress {
   return obj && typeof obj === 'object' && !Array.isArray(obj);
 }

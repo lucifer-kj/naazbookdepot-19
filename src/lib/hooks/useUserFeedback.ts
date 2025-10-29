@@ -63,7 +63,7 @@ export const useUserFeedback = () => {
     }
 
     return id;
-  }, []);
+  }, [removeMessage]);
 
   const removeMessage = useCallback((id: string) => {
     setMessages(prev => prev.filter(msg => msg.id !== id));
@@ -117,8 +117,9 @@ export const useUserFeedback = () => {
 
   // Cleanup timeouts on unmount
   useEffect(() => {
+    const timeouts = timeoutsRef.current;
     return () => {
-      timeoutsRef.current.forEach(timeout => clearTimeout(timeout));
+      timeouts.forEach(timeout => clearTimeout(timeout));
     };
   }, []);
 

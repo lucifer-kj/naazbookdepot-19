@@ -7,7 +7,7 @@ interface PerformanceMetric {
   name: string;
   value: number;
   timestamp: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 interface ErrorEvent {
@@ -27,7 +27,7 @@ interface UserInteraction {
   target: string;
   timestamp: string;
   duration?: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 class ProductionMonitoringService {
@@ -103,8 +103,8 @@ class ProductionMonitoringService {
             value: lastEntry.startTime,
             timestamp: new Date().toISOString(),
             metadata: {
-              element: (lastEntry as any).element?.tagName,
-              url: (lastEntry as any).url
+              element: (lastEntry as unknown).element?.tagName,
+              url: (lastEntry as unknown).url
             }
           });
         });
@@ -116,10 +116,10 @@ class ProductionMonitoringService {
           entries.forEach((entry) => {
             this.captureMetric({
               name: 'first_input_delay',
-              value: (entry as any).processingStart - entry.startTime,
+              value: (entry as unknown).processingStart - entry.startTime,
               timestamp: new Date().toISOString(),
               metadata: {
-                eventType: (entry as any).name
+                eventType: (entry as unknown).name
               }
             });
           });
@@ -132,8 +132,8 @@ class ProductionMonitoringService {
           const entries = list.getEntries();
           
           entries.forEach((entry) => {
-            if (!(entry as any).hadRecentInput) {
-              clsValue += (entry as any).value;
+            if (!(entry as unknown).hadRecentInput) {
+              clsValue += (entry as unknown).value;
             }
           });
 
@@ -254,7 +254,7 @@ class ProductionMonitoringService {
   private collectSystemMetrics(): void {
     // Memory usage
     if ('memory' in performance) {
-      const memory = (performance as any).memory;
+      const memory = (performance as unknown).memory;
       
       this.captureMetric({
         name: 'memory_usage',
@@ -269,7 +269,7 @@ class ProductionMonitoringService {
 
     // Connection information
     if ('connection' in navigator) {
-      const connection = (navigator as any).connection;
+      const connection = (navigator as unknown).connection;
       
       this.captureMetric({
         name: 'network_info',

@@ -304,7 +304,7 @@ const Checkout = () => {
                 <div className="bg-white rounded-lg shadow-sm p-6">
                   <h2 className="text-xl font-semibold mb-4">Special Instructions (Optional)</h2>
                   <Textarea
-                    placeholder="Any special delivery instructions..."
+                    placeholder="unknown special delivery instructions..."
                     value={specialInstructions}
                     onChange={(e) => setSpecialInstructions(e.target.value)}
                   />

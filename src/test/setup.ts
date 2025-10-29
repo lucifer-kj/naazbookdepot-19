@@ -46,7 +46,6 @@ vi.mock('react-router-dom', () => ({
   Routes: ({ children }: { children: React.ReactNode }) => children,
   Route: ({ children }: { children: React.ReactNode }) => children,
   Link: ({ children, to }: { children: React.ReactNode; to: string }) => {
-    const React = require('react');
     return React.createElement('a', { href: to }, children);
   }
 }));

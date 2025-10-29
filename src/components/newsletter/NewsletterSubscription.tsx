@@ -196,7 +196,7 @@ export const NewsletterSubscription = ({
 
       {variant !== 'footer' && (
         <div className="mt-4 text-xs text-gray-500">
-          <p>We respect your privacy. Unsubscribe at any time.</p>
+          <p>We respect your privacy. Unsubscribe at unknown time.</p>
         </div>
       )}
     </div>

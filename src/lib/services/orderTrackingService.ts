@@ -184,7 +184,7 @@ export class OrderTrackingService {
   ): Promise<boolean> {
     try {
       // Update order status
-      const updateData: any = {
+      const updateData: unknown = {
         status,
         updated_at: new Date().toISOString()
       };
@@ -288,7 +288,7 @@ export class OrderTrackingService {
    */
   private async calculateDeliveryEstimate(order: Order): Promise<DeliveryEstimate | undefined> {
     try {
-      const shippingAddress = order.shipping_address as any;
+      const shippingAddress = order.shipping_address as unknown;
       if (!shippingAddress) return undefined;
 
       const city = shippingAddress.city?.toLowerCase();

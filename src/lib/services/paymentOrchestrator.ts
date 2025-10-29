@@ -38,7 +38,7 @@ export interface PaymentRequest {
     countryCode: string;
   };
   productInfo: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface PaymentResult {
@@ -50,7 +50,7 @@ export interface PaymentResult {
   status: 'pending' | 'completed' | 'failed' | 'cancelled';
   redirectUrl?: string;
   error?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface PaymentAnalytics {
@@ -310,7 +310,7 @@ class PaymentOrchestrator {
         amount: paymentRequest.amount,
         currency: paymentRequest.currency,
         status: 'pending',
-        redirectUrl: `${(import.meta.env as any).VITE_PAYU_BASE_URL || 'https://test.payu.in'}/_payment`,
+        redirectUrl: `${(import.meta.env as unknown).VITE_PAYU_BASE_URL || 'https://test.payu.in'}/_payment`,
         metadata: { formData }
       };
     }
@@ -402,7 +402,7 @@ class PaymentOrchestrator {
   /**
    * Get recent transactions for fraud detection
    */
-  private async getRecentTransactions(email: string, minutes: number): Promise<any[]> {
+  private async getRecentTransactions(email: string, minutes: number): Promise<unknown[]> {
     try {
       const cutoffTime = new Date(Date.now() - minutes * 60 * 1000).toISOString();
       
@@ -528,7 +528,7 @@ class PaymentOrchestrator {
     }
 
     switch (method.provider) {
-      case 'payu':
+      case 'payu': {
         const payuResult = await payuService.verifyPayment('', orderId);
         return {
           success: payuResult.status === 'success',
@@ -539,6 +539,7 @@ class PaymentOrchestrator {
           status: payuResult.status === 'success' ? 'completed' : 'failed',
           error: payuResult.error
         };
+      }
 
       case 'paypal':
         // PayPal verification would be handled through webhooks

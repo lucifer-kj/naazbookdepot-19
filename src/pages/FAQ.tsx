@@ -57,7 +57,7 @@ const FAQ = () => {
         },
         {
           question: "Do you provide product care instructions?",
-          answer: "Yes, all products come with care instructions. For specific queries about maintaining any product, please contact our customer service team."
+          answer: "Yes, all products come with care instructions. For specific queries about maintaining unknown product, please contact our customer service team."
         }
       ]
     },

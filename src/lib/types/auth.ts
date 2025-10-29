@@ -45,7 +45,7 @@ export interface Order {
 }
 
 export interface LoginResult {
-  error?: any;
+  error?: unknown;
   user: User | null;
   session: Session | null;
 }
@@ -56,7 +56,7 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   isAdmin: boolean;
   login: (email: string, password: string) => Promise<LoginResult>;
-  register: (userData: any) => Promise<{ error?: any }>;
+  register: (userData: unknown) => Promise<{ error?: unknown }>;
   logout: () => Promise<void>;
   updateProfile: (userData: Partial<AuthUser>) => Promise<void>;
   orders: Order[];

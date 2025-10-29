@@ -209,7 +209,7 @@ class HealthCheckService {
       let memoryMessage = 'Performance metrics healthy';
 
       if ('memory' in performance) {
-        const memory = (performance as any).memory;
+        const memory = (performance as unknown).memory;
         const usedMB = memory.usedJSHeapSize / 1024 / 1024;
         const limitMB = memory.jsHeapSizeLimit / 1024 / 1024;
         const usagePercent = (usedMB / limitMB) * 100;

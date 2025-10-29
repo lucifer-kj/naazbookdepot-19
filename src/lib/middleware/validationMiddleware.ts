@@ -9,7 +9,7 @@ export interface ValidationMiddlewareConfig {
   schema: ZodSchema;
   serverValidation?: ServerValidationConfig;
   skipSanitization?: boolean;
-  customErrorHandler?: (errors: Record<string, string>) => any;
+  customErrorHandler?: (errors: Record<string, string>) => unknown;
   securityLevel?: 'basic' | 'strict' | 'paranoid';
   enableCSRFValidation?: boolean;
   enableRateLimiting?: boolean;
@@ -23,7 +23,7 @@ export interface ValidationMiddlewareConfig {
 
 export interface ValidationResult {
   success: boolean;
-  data?: any;
+  data?: unknown;
   errors?: Record<string, string>;
 }
 
@@ -31,7 +31,7 @@ export interface ValidationResult {
  * Enhanced validation middleware for API requests with security features
  */
 export async function validateRequest(
-  requestData: any,
+  requestData: unknown,
   config: ValidationMiddlewareConfig,
   requestContext?: {
     headers?: Record<string, string>;
@@ -126,7 +126,7 @@ export async function validateRequest(
  * Enhanced sanitization with multiple security levels
  */
 async function enhancedSanitization(
-  data: any,
+  data: unknown,
   options: {
     level: 'basic' | 'strict' | 'html' | 'sql' | 'nosql';
     securityLevel: 'basic' | 'strict' | 'paranoid';
@@ -134,7 +134,7 @@ async function enhancedSanitization(
     allowedPatterns?: RegExp[];
     blockedPatterns?: RegExp[];
   }
-): Promise<any> {
+): Promise<unknown> {
   if (typeof data === 'string') {
     // Apply appropriate sanitization based on level
     switch (options.level) {
@@ -161,7 +161,7 @@ async function enhancedSanitization(
       data = sanitizationService.sanitizeNoSQLInput(data);
     }
 
-    const sanitized: any = {};
+    const sanitized: unknown = {};
     for (const [key, value] of Object.entries(data)) {
       const sanitizedKey = sanitizationService.sanitizeInput(key);
       sanitized[sanitizedKey] = await enhancedSanitization(value, options);
@@ -176,7 +176,7 @@ async function enhancedSanitization(
  * Paranoid security checks for highly sensitive operations
  */
 async function performParanoidSecurityCheck(
-  data: any
+  data: unknown
 ): Promise<{ passed: boolean; errors: string[] }> {
   const errors: string[] = [];
 
@@ -204,7 +204,7 @@ async function performParanoidSecurityCheck(
 
     // Check for excessive nesting (potential DoS)
     const maxDepth = 10;
-    const checkDepth = (obj: any, depth: number = 0): boolean => {
+    const checkDepth = (obj: unknown, depth: number = 0): boolean => {
       if (depth > maxDepth) return false;
       
       if (typeof obj === 'object' && obj !== null) {
@@ -223,7 +223,7 @@ async function performParanoidSecurityCheck(
     }
 
     // Check for excessively large strings
-    const checkStringLengths = (obj: any): boolean => {
+    const checkStringLengths = (obj: unknown): boolean => {
       if (typeof obj === 'string' && obj.length > 10000) {
         return false;
       }
@@ -259,7 +259,7 @@ async function performParanoidSecurityCheck(
  * Higher-order function to create validation middleware for specific schemas
  */
 export function createValidationMiddleware(config: ValidationMiddlewareConfig) {
-  return async (requestData: any): Promise<ValidationResult> => {
+  return async (requestData: unknown): Promise<ValidationResult> => {
     return validateRequest(requestData, config);
   };
 }
@@ -323,31 +323,31 @@ export function validateSearchQuery(query: string): ValidationResult {
 
 export const authValidationMiddleware = {
   signUp: createValidationMiddleware({
-    schema: null as any, // Will be loaded dynamically
+    schema: null as unknown, // Will be loaded dynamically
     serverValidation: { checkUniqueEmail: true },
   }),
   
   signIn: createValidationMiddleware({
-    schema: null as any, // Will be loaded dynamically
+    schema: null as unknown, // Will be loaded dynamically
   }),
   
   forgotPassword: createValidationMiddleware({
-    schema: null as any, // Will be loaded dynamically
+    schema: null as unknown, // Will be loaded dynamically
   }),
   
   resetPassword: createValidationMiddleware({
-    schema: null as any, // Will be loaded dynamically
+    schema: null as unknown, // Will be loaded dynamically
   }),
 };
 
 export const productValidationMiddleware = {
   create: createValidationMiddleware({
-    schema: null as any, // Will be loaded dynamically
+    schema: null as unknown, // Will be loaded dynamically
     serverValidation: { validateInventory: true },
   }),
   
   update: createValidationMiddleware({
-    schema: null as any, // Will be loaded dynamically
+    schema: null as unknown, // Will be loaded dynamically
     serverValidation: { 
       checkExistingProduct: true,
       validateInventory: true 
@@ -357,7 +357,7 @@ export const productValidationMiddleware = {
 
 export const orderValidationMiddleware = {
   create: createValidationMiddleware({
-    schema: null as any, // Will be loaded dynamically
+    schema: null as unknown, // Will be loaded dynamically
     serverValidation: { 
       validateInventory: true,
       checkPromoCode: true 
@@ -365,7 +365,7 @@ export const orderValidationMiddleware = {
   }),
   
   update: createValidationMiddleware({
-    schema: null as any, // Will be loaded dynamically
+    schema: null as unknown, // Will be loaded dynamically
   }),
 };
 

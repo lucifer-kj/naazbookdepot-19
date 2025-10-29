@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase';
 
 describe('Authentication Flow Validation', () => {
   beforeEach(() => {
-    // Clear any existing session
+    // Clear unknown existing session
     supabase.auth.signOut();
   });
 

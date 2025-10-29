@@ -236,7 +236,7 @@ export const bundleAnalyzer = new BundleAnalyzer();
 // Development utilities
 if (import.meta.env.DEV) {
   // Add global access for debugging
-  (window as any).bundleAnalyzer = bundleAnalyzer;
+  (window as unknown).bundleAnalyzer = bundleAnalyzer;
 
   // Log bundle report after page load
   window.addEventListener('load', () => {

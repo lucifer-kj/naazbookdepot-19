@@ -15,7 +15,7 @@ export function useErrorMonitoring() {
   }, [location.pathname]);
 
   // Capture and track errors
-  const captureError = useCallback((error: Error, context?: any) => {
+  const captureError = useCallback((error: Error, context?: unknown) => {
     trackError(error, {
       component: 'useErrorMonitoring',
       action: 'manual_error_capture',
@@ -24,12 +24,12 @@ export function useErrorMonitoring() {
   }, []);
 
   // Track user interactions
-  const trackUserInteraction = useCallback((action: string, element: string, details?: any) => {
+  const trackUserInteraction = useCallback((action: string, element: string, details?: unknown) => {
     trackInteraction(action, element, details);
   }, []);
 
   // Add breadcrumb for debugging
-  const addDebugBreadcrumb = useCallback((message: string, category: string = 'debug', data?: any) => {
+  const addDebugBreadcrumb = useCallback((message: string, category: string = 'debug', data?: unknown) => {
     addBreadcrumb(message, category, 'info', data);
   }, []);
 
@@ -53,7 +53,7 @@ export function useErrorMonitoring() {
   }, []);
 
   // Track form submissions
-  const trackFormSubmission = useCallback((formName: string, success: boolean, errors?: any) => {
+  const trackFormSubmission = useCallback((formName: string, success: boolean, errors?: unknown) => {
     addBreadcrumb(`Form ${formName} ${success ? 'submitted' : 'failed'}`, 'form', success ? 'info' : 'error', {
       formName,
       success,

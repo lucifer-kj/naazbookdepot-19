@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { sanitizationService } from '../sanitizationService';
-import DOMPurify from 'dompurify';
+// DOMPurify is mocked below, no need to import for tests
 
 // Mock DOMPurify
 vi.mock('dompurify', () => ({

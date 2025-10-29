@@ -8,6 +8,8 @@ import GlobalErrorBoundary from '@/components/GlobalErrorBoundary';
 import { testDatabaseConnection, validateData } from '@/utils/databaseTest';
 import { EnvChecker } from '@/components/debug/EnvChecker';
 import { ErrorMonitoringPanel } from '@/components/debug/ErrorMonitoringPanel';
+import { AppDiagnostic } from '@/components/debug/AppDiagnostic';
+import { SimpleTest } from '@/components/debug/SimpleTest';
 import { initializePerformanceOptimizations } from '@/lib/utils/performanceOptimization';
 import { productionMonitoring } from '@/lib/services/ProductionMonitoring';
 import { healthCheckService } from '@/lib/services/HealthCheck';
@@ -139,6 +141,8 @@ function App() {
                 <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
+              <AppDiagnostic />
+              <SimpleTest />
               {import.meta.env.DEV && <EnvChecker />}
               {import.meta.env.DEV && (
                 <Suspense fallback={null}>

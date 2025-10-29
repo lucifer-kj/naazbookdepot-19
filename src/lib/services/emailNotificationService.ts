@@ -2,6 +2,59 @@ import { supabase } from '@/integrations/supabase/client';
 import { emailService } from './emailService';
 import { OrderWithItems, OrderStatus } from '@/types/order';
 
+// Type definitions for payload data
+interface OrderPayload {
+  id: number;
+  status: OrderStatus;
+  email: string;
+  tracking_number?: string;
+  shipped_at?: string;
+  [key: string]: unknown;
+}
+
+interface CartItem {
+  title: string;
+  price: number;
+  quantity: number;
+}
+
+interface ProductData {
+  title: string;
+  price: number;
+}
+
+interface AbandonedCartItem {
+  user_id: string;
+  product_id: string;
+  quantity: number;
+  products: ProductData | null;
+}
+
+// Type guard functions
+function isValidOrderPayload(obj: unknown): obj is OrderPayload {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'id' in obj &&
+    'status' in obj &&
+    typeof (obj as OrderPayload).id === 'number' &&
+    typeof (obj as OrderPayload).status === 'string'
+  );
+}
+
+function isValidCartItem(obj: unknown): obj is CartItem {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'title' in obj &&
+    'price' in obj &&
+    'quantity' in obj &&
+    typeof (obj as CartItem).title === 'string' &&
+    typeof (obj as CartItem).price === 'number' &&
+    typeof (obj as CartItem).quantity === 'number'
+  );
+}
+
 export class EmailNotificationService {
   private static instance: EmailNotificationService;
 
@@ -28,7 +81,11 @@ export class EmailNotificationService {
             table: 'orders'
           },
           (payload) => {
-            this.handleOrderStatusChange(payload.new as unknown, payload.old as unknown);
+            const newOrder = payload.new as unknown;
+            const oldOrder = payload.old as unknown;
+            if (isValidOrderPayload(newOrder) && isValidOrderPayload(oldOrder)) {
+              this.handleOrderStatusChange(newOrder, oldOrder);
+            }
           }
         )
         .on(
@@ -39,7 +96,10 @@ export class EmailNotificationService {
             table: 'orders'
           },
           (payload) => {
-            this.handleNewOrder(payload.new as unknown);
+            const newOrder = payload.new as unknown;
+            if (isValidOrderPayload(newOrder)) {
+              this.handleNewOrder(newOrder);
+            }
           }
         )
         .subscribe();
@@ -53,8 +113,14 @@ export class EmailNotificationService {
   /**
    * Handle new order creation
    */
-  private async handleNewOrder(order: unknown): Promise<void> {
+  private async handleNewOrder(order: OrderPayload): Promise<void> {
     try {
+      // Validate order payload
+      if (!isValidOrderPayload(order)) {
+        console.error('Invalid order payload received:', order);
+        return;
+      }
+
       // Get full order with items
       const fullOrder = await this.getOrderWithItems(order.id);
       if (!fullOrder) return;
@@ -76,8 +142,14 @@ export class EmailNotificationService {
   /**
    * Handle order status changes
    */
-  private async handleOrderStatusChange(newOrder: unknown, oldOrder: unknown): Promise<void> {
+  private async handleOrderStatusChange(newOrder: OrderPayload, oldOrder: OrderPayload): Promise<void> {
     try {
+      // Validate order payloads
+      if (!isValidOrderPayload(newOrder) || !isValidOrderPayload(oldOrder)) {
+        console.error('Invalid order payload received:', { newOrder, oldOrder });
+        return;
+      }
+
       // Only process if status actually changed
       if (newOrder.status === oldOrder.status) return;
 
@@ -298,8 +370,19 @@ export class EmailNotificationService {
   /**
    * Send abandoned cart recovery email
    */
-  async sendAbandonedCartEmail(userId: string, cartItems: unknown[]): Promise<boolean> {
+  async sendAbandonedCartEmail(userId: string, cartItems: CartItem[]): Promise<boolean> {
     try {
+      // Validate input
+      if (!userId || !Array.isArray(cartItems) || cartItems.length === 0) {
+        return false;
+      }
+
+      // Validate all cart items
+      const validCartItems = cartItems.filter(isValidCartItem);
+      if (validCartItems.length === 0) {
+        return false;
+      }
+
       // Get user details
       const { data: profile } = await supabase
         .from('profiles')
@@ -313,8 +396,10 @@ export class EmailNotificationService {
       const shouldSend = await this.shouldSendOrderEmail(profile.email, 'special_offers');
       if (!shouldSend) return false;
 
-      // Calculate cart total
-      const cartTotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+      // Calculate cart total with validated items
+      const cartTotal = validCartItems.reduce((total, item) => {
+        return total + (item.price * item.quantity);
+      }, 0);
 
       // Generate abandoned cart email content
       const content = `
@@ -323,7 +408,7 @@ export class EmailNotificationService {
         
         <div style="background: #f9f9f9; padding: 15px; margin: 15px 0; border-radius: 5px;">
           <h3>Items in your cart:</h3>
-          ${cartItems.map(item => `
+          ${validCartItems.map(item => `
             <div style="border-bottom: 1px solid #eee; padding: 10px 0;">
               <strong>${item.title}</strong><br>
               ₹${item.price.toFixed(2)} × ${item.quantity}
@@ -375,18 +460,32 @@ export class EmailNotificationService {
 
       if (!abandonedCarts) return;
 
-      // Group by user
-      const userCarts = abandonedCarts.reduce((acc, item) => {
-        if (!acc[item.user_id]) {
-          acc[item.user_id] = [];
+      // Group by user with proper typing
+      const userCarts = abandonedCarts.reduce((acc, item: Record<string, unknown>) => {
+        const userId = item.user_id;
+
+        // Validate userId is a string
+        if (typeof userId !== 'string') {
+          return acc;
         }
-        acc[item.user_id].push({
-          title: (item.products as unknown)?.title || 'Product',
-          price: (item.products as unknown)?.price || 0,
-          quantity: item.quantity
-        });
+
+        if (!acc[userId]) {
+          acc[userId] = [];
+        }
+
+        // Safely extract product data
+        const products = item.products;
+        const productData = Array.isArray(products) ? products[0] : products;
+
+        const cartItem: CartItem = {
+          title: (productData as Record<string, unknown>)?.title as string || 'Product',
+          price: typeof (productData as Record<string, unknown>)?.price === 'number' ? (productData as Record<string, unknown>).price as number : 0,
+          quantity: typeof item.quantity === 'number' ? item.quantity : 0
+        };
+
+        acc[userId].push(cartItem);
         return acc;
-      }, {} as Record<string, unknown[]>);
+      }, {} as Record<string, CartItem[]>);
 
       // Send abandoned cart emails
       for (const [userId, items] of Object.entries(userCarts)) {

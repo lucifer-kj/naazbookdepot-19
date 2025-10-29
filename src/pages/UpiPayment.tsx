@@ -16,20 +16,20 @@ const UpiPayment = () => {
   const { user } = useAuth();
   const { clearCart } = useCartContext();
   const createOrder = useCreateOrder();
-  
+
   const [countdown, setCountdown] = useState(15);
   const [showButtons, setShowButtons] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  
+
   const cartFromUrl = JSON.parse(searchParams.get('cart') || '{}');
   const total = searchParams.get('total') || '0';
   const shippingData = JSON.parse(searchParams.get('shipping') || '{}');
   const gst = searchParams.get('gst') || '0';
-  
+
   const [upiReference] = useState(() =>
     `NBD${new Date().toISOString().slice(0, 10).replace(/-/g, '')}${Math.random().toString(36).substr(2, 8).toUpperCase()}`
   );
-  
+
   const upiId = 'athar.nabeel94-3@oksbi';
   const merchantName = 'Nabeel Athar';
   const upiUrl = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(merchantName)}&am=${total}&tn=${encodeURIComponent(`Naaz Books order reference: ${upiReference}`)}&mc=0000&mode=02&purpose=00`;
@@ -46,9 +46,10 @@ const UpiPayment = () => {
     if (countdown > 0) {
       const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
       return () => clearTimeout(timer);
-    } else {
-      setShowButtons(true);
     }
+
+    // When countdown reaches 0, show buttons
+    setShowButtons(true);
   }, [countdown]);
 
   const handleRetryPayment = () => {
@@ -63,7 +64,7 @@ const UpiPayment = () => {
     }
 
     setIsProcessing(true);
-    
+
     try {
       const orderData = {
         cartItems: cartFromUrl.items,
@@ -75,7 +76,7 @@ const UpiPayment = () => {
       };
 
       const order = await createOrder.mutateAsync(orderData);
-      
+
       // Update order with UPI details for admin verification
       await supabase
         .from('orders')
@@ -150,13 +151,13 @@ const UpiPayment = () => {
             </div>
 
             <div className="flex flex-col items-center relative mb-4 md:mb-6">
-              <img 
+              <img
                 src={qrCodeUrl}
                 alt="Scan to pay with UPI"
                 className="rounded-xl w-40 h-40 md:w-52 md:h-52 border-0 shadow-sm"
                 style={{ background: 'white', objectFit: 'contain' }}
               />
-              <img 
+              <img
                 src={brandLogo}
                 alt="Brand Logo"
                 className="absolute top-1/2 left-1/2 w-8 h-8 md:w-12 md:h-12 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white border border-gray-200 shadow-sm"
@@ -204,13 +205,13 @@ const UpiPayment = () => {
             )}
 
             <div className="flex flex-col items-center mt-3">
-              <a 
+              <a
                 href={waLink}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-3 md:px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-xs md:text-base"
               >
-                <Smartphone size={16}/>
+                <Smartphone size={16} />
                 WhatsApp for Payment Help
               </a>
               <span className="text-xs text-gray-500 mt-1 text-center px-2">Include reference: {upiReference}</span>

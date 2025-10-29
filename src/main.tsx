@@ -16,6 +16,10 @@ const configValidation = configValidator.validateAll();
 import { errorMonitoring } from '@/lib/services/ErrorMonitoring';
 errorMonitoring.initialize();
 
+// Suppress accessibility warnings in production (temporary fix)
+import { suppressAccessibilityWarnings } from '@/lib/utils/suppressAccessibilityWarnings';
+suppressAccessibilityWarnings();
+
 // Log critical issues in development, handle gracefully in production
 if (!envValidation.isValid || !configValidation.isValid) {
   if (import.meta.env.DEV) {

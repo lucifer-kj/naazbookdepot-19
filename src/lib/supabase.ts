@@ -3,6 +3,12 @@ import { Database } from '../types/supabase';
 import { apiErrorHandler } from './services/apiErrorHandler';
 import sentryService from './services/sentryService';
 import { getSupabaseConfig, validateRequiredEnvVars, env } from './config/env';
+import { preventMultipleSupabaseClients } from './utils/consoleErrorFixes';
+
+// Prevent multiple client initialization
+if (!preventMultipleSupabaseClients()) {
+  throw new Error('Supabase client already initialized');
+}
 
 // Validate required environment variables
 validateRequiredEnvVars(['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY']);

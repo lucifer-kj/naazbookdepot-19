@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Star, ShoppingCart, Heart, ArrowLeft, Plus, Minus, Loader2 } from 'lucide-react';
 import { useProduct } from '@/lib/hooks/useProducts';
@@ -68,9 +68,13 @@ const ProductPage = () => {
           image: product.images?.[0] || '/placeholder.svg'
         });
       }
-      console.log(`Added ${quantity} item(s) to cart successfully`);
+      import('../lib/utils/consoleMigration').then(({ logInfo }) => {
+        logInfo('Added items to cart successfully', { productId: product?.id, quantity });
+      });
     } catch (error) {
-      console.error('Failed to add item to cart:', error);
+      import('../lib/utils/consoleMigration').then(({ handleApiError }) => {
+        handleApiError(error, 'add_to_cart', { productId: product?.id, quantity });
+      });
     } finally {
       setIsAddingToCart(false);
     }
@@ -107,7 +111,7 @@ const ProductPage = () => {
             Back
           </button>
 
-          <div className="grid lg:grid-cols-2 gap-12">
+          <div className="grid lg:grid-cols-2 gap-6 lg:gap-12">
             {/* Product Images */}
             <div>
               <div className="aspect-square mb-4 bg-gray-100 rounded-lg overflow-hidden">
@@ -221,7 +225,7 @@ const ProductPage = () => {
                 </div>
               )}
 
-              <div className="flex gap-4 mb-6">
+              <div className="flex flex-col sm:flex-row gap-4 mb-6">
                 <button
                   onClick={handleAddToCart}
                   disabled={product.stock === 0 || isAddingToCart}

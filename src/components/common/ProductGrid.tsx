@@ -1,6 +1,6 @@
 
-import React from 'react';
-import Product, { ProductData, ProductProps } from './Product';
+// ProductGrid component for displaying products in a grid layout
+import Product, { ProductData, ProductProps } from '@/components/common/Product';
 
 interface ProductGridProps {
   products: ProductData[];

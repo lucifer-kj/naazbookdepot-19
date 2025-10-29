@@ -1,79 +1,173 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { Button } from './ui/button';
+import { toast } from 'sonner';
+import { errorHandler } from '../lib/services/ErrorHandler';
+import { Button } from '@/components/ui/button';
+import { AlertTriangle, RefreshCw } from 'lucide-react';
 
 interface Props {
   children: ReactNode;
+  fallback?: ReactNode;
+  onError?: (error: Error, errorInfo: ErrorInfo) => void;
 }
 
 interface State {
   hasError: boolean;
   error?: Error;
+  errorInfo?: ErrorInfo;
+  retryCount: number;
 }
 
-class ErrorBoundary extends Component<Props, State> {
-  public state: State = {
-    hasError: false
+/**
+ * Enhanced Error Boundary with recovery options and proper error logging
+ * Replaces console.error with structured error handling
+ */
+export class ErrorBoundary extends Component<Props, State> {
+  private maxRetries = 3;
+
+  constructor(props: Props) {
+    super(props);
+    this.state = {
+      hasError: false,
+      retryCount: 0
+    };
+  }
+
+  static getDerivedStateFromError(error: Error): State {
+    return {
+      hasError: true,
+      error,
+      retryCount: 0
+    };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    // Log error using our centralized error handler instead of console.error
+    errorHandler.error(error, {
+      component: 'ErrorBoundary',
+      action: 'component_error',
+      additionalData: {
+        componentStack: errorInfo.componentStack,
+        errorBoundary: true,
+        retryCount: this.state.retryCount
+      }
+    });
+
+    // Call custom error handler if provided
+    if (this.props.onError) {
+      this.props.onError(error, errorInfo);
+    }
+
+    // Show user-friendly error notification
+    toast.error('Something went wrong. Please try refreshing the page.');
+
+    this.setState({
+      error,
+      errorInfo
+    });
+  }
+
+  handleRetry = () => {
+    const newRetryCount = this.state.retryCount + 1;
+    
+    if (newRetryCount <= this.maxRetries) {
+      errorHandler.info(`Error boundary retry attempt ${newRetryCount}`, {
+        component: 'ErrorBoundary',
+        action: 'retry',
+        additionalData: {
+          retryCount: newRetryCount,
+          maxRetries: this.maxRetries
+        }
+      });
+
+      this.setState({
+        hasError: false,
+        error: undefined,
+        errorInfo: undefined,
+        retryCount: newRetryCount
+      });
+    } else {
+      errorHandler.warn('Maximum retry attempts reached', {
+        component: 'ErrorBoundary',
+        action: 'max_retries_reached',
+        additionalData: {
+          retryCount: newRetryCount,
+          maxRetries: this.maxRetries
+        }
+      });
+      
+      toast.error('Unable to recover. Please refresh the page manually.');
+    }
   };
 
-  public static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
-  }
+  handleRefresh = () => {
+    errorHandler.info('User initiated page refresh from error boundary', {
+      component: 'ErrorBoundary',
+      action: 'manual_refresh'
+    });
+    
+    window.location.reload();
+  };
 
-  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Uncaught error:', error, errorInfo);
-  }
-
-  public render() {
+  render() {
     if (this.state.hasError) {
+      // Use custom fallback if provided
+      if (this.props.fallback) {
+        return this.props.fallback;
+      }
+
+      // Default error UI
       return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
           <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6 text-center">
-            <div className="mb-4">
-              <svg
-                className="mx-auto h-12 w-12 text-red-500"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-                />
-              </svg>
+            <div className="flex justify-center mb-4">
+              <AlertTriangle className="h-12 w-12 text-red-500" />
             </div>
+            
             <h1 className="text-xl font-semibold text-gray-900 mb-2">
               Something went wrong
             </h1>
+            
             <p className="text-gray-600 mb-6">
-              We're sorry, but something unexpected happened. Please try refreshing the page.
+              We're sorry, but something unexpected happened. Our team has been notified.
             </p>
-            <div className="space-y-3">
-              <Button
-                onClick={() => window.location.reload()}
-                className="w-full"
-              >
-                Refresh Page
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => window.location.href = '/'}
-                className="w-full"
-              >
-                Go to Home
-              </Button>
-            </div>
-            {process.env.NODE_ENV === 'development' && this.state.error && (
-              <details className="mt-4 text-left">
-                <summary className="cursor-pointer text-sm text-gray-500">
+
+            {import.meta.env.DEV && this.state.error && (
+              <div className="mb-6 p-4 bg-red-50 rounded-lg text-left">
+                <h3 className="text-sm font-medium text-red-800 mb-2">
                   Error Details (Development)
-                </summary>
-                <pre className="mt-2 text-xs text-red-600 bg-red-50 p-2 rounded overflow-auto">
+                </h3>
+                <pre className="text-xs text-red-700 overflow-auto max-h-32">
+                  {this.state.error.message}
                   {this.state.error.stack}
                 </pre>
-              </details>
+              </div>
             )}
+
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              {this.state.retryCount < this.maxRetries && (
+                <Button
+                  onClick={this.handleRetry}
+                  variant="default"
+                  className="flex items-center gap-2"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  Try Again ({this.maxRetries - this.state.retryCount} left)
+                </Button>
+              )}
+              
+              <Button
+                onClick={this.handleRefresh}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <RefreshCw className="h-4 w-4" />
+                Refresh Page
+              </Button>
+            </div>
+
+            <p className="text-xs text-gray-500 mt-4">
+              Error ID: {Date.now().toString(36)}
+            </p>
           </div>
         </div>
       );
@@ -81,6 +175,39 @@ class ErrorBoundary extends Component<Props, State> {
 
     return this.props.children;
   }
+}
+
+/**
+ * Higher-order component to wrap components with error boundary
+ */
+export function withErrorBoundary<P extends object>(
+  Component: React.ComponentType<P>,
+  fallback?: ReactNode,
+  onError?: (error: Error, errorInfo: ErrorInfo) => void
+) {
+  const WrappedComponent = (props: P) => (
+    <ErrorBoundary fallback={fallback} onError={onError}>
+      <Component {...props} />
+    </ErrorBoundary>
+  );
+
+  WrappedComponent.displayName = `withErrorBoundary(${Component.displayName || Component.name})`;
+  
+  return WrappedComponent;
+}
+
+/**
+ * Hook for handling errors in functional components
+ */
+export function useErrorHandler() {
+  const handleError = React.useCallback((error: Error, context?: any) => {
+    errorHandler.error(error, {
+      component: 'useErrorHandler',
+      additionalData: context
+    });
+  }, []);
+
+  return { handleError };
 }
 
 export default ErrorBoundary;

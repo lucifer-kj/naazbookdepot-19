@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Tag } from 'lucide-react';
 
 interface PromoCodeInputProps {

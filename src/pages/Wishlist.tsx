@@ -6,8 +6,8 @@ import { motion } from 'framer-motion';
 import { useWishlist, useRemoveFromWishlist } from '@/lib/hooks/useWishlist';
 import { useAddToCart } from '@/lib/hooks/useCart';
 import { useAuth } from '@/lib/context/AuthContext';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 
 const Wishlist = () => {
   const { isAuthenticated } = useAuth();
@@ -122,7 +122,7 @@ const Wishlist = () => {
                 Start adding books you love to your wishlist!
               </p>
               <Link 
-                to="/catalog"
+                to="/products"
                 className="bg-naaz-green text-white px-6 py-3 rounded-lg hover:bg-naaz-green/90"
               >
                 Browse Books

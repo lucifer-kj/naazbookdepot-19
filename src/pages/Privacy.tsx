@@ -1,7 +1,7 @@
 
 import React from 'react';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 import { Shield, Eye, Lock, FileText } from 'lucide-react';
 
 const Privacy = () => {

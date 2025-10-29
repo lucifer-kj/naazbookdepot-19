@@ -6,6 +6,7 @@ import { useRoleFetch } from '@/lib/hooks/useRoleFetch';
 import { useAddressManagement } from '@/lib/hooks/useAddressManagement';
 import { clearAuthCache } from '@/lib/utils/authOperations';
 import type { AuthUser, AuthContextType, Order, LoginResult } from '@/lib/types/auth';
+import { errorMonitoring } from '../services/ErrorMonitoring';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -21,7 +22,9 @@ function getCachedAdminStatus(userId: string): boolean | null {
       return cached === 'true';
     }
   } catch (error) {
-    console.warn('Failed to get cached admin status:', error);
+    import('../utils/consoleMigration').then(({ logWarning }) => {
+      logWarning('Failed to get cached admin status', { error });
+    });
   }
   return null;
 }
@@ -31,7 +34,9 @@ function setCachedAdminStatus(userId: string, isAdmin: boolean) {
     sessionStorage.setItem(`${ADMIN_CACHE_KEY}-${userId}`, isAdmin.toString());
     sessionStorage.setItem(`${ADMIN_CACHE_EXPIRY_KEY}-${userId}`, (Date.now() + CACHE_DURATION).toString());
   } catch (error) {
-    console.warn('Failed to cache admin status:', error);
+    import('../utils/consoleMigration').then(({ logWarning }) => {
+      logWarning('Failed to cache admin status', { error });
+    });
   }
 }
 
@@ -45,14 +50,18 @@ async function checkAdminStatus(userId?: string): Promise<boolean> {
   try {
     const { data: isAdminResult, error: adminError } = await supabase.rpc('is_admin');
     if (adminError) {
-      console.warn('Admin check error:', adminError);
+      import('../utils/consoleMigration').then(({ handleDatabaseError }) => {
+        handleDatabaseError(adminError, 'admin_check');
+      });
       return false;
     }
     const isAdmin = Boolean(isAdminResult);
     setCachedAdminStatus(userId, isAdmin);
     return isAdmin;
   } catch (error) {
-    console.warn('Admin check failed:', error);
+    import('../utils/consoleMigration').then(({ handleAuthError }) => {
+      handleAuthError(error, { operation: 'admin_check' });
+    });
     return false;
   }
 }
@@ -73,7 +82,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const handleAuthChange = async (event: string, session: Session | null) => {
       if (!isMounted) return;
       
-      console.log('Auth state change:', event, !!session);
+      import('../utils/consoleMigration').then(({ logInfo }) => {
+        logInfo('Auth state change', { event, hasSession: !!session });
+      });
       
       setSession(session);
       
@@ -85,6 +96,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         };
         setUser(userData);
         
+        // Set user context in error monitoring
+        errorMonitoring.setUserContext({
+          id: userData.id,
+          email: userData.email,
+          username: userData.name,
+          role: 'user' // Will be updated when roles are fetched
+        });
+        
         // Fetch user roles
         try {
           const roles = await fetchUserRoles(session.user.id);
@@ -92,7 +111,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             setUser(prev => prev ? { ...prev, roles } : null);
           }
         } catch (error) {
-          console.warn('Failed to fetch user roles:', error);
+          import('../utils/consoleMigration').then(({ handleAuthError }) => {
+            handleAuthError(error, { operation: 'fetch_user_roles' });
+          });
         }
         
         // Check admin status
@@ -122,7 +143,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         
         await handleAuthChange('INITIAL_SESSION', session);
       } catch (error) {
-        console.error('Failed to initialize auth:', error);
+        import('../utils/consoleMigration').then(({ handleAuthError }) => {
+          handleAuthError(error, { operation: 'auth_initialization' });
+        });
         if (isMounted) {
           setUser(null);
           setSession(null);
@@ -156,14 +179,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       });
 
       if (error) {
-        console.error('Login error:', error);
+        import('../utils/consoleMigration').then(({ handleAuthError }) => {
+          handleAuthError(error, { operation: 'login' });
+        });
         return { error, user: null, session: null };
       }
 
-      console.log('Login successful:', { user: !!data.user, session: !!data.session });
+      import('../utils/consoleMigration').then(({ logInfo }) => {
+        logInfo('Login successful', { hasUser: !!data.user, hasSession: !!data.session });
+      });
       return { error: null, user: data.user, session: data.session };
     } catch (err) {
-      console.error('Login exception:', err);
+      import('../utils/consoleMigration').then(({ handleAuthError }) => {
+        handleAuthError(err, { operation: 'login_exception' });
+      });
       return { error: err, user: null, session: null };
     }
   };
@@ -182,20 +211,26 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       });
 
       if (error) {
-        console.error('Registration error:', error);
+        import('../utils/consoleMigration').then(({ handleAuthError }) => {
+          handleAuthError(error, { operation: 'registration' });
+        });
         return { error };
       }
 
       return { error: null, data };
     } catch (err) {
-      console.error('Registration exception:', err);
+      import('../utils/consoleMigration').then(({ handleAuthError }) => {
+        handleAuthError(err, { operation: 'registration_exception' });
+      });
       return { error: err };
     }
   };
 
   const logout = async () => {
     try {
-      console.log('Logging out user...');
+      import('../utils/consoleMigration').then(({ logInfo }) => {
+        logInfo('Logging out user', { userId: user?.id });
+      });
       
       // Clear cache before logout
       clearAuthCache();
@@ -203,7 +238,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // Perform Supabase logout
       const { error } = await supabase.auth.signOut();
       if (error) {
-        console.warn('Logout error:', error);
+        import('../utils/consoleMigration').then(({ handleAuthError }) => {
+          handleAuthError(error, { operation: 'logout' });
+        });
       }
       
       // Clear context state immediately
@@ -211,9 +248,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setSession(null);
       setIsAdmin(false);
       
-      console.log('Logout completed successfully');
+      // Clear user context in error monitoring
+      errorMonitoring.clearUserContext();
+      
+      import('../utils/consoleMigration').then(({ logInfo }) => {
+        logInfo('Logout completed successfully');
+      });
     } catch (error) {
-      console.error('Logout exception:', error);
+      import('../utils/consoleMigration').then(({ handleAuthError }) => {
+        handleAuthError(error, { operation: 'logout_exception' });
+      });
       // Clear state even on error
       setUser(null);
       setSession(null);
@@ -233,23 +277,29 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       });
 
       if (error) {
-        console.error('Error updating profile:', error);
+        import('../utils/consoleMigration').then(({ handleAuthError }) => {
+          handleAuthError(error, { operation: 'profile_update' });
+        });
         throw error;
       }
 
       // Update local user state
       setUser(prev => prev ? { ...prev, ...userData } : null);
     } catch (error) {
-      console.error('Failed to update profile:', error);
+      import('../utils/consoleMigration').then(({ handleAuthError }) => {
+        handleAuthError(error, { operation: 'profile_update_exception' });
+      });
       throw error;
     }
   };
 
-  console.log('Auth context state:', { 
-    user: !!user, 
-    isAdmin, 
-    roles: user?.roles, 
-    loading 
+  import('../utils/consoleMigration').then(({ logDebug }) => {
+    logDebug('Auth context state', { 
+      hasUser: !!user, 
+      isAdmin, 
+      roles: user?.roles, 
+      loading 
+    });
   });
 
   const value: AuthContextType = {

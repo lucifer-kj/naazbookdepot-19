@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
-import { useAuth } from './AuthContext';
+import { useAuth } from '@/lib/context/AuthContext';
 import { useCart, useAddToCart, useUpdateCartItem, useRemoveFromCart, useClearCart } from '../hooks/useCart';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -163,7 +163,9 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           const parsedCart = JSON.parse(savedCart);
           dispatch({ type: 'SET_CART', items: parsedCart });
         } catch (error) {
-          console.error('Failed to parse saved cart:', error);
+          import('../utils/consoleMigration').then(({ logWarning }) => {
+            logWarning('Failed to parse saved cart', { error });
+          });
           localStorage.removeItem(CART_STORAGE_KEY);
         }
       }
@@ -206,7 +208,9 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           filter: `user_id=eq.${user.id}`
         },
         () => {
-          console.log('Cart updated in real-time');
+          import('../utils/consoleMigration').then(({ logInfo }) => {
+            logInfo('Cart updated in real-time');
+          });
         }
       )
       .subscribe();
@@ -225,7 +229,9 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         });
         dispatch({ type: 'TRIGGER_ANIMATION' });
       } catch (error) {
-        console.error('Failed to add item to cart:', error);
+        import('../utils/consoleMigration').then(({ handleApiError }) => {
+          handleApiError(error, 'add_to_cart');
+        });
         // Fallback to local storage if Supabase fails
         dispatch({ type: 'ADD_ITEM', item });
       }
@@ -252,7 +258,9 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             quantity
           });
         } catch (error) {
-          console.error('Failed to update cart item:', error);
+          import('../utils/consoleMigration').then(({ handleApiError }) => {
+            handleApiError(error, 'update_cart_quantity');
+          });
           // Fallback to local state
           dispatch({ type: 'UPDATE_QUANTITY', productId, quantity });
         }
@@ -272,7 +280,9 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         try {
           await removeFromCartMutation.mutateAsync(cartItem.id);
         } catch (error) {
-          console.error('Failed to remove cart item:', error);
+          import('../utils/consoleMigration').then(({ handleApiError }) => {
+            handleApiError(error, 'remove_cart_item');
+          });
           // Fallback to local state
           dispatch({ type: 'REMOVE_ITEM', productId });
         }
@@ -287,7 +297,9 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       try {
         await clearCartMutation.mutateAsync();
       } catch (error) {
-        console.error('Failed to clear cart:', error);
+        import('../utils/consoleMigration').then(({ handleApiError }) => {
+          handleApiError(error, 'clear_cart');
+        });
         // Fallback to local state
         dispatch({ type: 'CLEAR_CART' });
       }

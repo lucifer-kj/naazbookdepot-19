@@ -140,7 +140,7 @@ class ApiErrorHandlerService {
   /**
    * Logs error to monitoring service
    */
-  private logError(error: ApiError, context?: ErrorContext) {
+  private logErrorInternal(error: ApiError, context?: ErrorContext) {
     if (!this.defaultConfig.enableLogging) return;
 
     const errorContext: ErrorContext = {
@@ -159,6 +159,51 @@ class ApiErrorHandlerService {
     };
 
     sentryService.captureError(error, errorContext);
+  }
+
+  /**
+   * Public method to log errors
+   */
+  logError(error: Error, context?: ErrorContext) {
+    if (!this.defaultConfig.enableLogging) return;
+
+    const errorContext: ErrorContext = {
+      ...context,
+      additionalData: {
+        ...context?.additionalData,
+        timestamp: new Date().toISOString()
+      }
+    };
+
+    sentryService.captureError(error, errorContext);
+  }
+
+  /**
+   * Public method to log warnings
+   */
+  logWarning(message: string, context?: ErrorContext) {
+    if (!this.defaultConfig.enableLogging) return;
+
+    sentryService.addBreadcrumb(
+      message,
+      context?.component || 'app',
+      'warning',
+      context?.additionalData
+    );
+  }
+
+  /**
+   * Public method to log info messages
+   */
+  logInfo(message: string, context?: ErrorContext) {
+    if (!this.defaultConfig.enableLogging) return;
+
+    sentryService.addBreadcrumb(
+      message,
+      context?.component || 'app',
+      'info',
+      context?.additionalData
+    );
   }
 
   /**
@@ -225,7 +270,7 @@ class ApiErrorHandlerService {
         lastError = this.createApiError(error, endpoint, method, context);
         
         // Log the error
-        this.logError(lastError, context);
+        this.logErrorInternal(lastError, context);
         
         // Check if we should retry
         if (!finalConfig.enableRetry || !this.shouldRetry(lastError, retryCount, finalConfig.retryConfig)) {
@@ -274,7 +319,7 @@ class ApiErrorHandlerService {
     }
 
     // Log Supabase error
-    this.logError(apiError, {
+    this.logErrorInternal(apiError, {
       ...context,
       action: 'supabase_operation',
       additionalData: {

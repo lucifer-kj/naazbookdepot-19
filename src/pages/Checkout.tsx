@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useCart } from '../lib/hooks/useCart';
-import { useAuth } from '../lib/hooks/useAuth';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Textarea } from '../components/ui/textarea';
+import { useCart } from '@/lib/hooks/useCart';
+import { useAuth } from '@/lib/hooks/useAuth';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Loader2, Truck, Shield, ArrowLeft, CheckCircle } from 'lucide-react';
-import { UnifiedPayment } from '../components/payment/UnifiedPayment';
-import { supabase } from '../integrations/supabase/client';
+import { UnifiedPayment } from '@/components/payment/UnifiedPayment';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface ShippingAddress {
@@ -144,7 +144,9 @@ const Checkout = () => {
         });
         
         if (stockError) {
-          console.error('Stock update error:', stockError);
+          import('../lib/utils/consoleMigration').then(({ handleDatabaseError }) => {
+            handleDatabaseError(stockError, 'update_stock');
+          });
         }
       }
 
@@ -166,7 +168,9 @@ const Checkout = () => {
         });
       }, 2000);
     } catch (error) {
-      console.error('Order placement error:', error);
+      import('../lib/utils/consoleMigration').then(({ handleApiError }) => {
+        handleApiError(error, 'place_order');
+      });
       toast.error('Failed to place order. Please try again.');
     } finally {
       setLoading(false);

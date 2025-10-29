@@ -1,5 +1,5 @@
 
-import React from 'react';
+import { useEffect } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -16,7 +16,7 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
   children,
   className
 }) => {
-  React.useEffect(() => {
+  useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
     } else {
@@ -48,9 +48,10 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({
           <h2 className="text-lg font-playfair font-semibold text-naaz-green">Menu</h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-3 hover:bg-gray-100 rounded-full transition-colors touch-manipulation"
+            aria-label="Close menu"
           >
-            <X size={20} />
+            <X size={24} />
           </button>
         </div>
         <div className="overflow-y-auto h-[calc(100%-4rem)]">

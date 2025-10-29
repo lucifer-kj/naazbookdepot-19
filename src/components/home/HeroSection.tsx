@@ -91,7 +91,7 @@ const HeroSection = () => {
                 <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
               </span>
             </Link>
-            <Link to="/books" className="group border-2 border-white text-white px-8 py-4 rounded-xl font-bold hover:bg-white hover:text-naaz-green transition-all duration-300 text-center transform hover:scale-105">
+            <Link to="/products" className="group border-2 border-white text-white px-8 py-4 rounded-xl font-bold hover:bg-white hover:text-naaz-green transition-all duration-300 text-center transform hover:scale-105">
               <span className="flex items-center justify-center gap-2">
                 Explore Books
                 <BookOpen size={20} className="group-hover:rotate-12 transition-transform" />

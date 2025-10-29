@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../integrations/supabase/client';
 import { toast } from 'sonner';
+import { handleApiError as handleApiErrorNew } from './consoleMigration';
 
 // Global error handler for API calls
 export const handleApiError = (error: unknown, customMessage?: string) => {
-  console.error('API Error:', error);
+  handleApiErrorNew(error, 'api_call', { customMessage });
   
   let message = customMessage || 'Something went wrong';
   
@@ -124,7 +125,9 @@ export const useLocalStorage = <T>(key: string, initialValue: T) => {
       const item = window.localStorage.getItem(key);
       return item ? JSON.parse(item) : initialValue;
     } catch (error) {
-      console.error(`Error reading localStorage key "${key}":`, error);
+      import('./consoleMigration').then(({ handleApiError }) => {
+        handleApiError(error, 'localStorage_read', { key });
+      });
       return initialValue;
     }
   });
@@ -135,7 +138,9 @@ export const useLocalStorage = <T>(key: string, initialValue: T) => {
       setStoredValue(valueToStore);
       window.localStorage.setItem(key, JSON.stringify(valueToStore));
     } catch (error) {
-      console.error(`Error setting localStorage key "${key}":`, error);
+      import('./consoleMigration').then(({ handleApiError: handleApiErrorNew }) => {
+        handleApiErrorNew(error, 'localStorage_write', { key });
+      });
       handleApiError(error, 'Failed to save data locally');
     }
   };
@@ -213,7 +218,9 @@ export const handleSupabaseError = (error: unknown, context?: string) => {
     message = `${context}: ${message}`;
   }
 
-  console.error('Supabase Error:', error);
+  import('./consoleMigration').then(({ handleDatabaseError }) => {
+    handleDatabaseError(error, 'supabase_operation', { context });
+  });
   toast.error(message);
 };
 

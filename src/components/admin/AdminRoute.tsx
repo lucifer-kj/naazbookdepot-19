@@ -72,7 +72,7 @@ const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
     loading
   }), [isAuthenticated, isAdmin, loading]);
 
-  console.log('AdminRoute check:', authState);
+  // Authentication state check for admin access
 
   const [showSkeleton, setShowSkeleton] = React.useState(true);
   
@@ -92,17 +92,13 @@ const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
 
   // Redirect to login if not authenticated
   if (!authState.isAuthenticated) {
-    console.log('User not authenticated, redirecting to admin login');
     return <Navigate to="/admin/login" replace />;
   }
 
   // Show access denied if authenticated but not admin
   if (!authState.isAdmin) {
-    console.log('User not admin, showing access denied');
     return <AccessDenied />;
   }
-
-  console.log('Access granted to admin panel');
   return <div className="animate-fade-in">{children}</div>;
 };
 

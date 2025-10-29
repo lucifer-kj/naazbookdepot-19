@@ -1,15 +1,15 @@
 
 import React, { useState, useEffect } from 'react';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
-import ContactInfoStrip from '../components/home/ContactInfoStrip';
-import HeroSection from '../components/home/HeroSection';
-import FeaturedBooksCarousel from '../components/home/FeaturedBooksCarousel';
-import ThreeDivisionsShowcase from '../components/home/ThreeDivisionsShowcase';
-import AboutPreviewSection from '../components/home/AboutPreviewSection';
-import TestimonialsSection from '../components/home/TestimonialsSection';
-import NewsletterSection from '../components/home/NewsletterSection';
-import FloatingButtons from '../components/home/FloatingButtons';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import ContactInfoStrip from '@/components/home/ContactInfoStrip';
+import HeroSection from '@/components/home/HeroSection';
+import FeaturedBooksCarousel from '@/components/home/FeaturedBooksCarousel';
+import ThreeDivisionsShowcase from '@/components/home/ThreeDivisionsShowcase';
+import AboutPreviewSection from '@/components/home/AboutPreviewSection';
+import TestimonialsSection from '@/components/home/TestimonialsSection';
+import NewsletterSection from '@/components/home/NewsletterSection';
+import FloatingButtons from '@/components/home/FloatingButtons';
 
 const Home = () => {
   const [showBackToTop, setShowBackToTop] = useState(false);

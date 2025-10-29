@@ -1,7 +1,7 @@
 
 import React from 'react';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 import { Mail, Phone, MapPin, Clock, MessageCircle } from 'lucide-react';
 
 const Contact = () => {

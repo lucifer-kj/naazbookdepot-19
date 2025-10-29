@@ -38,7 +38,9 @@ export default function AdminPromoCodes() {
         // await deletePromoCode(id);
         setPromoCodes(promoCodes.filter(code => code.id !== id));
       } catch (error) {
-        console.error('Error deleting promo code:', error);
+        import('../../lib/utils/consoleMigration').then(({ handleDatabaseError }) => {
+          handleDatabaseError(error, 'delete_promo_code', { promoCodeId: id });
+        });
       }
     }
   };
@@ -62,7 +64,9 @@ export default function AdminPromoCodes() {
       setIsModalOpen(false);
       setEditingCode(null);
     } catch (error) {
-      console.error('Error saving promo code:', error);
+      import('../../lib/utils/consoleMigration').then(({ handleDatabaseError }) => {
+        handleDatabaseError(error, 'save_promo_code', { promoCode: editingCode });
+      });
     }
   };
 

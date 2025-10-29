@@ -33,7 +33,7 @@ const FeaturedBooksCarousel = () => {
           />
           
           <div className="text-center mt-12">
-            <Link to="/catalog" className="group bg-naaz-gold text-white px-8 py-4 rounded-xl font-semibold hover:bg-naaz-gold/90 transition-all duration-300 inline-flex items-center gap-3 transform hover:scale-105">
+            <Link to="/products" className="group bg-naaz-gold text-white px-8 py-4 rounded-xl font-semibold hover:bg-naaz-gold/90 transition-all duration-300 inline-flex items-center gap-3 transform hover:scale-105">
               View Complete Collection 
               <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
             </Link>

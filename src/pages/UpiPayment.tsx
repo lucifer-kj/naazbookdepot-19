@@ -77,33 +77,22 @@ const UpiPayment = () => {
       const order = await createOrder.mutateAsync(orderData);
       
       // Update order with UPI details for admin verification
-      await fetch(`https://tyjnywhsynuwgclpehtx.supabase.co/rest/v1/orders?id=eq.${order.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5am55d2hzeW51d2djbHBlaHR4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE0MTAwODMsImV4cCI6MjA3Njk4NjA4M30.opDu5zS7aQh17B-Mf7awqNo4DayPZx_fA4e3-SDXzqw`,
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5am55d2hzeW51d2djbHBlaHR4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE0MTAwODMsImV4cCI6MjA3Njk4NjA4M30.opDu5zS7aQh17B-Mf7awqNo4DayPZx_fA4e3-SDXzqw',
-        },
-        body: JSON.stringify({
+      await supabase
+        .from('orders')
+        .update({
           payment_method: 'upi',
           payment_status: 'pending_verification',
           upi_reference_code: upiReference,
           status: 'pending_payment_verification'
-        }),
-      });
+        })
+        .eq('id', order.id);
 
       // Save user address for future orders if signed in
       if (user && shippingData) {
         try {
-          await fetch(`https://tyjnywhsynuwgclpehtx.supabase.co/rest/v1/profiles`, {
-            method: 'UPSERT',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImloeHR2ZnVxb2R2b2RydXR2dmNwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk2OTk4NjgsImV4cCI6MjA2NTI3NTg2OH0.cAjvbp2C5rMvvWVpRHG0LNfu4pa4sQp2agIKfq0ZtFw`,
-              'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImloeHR2ZnVxb2R2b2RydXR2dmNwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk2OTk4NjgsImV4cCI6MjA2NTI3NTg2OH0.cAjvbp2C5rMvvWVpRHG0LNfu4pa4sQp2agIKfq0ZtFw',
-              'Prefer': 'resolution=merge-duplicates'
-            },
-            body: JSON.stringify({
+          await supabase
+            .from('profiles')
+            .upsert({
               id: user.id,
               name: shippingData.name,
               default_address: {
@@ -114,17 +103,20 @@ const UpiPayment = () => {
                 phone: shippingData.phone,
                 landmark: shippingData.landmark
               }
-            }),
-          });
+            });
         } catch (error) {
-          console.error('Failed to save user address:', error);
+          import('../lib/utils/consoleMigration').then(({ handleDatabaseError }) => {
+            handleDatabaseError(error, 'save_user_address');
+          });
         }
       }
 
       clearCart();
       navigate(`/order-confirmation?orderNumber=${order.order_number}&payment=upi&status=pending`);
     } catch (error) {
-      console.error('Error creating order:', error);
+      import('../lib/utils/consoleMigration').then(({ handleApiError }) => {
+        handleApiError(error, 'create_order', { paymentMethod: 'upi' });
+      });
       alert('Failed to process order. Please try again or contact support.');
     } finally {
       setIsProcessing(false);

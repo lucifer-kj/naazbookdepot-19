@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { FormField } from './FormField';
+import { FormField } from '@/components/forms/FormField';
 
 export interface ValidatedFormProps<T extends FieldValues> {
   schema: ZodSchema<T>;

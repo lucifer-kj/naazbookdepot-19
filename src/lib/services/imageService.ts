@@ -232,7 +232,9 @@ class ImageService {
         }
       }
     } catch (error) {
-      console.warn('Failed to initialize storage buckets:', error);
+      import('../utils/consoleMigration').then(({ logWarning }) => {
+        logWarning('Failed to initialize storage buckets', { error });
+      });
     }
   }
 }

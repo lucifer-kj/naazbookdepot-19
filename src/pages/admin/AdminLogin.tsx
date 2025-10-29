@@ -20,7 +20,6 @@ const AdminLogin = () => {
   // Handle redirection when user becomes authenticated admin
   useEffect(() => {
     if (!loading && isAuthenticated && isAdmin) {
-      console.log('Admin authenticated, redirecting to dashboard');
       navigate('/admin/dashboard', { replace: true });
     }
   }, [loading, isAuthenticated, isAdmin, navigate]);
@@ -55,24 +54,32 @@ const AdminLogin = () => {
     setError('');
 
     try {
-      console.log('Attempting admin login with:', formData.email);
+      import('../../lib/utils/consoleMigration').then(({ logInfo }) => {
+        logInfo('Attempting admin login', { email: formData.email });
+      });
       
       const result = await login(formData.email, formData.password);
       
       if (result.error) {
-        console.error('Login error:', result.error);
+        import('../../lib/utils/consoleMigration').then(({ handleAuthError }) => {
+          handleAuthError(result.error, { operation: 'admin_login' });
+        });
         setError(result.error.message || 'Login failed. Please check your credentials.');
         return;
       }
 
       if (result.user && result.session) {
-        console.log('Login successful, waiting for admin verification...');
+        import('../../lib/utils/consoleMigration').then(({ logInfo }) => {
+          logInfo('Login successful, waiting for admin verification');
+        });
         // The useEffect above will handle navigation when isAdmin becomes true
       } else {
         setError('Login failed. Please try again.');
       }
     } catch (err) {
-      console.error('Unexpected login error:', err);
+      import('../../lib/utils/consoleMigration').then(({ handleAuthError }) => {
+        handleAuthError(err, { operation: 'admin_login_exception' });
+      });
       setError('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);

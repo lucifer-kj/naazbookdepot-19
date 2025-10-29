@@ -24,10 +24,13 @@ const envSchema = z.object({
   VITE_PAYPAL_CLIENT_ID: z.string().optional(),
   VITE_PAYPAL_CLIENT_SECRET: z.string().optional(),
   VITE_PAYPAL_ENVIRONMENT: z.enum(['sandbox', 'production']).default('sandbox'),
+  VITE_PAYPAL_BASE_URL: z.string().url().optional(),
   
   VITE_PAYU_MERCHANT_KEY: z.string().optional(),
   VITE_PAYU_MERCHANT_SALT: z.string().optional(),
   VITE_PAYU_ENVIRONMENT: z.enum(['test', 'production']).default('test'),
+  VITE_PAYU_BASE_URL: z.string().url().optional(),
+  VITE_PAYU_UPI_VPA: z.string().optional(),
 
   // Image and File Storage
   VITE_IMAGE_CDN_URL: z.string().url('Invalid image CDN URL').optional(),
@@ -87,9 +90,11 @@ function parseEnv() {
     if (error instanceof z.ZodError) {
       // In development, log warnings but don't fail
       if (import.meta.env.MODE === 'development') {
-        console.warn('Environment validation warnings:');
-        error.errors.forEach(err => {
-          console.warn(`  ${err.path.join('.')}: ${err.message}`);
+        import('../utils/consoleMigration').then(({ logWarning }) => {
+          logWarning('Environment validation warnings detected');
+          error.errors.forEach(err => {
+            logWarning(`Environment validation: ${err.path.join('.')}: ${err.message}`);
+          });
         });
         
         // Return a safe default configuration for development

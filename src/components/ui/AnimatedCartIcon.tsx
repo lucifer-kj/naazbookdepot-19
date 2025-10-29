@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ShoppingCart } from 'lucide-react';
 import { useCartContext } from '@/lib/context/CartContext';
 

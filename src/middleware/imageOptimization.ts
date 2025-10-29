@@ -105,7 +105,9 @@ export const imageOptimizationMiddleware = async (
     res.type(`image/${options.format}`);
     res.send(buffer);
   } catch (error) {
-    console.error('Image processing error:', error);
+    import('../lib/utils/consoleMigration').then(({ handleApiError }) => {
+      handleApiError(error, 'image_processing', { originalUrl: req.originalUrl });
+    });
     next(error);
   }
 };

@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Textarea } from '../../components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Badge } from '../../components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
-import { Label } from '../../components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { 
   Plus, 
   Edit, 
@@ -22,7 +22,7 @@ import {
   Clock,
   TrendingUp
 } from 'lucide-react';
-import { blogService, BlogPost, BlogStats } from '../../lib/services/blogService';
+import { blogService, BlogPost, BlogStats } from '@/lib/services/blogService';
 import { toast } from 'sonner';
 
 const BlogManagement = () => {
@@ -74,7 +74,9 @@ const BlogManagement = () => {
       setPosts(result.posts);
       setTotalPosts(result.total);
     } catch (error) {
-      console.error('Error fetching posts:', error);
+      import('../../lib/utils/consoleMigration').then(({ handleApiError }) => {
+        handleApiError(error, 'fetch_blog_posts', { page, limit });
+      });
       toast.error('Failed to fetch blog posts');
     } finally {
       setLoading(false);
@@ -86,7 +88,9 @@ const BlogManagement = () => {
       const blogStats = await blogService.getBlogStats();
       setStats(blogStats);
     } catch (error) {
-      console.error('Error fetching stats:', error);
+      import('../../lib/utils/consoleMigration').then(({ handleApiError }) => {
+        handleApiError(error, 'fetch_blog_stats');
+      });
     }
   };
 
@@ -114,7 +118,9 @@ const BlogManagement = () => {
       fetchPosts();
       fetchStats();
     } catch (error) {
-      console.error('Error creating post:', error);
+      import('../../lib/utils/consoleMigration').then(({ handleDatabaseError }) => {
+        handleDatabaseError(error, 'create_blog_post', { title: newPost.title });
+      });
       toast.error('Failed to create blog post');
     }
   };
@@ -138,7 +144,9 @@ const BlogManagement = () => {
       fetchPosts();
       fetchStats();
     } catch (error) {
-      console.error('Error updating post:', error);
+      import('../../lib/utils/consoleMigration').then(({ handleDatabaseError }) => {
+        handleDatabaseError(error, 'update_blog_post', { postId: post.id });
+      });
       toast.error('Failed to update blog post');
     }
   };
@@ -152,7 +160,9 @@ const BlogManagement = () => {
       fetchPosts();
       fetchStats();
     } catch (error) {
-      console.error('Error deleting post:', error);
+      import('../../lib/utils/consoleMigration').then(({ handleDatabaseError }) => {
+        handleDatabaseError(error, 'delete_blog_post', { postId: id });
+      });
       toast.error('Failed to delete blog post');
     }
   };

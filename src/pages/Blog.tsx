@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Badge } from '../components/ui/badge';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { Search, Calendar, User, Tag, ArrowRight, BookOpen, Clock, Eye } from 'lucide-react';
-import { blogService, BlogPost } from '../lib/services/blogService';
+import { blogService, BlogPost } from '@/lib/services/blogService';
 
 
 
@@ -41,7 +41,9 @@ const Blog = () => {
       setTotalPosts(result.total);
       setHasMore(result.hasMore);
     } catch (error) {
-      console.error('Error fetching blog posts:', error);
+      import('../lib/utils/consoleMigration').then(({ handleApiError }) => {
+        handleApiError(error, 'fetch_blog_posts', { page, limit });
+      });
       // Fallback to mock data if service fails
       const mockPosts: BlogPost[] = [
         {

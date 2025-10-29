@@ -1,13 +1,17 @@
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AuthProvider } from './lib/context/AuthContext';
-import { CartProvider } from './lib/context/CartContext';
+import { AuthProvider } from '@/lib/context/AuthContext';
+import { CartProvider } from '@/lib/context/CartContext';
 import { useEffect } from 'react';
 import { ToastProvider } from '@/components/ui/toaster';
-import GlobalErrorBoundary from './components/GlobalErrorBoundary';
-import { testDatabaseConnection, validateData } from './utils/databaseTest';
-import { EnvChecker } from './components/debug/EnvChecker';
-import './lib/utils/consoleErrorFixes'; // Initialize error fixes
+import GlobalErrorBoundary from '@/components/GlobalErrorBoundary';
+import { testDatabaseConnection, validateData } from '@/utils/databaseTest';
+import { EnvChecker } from '@/components/debug/EnvChecker';
+import { ErrorMonitoringPanel } from '@/components/debug/ErrorMonitoringPanel';
+import { initializePerformanceOptimizations } from '@/lib/utils/performanceOptimization';
+import { productionMonitoring } from '@/lib/services/ProductionMonitoring';
+import { healthCheckService } from '@/lib/services/HealthCheck';
+import '@/lib/utils/consoleErrorFixes'; // Initialize error fixes
 import './App.css';
 
 // Type for API errors
@@ -16,12 +20,23 @@ interface ApiError {
   message?: string;
 }
 
-// Log environment variables status
-console.log('Environment Variables Check:', {
-  SUPABASE_URL: !!import.meta.env.VITE_SUPABASE_URL,
-  NODE_ENV: import.meta.env.VITE_NODE_ENV,
-  API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
-});
+// Initialize environment validation
+import { environmentService } from '@/lib/services/environmentService';
+environmentService.initialize();
+
+// Initialize performance optimizations
+initializePerformanceOptimizations();
+
+// Initialize production monitoring
+if (import.meta.env.PROD) {
+  // Set up health check interval
+  setInterval(async () => {
+    const health = await healthCheckService.getHealthStatus();
+    if (health.status === 'unhealthy') {
+      console.error('Application health check failed:', health);
+    }
+  }, 60000); // Check every minute
+}
 
 // Test database connection on startup
 testDatabaseConnection().then((success) => {
@@ -35,7 +50,7 @@ testDatabaseConnection().then((success) => {
 });
 
 import { lazy, Suspense } from 'react';
-import { LoadingBar } from './components/common/LoadingBar';
+import { LoadingBar } from '@/components/common/LoadingBar';
 
 // Core Pages
 const Home = lazy(() => import('./pages/Home'));
@@ -57,49 +72,12 @@ const Blog = lazy(() => import('./pages/Blog'));
 const ComingSoon = lazy(() => import('./pages/ComingSoon'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
-// Admin Pages
-const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'));
-const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
-const AdminProducts = lazy(() => import('./pages/admin/Products'));
-const ProductNew = lazy(() => import('./pages/admin/ProductNew'));
-const ProductEdit = lazy(() => import('./pages/admin/ProductEdit'));
-const AdminOrders = lazy(() => import('./pages/admin/AdminOrders'));
-const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
-const AdminUserProfiles = lazy(() => import('./pages/admin/UserProfiles'));
-const AdminInventory = lazy(() => import('./pages/admin/Inventory'));
-const AdminReviews = lazy(() => import('./pages/admin/Reviews'));
-const AdminPromoCodes = lazy(() => import('./pages/admin/PromoCodes'));
+// Admin Routes (lazy loaded as a chunk)
+const AdminRoutes = lazy(() => import('@/routes/AdminRoutes'));
 
-// Components
-import AdminRoute from './components/admin/AdminRoute';
+import { createOptimizedQueryClient } from '@/lib/config/cacheConfig';
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      gcTime: 30 * 60 * 1000, // Cache garbage collection after 30 minutes
-      staleTime: 5 * 60 * 1000, // Consider data stale after 5 minutes
-      retry: (failureCount, error: ApiError) => {
-        // Don't retry on 4xx errors except timeout and rate limit
-        if (error?.status && error.status >= 400 && error.status < 500) {
-          return error.status === 408 || error.status === 429;
-        }
-        return failureCount < 2;
-      },
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-      networkMode: 'offlineFirst'
-    },
-    mutations: {
-      retry: (failureCount, error: ApiError) => {
-        // Don't retry mutations on client errors
-        if (error?.status && error.status >= 400 && error.status < 500) {
-          return false;
-        }
-        return failureCount < 1; // Only retry once for mutations
-      },
-      networkMode: 'offlineFirst'
-    }
-  }
-});
+const queryClient = createOptimizedQueryClient();
 
 // Enhanced ScrollToTop component that handles all navigation types
 const ScrollToTop = () => {
@@ -130,8 +108,9 @@ function App() {
                 <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/products" element={<Products />} />
-                <Route path="/books" element={<Products />} />
-                <Route path="/catalog" element={<Products />} />
+                {/* Legacy route redirects */}
+                <Route path="/books" element={<Navigate to="/products" replace />} />
+                <Route path="/catalog" element={<Navigate to="/products" replace />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/faq" element={<FAQ />} />
@@ -149,25 +128,27 @@ function App() {
                 <Route path="/blog" element={<Blog />} />
                 <Route path="/coming-soon" element={<ComingSoon section="perfumes" />} />
 
-                {/* Admin Routes */}
-                <Route path="/admin/login" element={<AdminLogin />} />
-                <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-                <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-                <Route path="/admin/products" element={<AdminRoute><AdminProducts /></AdminRoute>} />
-                <Route path="/admin/products/new" element={<AdminRoute><ProductNew /></AdminRoute>} />
-                <Route path="/admin/products/:id/edit" element={<AdminRoute><ProductEdit /></AdminRoute>} />
-                <Route path="/admin/orders" element={<AdminRoute><AdminOrders /></AdminRoute>} />
-                <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
-                <Route path="/admin/user-profiles" element={<AdminRoute><AdminUserProfiles /></AdminRoute>} />
-                <Route path="/admin/inventory" element={<AdminRoute><AdminInventory /></AdminRoute>} />
-                <Route path="/admin/reviews" element={<AdminRoute><AdminReviews /></AdminRoute>} />
-                <Route path="/admin/promo-codes" element={<AdminRoute><AdminPromoCodes /></AdminRoute>} />
+                {/* Admin Routes - Lazy loaded as separate chunk */}
+                <Route path="/admin/*" element={<AdminRoutes />} />
                 
                 {/* 404 Route - Must be last */}
                 <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
               {import.meta.env.DEV && <EnvChecker />}
+              {import.meta.env.DEV && (
+                <Suspense fallback={null}>
+                  <ErrorMonitoringPanel />
+                </Suspense>
+              )}
+              {import.meta.env.DEV && (
+                <Suspense fallback={null}>
+                  {(() => {
+                    const MonitoringDashboard = lazy(() => import('@/components/debug/MonitoringDashboard'));
+                    return <MonitoringDashboard />;
+                  })()}
+                </Suspense>
+              )}
             </Router>
           </CartProvider>
         </AuthProvider>

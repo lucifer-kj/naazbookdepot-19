@@ -57,7 +57,9 @@ export default function AdminProductNew() {
         navigate('/admin/products');
       }
     } catch (error) {
-      console.error('Error creating product:', error);
+      import('../../lib/utils/consoleMigration').then(({ handleDatabaseError }) => {
+        handleDatabaseError(error, 'create_product', { formData });
+      });
       setErrors({
         submit: 'Failed to create product. Please try again.'
       });

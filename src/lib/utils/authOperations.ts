@@ -21,7 +21,9 @@ export const clearAuthCache = () => {
     // Clear localStorage admin entries
     localStorage.removeItem('admin-pwa-prompt-dismissed');
   } catch (error) {
-    console.warn('Failed to clear auth cache:', error);
+    import('./consoleMigration').then(({ logWarning }) => {
+      logWarning('Failed to clear auth cache', { error });
+    });
   }
 };
 
@@ -34,14 +36,18 @@ export const authOperations = {
       });
 
       if (error) {
-        console.error('Login error:', error);
+        import('./consoleMigration').then(({ handleAuthError }) => {
+          handleAuthError(error, { operation: 'login' });
+        });
         return { error, user: null, session: null };
       }
 
       console.log('Login successful:', { user: !!data.user, session: !!data.session });
       return { error: null, user: data.user, session: data.session };
     } catch (err) {
-      console.error('Login exception:', err);
+      import('./consoleMigration').then(({ handleAuthError }) => {
+        handleAuthError(err, { operation: 'login_exception' });
+      });
       return { error: err, user: null, session: null };
     }
   },
@@ -60,13 +66,17 @@ export const authOperations = {
       });
 
       if (error) {
-        console.error('Registration error:', error);
+        import('./consoleMigration').then(({ handleAuthError }) => {
+          handleAuthError(error, { operation: 'registration' });
+        });
         return { error };
       }
 
       return { error: null, data };
     } catch (err) {
-      console.error('Registration exception:', err);
+      import('./consoleMigration').then(({ handleAuthError }) => {
+        handleAuthError(err, { operation: 'registration_exception' });
+      });
       return { error: err };
     }
   },

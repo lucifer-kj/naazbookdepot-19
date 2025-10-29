@@ -1,5 +1,5 @@
 
-import React from 'react';
+// Product component for displaying individual product cards
 import { Link } from 'react-router-dom';
 import { Heart, Star, ShoppingCart, Edit, Package } from 'lucide-react';
 import { useAddToCart } from '@/lib/hooks/useCart';
@@ -38,7 +38,7 @@ const Product: React.FC<ProductProps> = ({
   className = ''
 }) => {
   const { isAuthenticated } = useAuth();
-  const { addItem } = useCartContext();
+  const { addItem, isLoading: cartLoading } = useCartContext();
   const addToCart = useAddToCart();
   const addToWishlist = useAddToWishlist();
   const removeFromWishlist = useRemoveFromWishlist();
@@ -194,25 +194,39 @@ const Product: React.FC<ProductProps> = ({
           {showAddToCart && (
             <button 
               onClick={handleAddToCart}
-              disabled={isOutOfStock}
+              disabled={isOutOfStock || addToCart.isPending || cartLoading}
               className={`flex-1 bg-naaz-green text-white px-3 py-2 rounded-lg hover:bg-naaz-green/90 transition-all duration-300 transform hover:scale-105 flex items-center justify-center disabled:bg-gray-400 disabled:cursor-not-allowed ${
                 variant === 'compact' ? 'text-xs' : 'text-sm'
               }`}
             >
-              <ShoppingCart size={variant === 'compact' ? 12 : 16} className="mr-1" />
-              Add to Cart
+              {(addToCart.isPending || cartLoading) ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-1"></div>
+                  Adding...
+                </>
+              ) : (
+                <>
+                  <ShoppingCart size={variant === 'compact' ? 12 : 16} className="mr-1" />
+                  Add to Cart
+                </>
+              )}
             </button>
           )}
           
           {showWishlist && isAuthenticated && (
             <button 
               onClick={handleWishlist}
-              className="p-2 text-gray-600 hover:text-red-500 transition-colors"
+              disabled={addToWishlist.isPending || removeFromWishlist.isPending}
+              className="p-2 text-gray-600 hover:text-red-500 transition-colors disabled:opacity-50"
             >
-              <Heart 
-                size={variant === 'compact' ? 16 : 20} 
-                className={isInWishlist ? 'fill-red-500 text-red-500' : ''} 
-              />
+              {(addToWishlist.isPending || removeFromWishlist.isPending) ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-400 border-t-transparent"></div>
+              ) : (
+                <Heart 
+                  size={variant === 'compact' ? 16 : 20} 
+                  className={isInWishlist ? 'fill-red-500 text-red-500' : ''} 
+                />
+              )}
             </button>
           )}
           

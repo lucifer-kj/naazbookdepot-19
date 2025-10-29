@@ -1,6 +1,7 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import ErrorPage from '../pages/ErrorPage';
 import sentryService, { ErrorContext } from '../lib/services/sentryService';
+import { errorHandler } from '../lib/services/ErrorHandler';
 
 interface Props {
   children: ReactNode;
@@ -111,13 +112,17 @@ class ErrorHandler extends Component<Props, State> {
       }
     );
 
-    // Log to console in development
+    // Use our centralized error handler for development logging
     if (import.meta.env.DEV) {
-      console.group('🚨 Error Boundary Caught Error');
-      console.error('Error:', error);
-      console.error('Error Info:', errorInfo);
-      console.error('Context:', context);
-      console.groupEnd();
+      errorHandler.error(error, {
+        component: 'ErrorBoundary',
+        action: 'component_error_caught',
+        additionalData: {
+          ...context.additionalData,
+          errorInfo,
+          isDevelopment: true
+        }
+      });
     }
   };
 

@@ -56,7 +56,7 @@ const Footer = () => {
                   </Link>
                 </li>
                 <li>
-                  <Link to="/books" className="text-white/80 hover:text-naaz-gold transition-colors">
+                  <Link to="/products" className="text-white/80 hover:text-naaz-gold transition-colors">
                     Islamic Books
                   </Link>
                 </li>
@@ -84,32 +84,32 @@ const Footer = () => {
               <h4 className="text-lg font-playfair font-semibold mb-4">Book Categories</h4>
               <ul className="space-y-2">
                 <li>
-                  <Link to="/books?category=quran" className="text-white/80 hover:text-naaz-gold transition-colors">
+                  <Link to="/products?category=quran" className="text-white/80 hover:text-naaz-gold transition-colors">
                     Quran & Tafseer
                   </Link>
                 </li>
                 <li>
-                  <Link to="/books?category=hadith" className="text-white/80 hover:text-naaz-gold transition-colors">
+                  <Link to="/products?category=hadith" className="text-white/80 hover:text-naaz-gold transition-colors">
                     Hadith Collections
                   </Link>
                 </li>
                 <li>
-                  <Link to="/books?category=fiqh" className="text-white/80 hover:text-naaz-gold transition-colors">
+                  <Link to="/products?category=fiqh" className="text-white/80 hover:text-naaz-gold transition-colors">
                     Islamic Jurisprudence
                   </Link>
                 </li>
                 <li>
-                  <Link to="/books?category=history" className="text-white/80 hover:text-naaz-gold transition-colors">
+                  <Link to="/products?category=history" className="text-white/80 hover:text-naaz-gold transition-colors">
                     Islamic History
                   </Link>
                 </li>
                 <li>
-                  <Link to="/books?category=children" className="text-white/80 hover:text-naaz-gold transition-colors">
+                  <Link to="/products?category=children" className="text-white/80 hover:text-naaz-gold transition-colors">
                     Children's Books
                   </Link>
                 </li>
                 <li>
-                  <Link to="/books?category=urdu" className="text-white/80 hover:text-naaz-gold transition-colors">
+                  <Link to="/products?category=urdu" className="text-white/80 hover:text-naaz-gold transition-colors">
                     Urdu Literature
                   </Link>
                 </li>

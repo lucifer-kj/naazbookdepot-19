@@ -28,13 +28,18 @@ class SentryService {
         const config = getSentryConfig();
         
         if (!config.enabled || !config.dsn) {
-          console.warn('Sentry DSN not found or disabled. Error tracking will be disabled.');
+          // Use a simple warning since we can't use our error handler here (circular dependency)
+          if (import.meta.env.DEV) {
+            console.warn('Sentry DSN not found or disabled. Error tracking will be disabled.');
+          }
           return;
         }
 
         this.initializeSentry(config, isProduction(), isDevelopment());
       }).catch(() => {
-        console.warn('Failed to load environment configuration. Sentry disabled.');
+        if (import.meta.env.DEV) {
+          console.warn('Failed to load environment configuration. Sentry disabled.');
+        }
       });
     } catch (error) {
       console.warn('Failed to initialize Sentry:', error);
@@ -75,7 +80,9 @@ class SentryService {
 
       this.isInitialized = true;
     } catch (error) {
-      console.warn('Failed to initialize Sentry:', error);
+      if (import.meta.env.DEV) {
+        console.warn('Failed to initialize Sentry:', error);
+      }
     }
   }
 

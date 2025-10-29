@@ -1,25 +1,54 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useCart } from '../lib/hooks/useCart';
-import { useAuth } from '../lib/hooks/useAuth';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Badge } from '../components/ui/badge';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
-import CartItem from '../components/cart/CartItem';
-import PromoCodeInput from '../components/cart/PromoCodeInput';
-import CartEmpty from '../components/cart/CartEmpty';
+import { useCart, useUpdateCartItem, useRemoveFromCart } from '@/lib/hooks/useCart';
+import { useAuth } from '@/lib/hooks/useAuth';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import CartItem from '@/components/cart/CartItem';
+import PromoCodeInput from '@/components/cart/PromoCodeInput';
+import CartEmpty from '@/components/cart/CartEmpty';
 import { ShoppingBag, Truck, Shield, ArrowRight, Gift } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Cart = () => {
   const navigate = useNavigate();
-  const { cart, updateQuantity, removeFromCart, getTotalPrice, getTotalItems } = useCart();
+  const { data: cart = [], isLoading } = useCart();
+  const updateCartItem = useUpdateCartItem();
+  const removeFromCart = useRemoveFromCart();
   const { user } = useAuth();
   const [promoCode, setPromoCode] = useState('');
   const [discount, setDiscount] = useState(0);
-  const [isApplyingPromo, setIsApplyingPromo] = useState(false);
+
+  // Helper functions
+  const getTotalPrice = () => {
+    return cart.reduce((total, item) => total + (item.products.price * item.quantity), 0);
+  };
+
+  const getTotalItems = () => {
+    return cart.reduce((total, item) => total + item.quantity, 0);
+  };
+
+  const handleUpdateQuantity = async (cartItemId: string, quantity: number) => {
+    try {
+      await updateCartItem.mutateAsync({ cartItemId, quantity });
+    } catch (error) {
+      import('../lib/utils/consoleMigration').then(({ handleApiError }) => {
+        handleApiError(error, 'update_cart_item');
+      });
+    }
+  };
+
+  const handleRemoveFromCart = async (cartItemId: string) => {
+    try {
+      await removeFromCart.mutateAsync(cartItemId);
+    } catch (error) {
+      import('../lib/utils/consoleMigration').then(({ handleApiError }) => {
+        handleApiError(error, 'remove_cart_item');
+      });
+    }
+  };
 
   const subtotal = getTotalPrice();
   const shippingCost = subtotal >= 500 ? 0 : 50;
@@ -39,8 +68,6 @@ const Cart = () => {
       toast.error('Please enter a promo code');
       return;
     }
-
-    setIsApplyingPromo(true);
     
     // Simulate API call
     setTimeout(() => {
@@ -52,14 +79,7 @@ const Cart = () => {
       } else {
         toast.error('Invalid promo code');
       }
-      setIsApplyingPromo(false);
     }, 1000);
-  };
-
-  const handleRemovePromo = () => {
-    setDiscount(0);
-    setPromoCode('');
-    toast.success('Promo code removed');
   };
 
   const handleProceedToCheckout = () => {
@@ -76,6 +96,18 @@ const Cart = () => {
     
     navigate('/checkout');
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">Loading cart...</div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   if (cart.length === 0) {
     return (
@@ -107,8 +139,8 @@ const Cart = () => {
               <CartItem
                 key={item.id}
                 item={item}
-                onUpdateQuantity={updateQuantity}
-                onRemove={removeFromCart}
+                onUpdateQuantity={handleUpdateQuantity}
+                onRemove={handleRemoveFromCart}
               />
             ))}
             
@@ -135,12 +167,12 @@ const Cart = () => {
               {/* Promo Code Section */}
               <div className="mb-6">
                 <PromoCodeInput
-                  value={promoCode}
-                  onChange={setPromoCode}
-                  onApply={handleApplyPromo}
-                  isLoading={isApplyingPromo}
+                  onApplyPromo={(code) => {
+                    setPromoCode(code);
+                    handleApplyPromo();
+                  }}
+                  appliedPromo={discount > 0 ? promoCode : undefined}
                   discount={discount}
-                  onRemove={handleRemovePromo}
                 />
               </div>
 
@@ -240,9 +272,18 @@ const Cart = () => {
         <div className="mt-12">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">You might also like</h2>
           <div className="bg-white rounded-lg shadow-sm p-6">
-            <p className="text-gray-600 text-center">
-              Recommended products will appear here based on your cart items.
-            </p>
+            <div className="flex items-center justify-center space-x-4">
+              <ShoppingBag className="w-8 h-8 text-gray-400" />
+              <div className="text-center">
+                <p className="text-gray-600 mb-2">Discover more Islamic books</p>
+                <button
+                  onClick={() => navigate('/products')}
+                  className="text-naaz-green hover:text-green-600 font-medium"
+                >
+                  Browse our collection →
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -33,7 +33,9 @@ const AdminOrders = () => {
           table: 'orders'
         },
         (payload) => {
-          console.log('Orders real-time update:', payload);
+          import('../../lib/utils/consoleMigration').then(({ logInfo }) => {
+            logInfo('Orders real-time update', { payload });
+          });
           refetch();
           
           // Show notification for new orders
@@ -74,14 +76,18 @@ const AdminOrders = () => {
           }
         });
       } catch (notificationError) {
-        console.error('Error sending notification:', notificationError);
+        import('../../lib/utils/consoleMigration').then(({ handleApiError }) => {
+          handleApiError(notificationError, 'send_order_notification', { orderId: id, status });
+        });
       }
       
       setEditingOrder(null);
       setNewStatus('');
       setTrackingNumber('');
     } catch (error) {
-      console.error('Error updating order status:', error);
+      import('../../lib/utils/consoleMigration').then(({ handleDatabaseError }) => {
+        handleDatabaseError(error, 'update_order_status', { orderId: id, status, trackingNumber });
+      });
     }
   };
 
@@ -107,13 +113,17 @@ const AdminOrders = () => {
             }
           });
         } catch (notificationError) {
-          console.error('Error sending notification:', notificationError);
+          import('../../lib/utils/consoleMigration').then(({ handleApiError }) => {
+            handleApiError(notificationError, 'send_payment_notification', { orderId: id, paymentStatus });
+          });
         }
       }
       
       refetch();
     } catch (error) {
-      console.error('Error updating payment status:', error);
+      import('../../lib/utils/consoleMigration').then(({ handleDatabaseError }) => {
+        handleDatabaseError(error, 'update_payment_status', { orderId: id, paymentStatus });
+      });
     }
   };
 

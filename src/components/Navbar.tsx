@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, User, Menu, X, LogOut, ChevronDown } from 'lucide-react';
 import { useAuth } from '@/lib/context/AuthContext';
@@ -279,17 +279,17 @@ const Navbar = () => {
               </div>
 
               {/* Mobile Menu Links */}
-              <div className="flex flex-col space-y-3">
-                <Link to="/" className="text-naaz-green hover:text-naaz-gold transition-colors font-medium py-2" onClick={() => setIsMenuOpen(false)}>
+              <div className="flex flex-col space-y-1">
+                <Link to="/" className="text-naaz-green hover:text-naaz-gold transition-colors font-medium py-4 px-2 rounded-lg hover:bg-naaz-cream/50 touch-manipulation" onClick={() => setIsMenuOpen(false)}>
                   Home
                 </Link>
-                <Link to="/books" className="text-naaz-green hover:text-naaz-gold transition-colors font-medium py-2" onClick={() => setIsMenuOpen(false)}>
+                <Link to="/products" className="text-naaz-green hover:text-naaz-gold transition-colors font-medium py-4 px-2 rounded-lg hover:bg-naaz-cream/50 touch-manipulation" onClick={() => setIsMenuOpen(false)}>
                   Products
                 </Link>
-                <Link to="/about" className="text-naaz-green hover:text-naaz-gold transition-colors font-medium py-2" onClick={() => setIsMenuOpen(false)}>
+                <Link to="/about" className="text-naaz-green hover:text-naaz-gold transition-colors font-medium py-4 px-2 rounded-lg hover:bg-naaz-cream/50 touch-manipulation" onClick={() => setIsMenuOpen(false)}>
                   About
                 </Link>
-                <Link to="/contact" className="text-naaz-green hover:text-naaz-gold transition-colors font-medium py-2" onClick={() => setIsMenuOpen(false)}>
+                <Link to="/contact" className="text-naaz-green hover:text-naaz-gold transition-colors font-medium py-4 px-2 rounded-lg hover:bg-naaz-cream/50 touch-manipulation" onClick={() => setIsMenuOpen(false)}>
                   Contact
                 </Link>
               </div>

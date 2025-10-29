@@ -1,31 +1,31 @@
 
 import React from 'react';
 import { Trash2, Plus, Minus } from 'lucide-react';
-import { CartItem as CartItemType } from '@/lib/context/CartContext';
+import { CartItem as CartItemType } from '@/lib/hooks/useCart';
 
 interface CartItemProps {
   item: CartItemType;
-  onUpdateQuantity: (productId: string, quantity: number) => void;
-  onRemove: (productId: string) => void;
+  onUpdateQuantity: (cartItemId: string, quantity: number) => void;
+  onRemove: (cartItemId: string) => void;
 }
 
 const CartItem: React.FC<CartItemProps> = ({ item, onUpdateQuantity, onRemove }) => {
   const handleQuantityChange = (newQuantity: number) => {
     if (newQuantity > 0) {
-      onUpdateQuantity(item.productId, newQuantity);
+      onUpdateQuantity(item.id, newQuantity);
     }
   };
 
   return (
     <div className="flex items-center space-x-4 py-4 border-b border-gray-200 last:border-b-0">
       <img 
-        src={item.image} 
-        alt={item.name}
+        src={item.products.image_url || '/placeholder.svg'} 
+        alt={item.products.title}
         className="w-16 h-16 object-cover rounded-lg"
       />
       <div className="flex-1">
-        <h3 className="font-medium text-naaz-green">{item.name}</h3>
-        <p className="text-naaz-gold font-semibold">₹{item.price}</p>
+        <h3 className="font-medium text-naaz-green">{item.products.title}</h3>
+        <p className="text-naaz-gold font-semibold">₹{item.products.price}</p>
       </div>
       <div className="flex items-center space-x-2">
         <button 
@@ -44,7 +44,7 @@ const CartItem: React.FC<CartItemProps> = ({ item, onUpdateQuantity, onRemove })
         </button>
       </div>
       <button 
-        onClick={() => onRemove(item.productId)}
+        onClick={() => onRemove(item.id)}
         className="p-1 hover:bg-red-100 text-red-600 rounded transition-colors"
       >
         <Trash2 size={16} />

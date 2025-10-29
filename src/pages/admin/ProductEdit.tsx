@@ -44,7 +44,9 @@ export default function ProductEdit() {
         //   tags: product.tags || []
         // });
       } catch (error) {
-        console.error('Error loading product:', error);
+        import('../../lib/utils/consoleMigration').then(({ handleDatabaseError }) => {
+          handleDatabaseError(error, 'load_product', { productId: id });
+        });
         setErrors({
           submit: 'Failed to load product. Please try again.'
         });
@@ -67,7 +69,9 @@ export default function ProductEdit() {
       // await updateProduct(id, formData);
       navigate('/admin/products');
     } catch (error) {
-      console.error('Error updating product:', error);
+      import('../../lib/utils/consoleMigration').then(({ handleDatabaseError }) => {
+        handleDatabaseError(error, 'update_product', { productId: id, formData });
+      });
       setErrors({
         submit: 'Failed to update product. Please try again.'
       });

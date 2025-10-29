@@ -37,7 +37,9 @@ export default function AdminProducts() {
         // await deleteProduct(id);
         setProducts(products.filter(p => p.id !== id));
       } catch (error) {
-        console.error('Error deleting product:', error);
+        import('../../lib/utils/consoleMigration').then(({ handleDatabaseError }) => {
+          handleDatabaseError(error, 'delete_product', { productId: id });
+        });
       }
     }
   };
@@ -55,7 +57,9 @@ export default function AdminProducts() {
       ));
       setStockUpdateId(null);
     } catch (error) {
-      console.error('Error updating stock:', error);
+      import('../../lib/utils/consoleMigration').then(({ handleDatabaseError }) => {
+        handleDatabaseError(error, 'update_stock', { productId: id, newStock });
+      });
     }
   };
   

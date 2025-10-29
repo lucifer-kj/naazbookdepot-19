@@ -1,8 +1,9 @@
-// For development debugging only
-console.log('Environment check at startup:', {
-  hasSupabaseUrl: !!import.meta.env.VITE_SUPABASE_URL,
-  hasSupabaseKey: !!import.meta.env.VITE_SUPABASE_ANON_KEY,
-  nodeEnv: import.meta.env.VITE_NODE_ENV,
-  isProduction: import.meta.env.PROD,
-  isDevelopment: import.meta.env.DEV,
-});
+// Environment validation at startup
+import { environmentService } from './lib/services/environmentService';
+
+// Initialize environment validation
+const validationResult = environmentService.initialize();
+
+// Export validation result for use in other modules
+export { validationResult };
+export { environmentService };

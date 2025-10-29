@@ -1,6 +1,6 @@
 import React from 'react';
-import ErrorHandler from './ErrorHandler';
-import sentryService from '../lib/services/sentryService';
+import ErrorHandler from '@/components/ErrorHandler';
+import { errorHandler } from '../lib/services/ErrorHandler';
 
 interface GlobalErrorBoundaryProps {
   children: React.ReactNode;
@@ -12,12 +12,14 @@ const GlobalErrorBoundary: React.FC<GlobalErrorBoundaryProps> = ({ children }) =
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
       const error = event.reason instanceof Error ? event.reason : new Error(String(event.reason));
       
-      sentryService.captureError(error, {
+      // Use our centralized error handler instead of direct Sentry calls
+      errorHandler.error(error, {
+        component: 'GlobalErrorBoundary',
         action: 'unhandled_promise_rejection',
-        page: window.location.pathname,
         additionalData: {
           type: 'unhandledrejection',
-          reason: event.reason
+          reason: event.reason,
+          page: window.location.pathname
         }
       });
 
@@ -28,15 +30,17 @@ const GlobalErrorBoundary: React.FC<GlobalErrorBoundaryProps> = ({ children }) =
     const handleError = (event: ErrorEvent) => {
       const error = event.error || new Error(event.message);
       
-      sentryService.captureError(error, {
+      // Use our centralized error handler instead of direct Sentry calls
+      errorHandler.error(error, {
+        component: 'GlobalErrorBoundary',
         action: 'global_error',
-        page: window.location.pathname,
         additionalData: {
           type: 'error',
           filename: event.filename,
           lineno: event.lineno,
           colno: event.colno,
-          message: event.message
+          message: event.message,
+          page: window.location.pathname
         }
       });
     };

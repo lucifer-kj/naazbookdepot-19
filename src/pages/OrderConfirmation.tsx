@@ -2,8 +2,8 @@
 import React from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircle, Package, Clock, CreditCard, AlertCircle } from 'lucide-react';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 
 const OrderConfirmation = () => {
   const navigate = useNavigate();

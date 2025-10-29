@@ -18,8 +18,8 @@ interface Product {
   price: number;
   category: { name: string };
   stock_quantity: number;
-  is_featured: boolean;
-  is_published: boolean;
+  featured: boolean;
+  status: 'draft' | 'published' | 'archived';
 }
 
 interface ProductColumnsProps {
@@ -81,10 +81,10 @@ export const columns = ({ onEdit, onDelete }: ProductColumnsProps): ColumnDef<Pr
     },
   },
   {
-    accessorKey: 'is_featured',
+    accessorKey: 'featured',
     header: 'Featured',
     cell: ({ row }) => {
-      const isFeatured = row.getValue('is_featured') as boolean;
+      const isFeatured = row.getValue('featured') as boolean;
       return (
         <Badge variant={isFeatured ? 'default' : 'secondary'}>
           {isFeatured ? 'Yes' : 'No'}
@@ -93,13 +93,13 @@ export const columns = ({ onEdit, onDelete }: ProductColumnsProps): ColumnDef<Pr
     },
   },
   {
-    accessorKey: 'is_published',
+    accessorKey: 'status',
     header: 'Status',
     cell: ({ row }) => {
-      const isPublished = row.getValue('is_published') as boolean;
+      const status = row.getValue('status') as string;
       return (
-        <Badge variant={isPublished ? 'default' : 'secondary'}>
-          {isPublished ? 'Published' : 'Draft'}
+        <Badge variant={status === 'published' ? 'default' : status === 'draft' ? 'secondary' : 'destructive'}>
+          {status.charAt(0).toUpperCase() + status.slice(1)}
         </Badge>
       );
     },
@@ -121,17 +121,17 @@ export const columns = ({ onEdit, onDelete }: ProductColumnsProps): ColumnDef<Pr
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuItem
               onClick={() => onEdit(product.id, {
-                is_published: !product.is_published
+                status: product.status === 'published' ? 'draft' : 'published'
               })}
             >
-              {product.is_published ? 'Unpublish' : 'Publish'}
+              {product.status === 'published' ? 'Unpublish' : 'Publish'}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => onEdit(product.id, {
-                is_featured: !product.is_featured
+                featured: !product.featured
               })}
             >
-              {product.is_featured ? 'Remove from Featured' : 'Mark as Featured'}
+              {product.featured ? 'Remove from Featured' : 'Mark as Featured'}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem

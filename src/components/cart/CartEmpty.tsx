@@ -14,7 +14,7 @@ const CartEmpty = () => {
         Looks like you haven't added any items to your cart yet.
       </p>
       <Link 
-        to="/books"
+        to="/products"
         className="inline-block bg-naaz-green text-white px-8 py-3 rounded-lg hover:bg-naaz-green/90 transition-colors"
       >
         Start Shopping

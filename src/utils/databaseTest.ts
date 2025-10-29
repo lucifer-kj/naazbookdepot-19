@@ -14,7 +14,9 @@ export const testDatabaseConnection = async () => {
     console.log('Database connection successful!');
     return true;
   } catch (error) {
-    console.error('Database connection failed:', error);
+    import('../lib/utils/consoleMigration').then(({ handleDatabaseError }) => {
+      handleDatabaseError(error, 'database_connection_test');
+    });
     return false;
   }
 };
@@ -37,21 +39,23 @@ export const validateData = async () => {
     if (productsError) throw productsError;
     console.log(`Found ${products.length} products`);
 
-    // Check users
-    const { data: users, error: usersError } = await supabase
-      .from('users')
+    // Check profiles
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
       .select('*');
 
-    if (usersError) throw usersError;
-    console.log(`Found ${users.length} users`);
+    if (profilesError) throw profilesError;
+    console.log(`Found ${profiles.length} profiles`);
 
     return {
       categories: categories.length,
       products: products.length,
-      users: users.length,
+      profiles: profiles.length,
     };
   } catch (error) {
-    console.error('Data validation failed:', error);
+    import('../lib/utils/consoleMigration').then(({ handleDatabaseError }) => {
+      handleDatabaseError(error, 'data_validation');
+    });
     throw error;
   }
 };

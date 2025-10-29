@@ -32,7 +32,7 @@ const ThreeDivisionsShowcase = () => {
             <div className="bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-medium mb-6 inline-block">
               Available Now
             </div>
-            <Link to="/books" className="group-hover:bg-naaz-green group-hover:text-white text-naaz-gold border border-naaz-gold px-6 py-3 rounded-xl font-semibold transition-all duration-300 inline-flex items-center gap-2">
+            <Link to="/products" className="group-hover:bg-naaz-green group-hover:text-white text-naaz-gold border border-naaz-gold px-6 py-3 rounded-xl font-semibold transition-all duration-300 inline-flex items-center gap-2">
               Browse Collection 
               <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
             </Link>

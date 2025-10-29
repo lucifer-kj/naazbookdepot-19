@@ -3,8 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Loader2, Shield, AlertTriangle, CheckCircle, Clock, CreditCard } from 'lucide-react';
-import { PayUPayment } from './PayUPayment';
-import { PayPalPayment } from './PayPalPayment';
+import { PayUPayment } from '@/components/payment/PayUPayment';
+import { PayPalPayment } from '@/components/payment/PayPalPayment';
 import { paymentOrchestrator, PaymentMethod, PaymentRequest } from '../../lib/services/paymentOrchestrator';
 import { toast } from 'sonner';
 

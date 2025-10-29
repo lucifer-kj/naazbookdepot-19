@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useCart } from '../useCart';
-import { supabase } from '../../supabase';
-import { mockProduct, mockUser, mockCartItem } from '../../../test/utils';
+import { useCart } from '@/lib/hooks/useCart';
+import { supabase } from '@/lib/supabase';
+import { mockProduct, mockUser, mockCartItem } from '@/test/utils';
 
 // Mock Supabase
 vi.mock('../../supabase', () => ({

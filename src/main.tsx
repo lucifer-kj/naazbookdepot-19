@@ -16,20 +16,28 @@ const configValidation = configValidator.validateAll();
 import { errorMonitoring } from '@/lib/services/ErrorMonitoring';
 errorMonitoring.initialize();
 
-// Log critical issues in development
-if (import.meta.env.DEV && (!envValidation.isValid || !configValidation.isValid)) {
-  console.group('🚨 Configuration Issues Detected');
-  if (!envValidation.isValid) {
-    import('./lib/utils/consoleMigration').then(({ handleValidationError }) => {
-      handleValidationError('Environment validation failed', { errors: envValidation.errors });
+// Log critical issues in development, handle gracefully in production
+if (!envValidation.isValid || !configValidation.isValid) {
+  if (import.meta.env.DEV) {
+    console.group('🚨 Configuration Issues Detected');
+    if (!envValidation.isValid) {
+      import('./lib/utils/consoleMigration').then(({ handleValidationError }) => {
+        handleValidationError('Environment validation failed', { errors: envValidation.errors });
+      });
+    }
+    if (!configValidation.isValid) {
+      import('./lib/utils/consoleMigration').then(({ handleValidationError }) => {
+        handleValidationError('Configuration validation failed', { errors: configValidation.errors });
+      });
+    }
+    console.groupEnd();
+  } else {
+    // In production, log errors but don't block app initialization
+    console.warn('Configuration issues detected in production:', {
+      envErrors: envValidation.errors,
+      configErrors: configValidation.errors
     });
   }
-  if (!configValidation.isValid) {
-    import('./lib/utils/consoleMigration').then(({ handleValidationError }) => {
-      handleValidationError('Configuration validation failed', { errors: configValidation.errors });
-    });
-  }
-  console.groupEnd();
 }
 
 createRoot(document.getElementById("root")!).render(<App />);

@@ -5,6 +5,7 @@ import { CartProvider } from '@/lib/context/CartContext';
 import { useEffect } from 'react';
 import { ToastProvider } from '@/components/ui/toaster';
 import GlobalErrorBoundary from '@/components/GlobalErrorBoundary';
+import { ProductionErrorFallback } from '@/components/ProductionErrorFallback';
 import { testDatabaseConnection, validateData } from '@/utils/databaseTest';
 import { EnvChecker } from '@/components/debug/EnvChecker';
 import { ErrorMonitoringPanel } from '@/components/debug/ErrorMonitoringPanel';
